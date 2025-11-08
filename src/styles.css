@@ -1,0 +1,96 @@
+:root {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #1f2933;
+  background-color: #f7fafc;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-meta {
+  color: #52606d;
+  margin-bottom: 2rem;
+}
+
+.step {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+}
+
+.step header {
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-weight: 600;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.field small {
+  color: #697386;
+  line-height: 1.4;
+}
+
+.field input,
+.field textarea,
+.field select {
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+}
+
+.field input[readonly] {
+  background: #f1f5f9;
+}
+
+.choice-placeholder {
+  border: 1px dashed #cbd5e0;
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: #f8fafc;
+  color: #3d4852;
+  font-size: 0.95rem;
+}
+
+.hidden-field {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.child-action-group {
+  border-left: 3px solid #e2e8f0;
+  margin-left: 0.75rem;
+  padding-left: 1rem;
+}
