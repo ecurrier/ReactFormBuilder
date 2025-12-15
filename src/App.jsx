@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import formConfig from './data/formConfig.json';
 import FormBuilder from './components/FormBuilder.jsx';
 
-const DATA_SOURCE_URL = 'https://api.example.com/forms/configuration';
-
 const App = () => {
   const [config, setConfig] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,13 +21,31 @@ const App = () => {
         return;
       }
 
-      const response = await fetch(DATA_SOURCE_URL);
+      // Power Pages Web API call to retrieve form configuration
+      const recordId = new URLSearchParams(window.location.search).get('id');
+      const webApiUrl = `${window.location.origin}/_api/eyfrcc_versions(${recordId})/?$select=eyfrcc_formcontent`;
+
+      const response = await fetch(webApiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'OData-MaxVersion': '4.0',
+          'OData-Version': '4.0'
+        }
+      });
+
       if (!response.ok) {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      const data = await response.json();
-      setConfig(data);
+      const versionRecord = await response.json();
+      if (!versionRecord.eyfrcc_formcontent) {
+        throw new Error('Form content field is empty');
+      }
+
+      const formConfiguration = JSON.parse(versionRecord.eyfrcc_formcontent);
+      setConfig(formConfiguration);
       setIsDebugData(false);
     } catch (error) {
       console.error('Failed to load form configuration', error);
@@ -47,31 +63,6 @@ const App = () => {
 
   return (
     <div className="app-shell">
-      <header className="site-header">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            GF
-          </span>
-          <span className="brand-name">GrantFlow Portal</span>
-        </div>
-        <nav className="site-nav" aria-label="Primary">
-          <a href="#overview" className="nav-link">
-            Overview
-          </a>
-          <a href="#applications" className="nav-link">
-            Applications
-          </a>
-          <a href="#reporting" className="nav-link">
-            Reporting
-          </a>
-          <a href="#support" className="nav-link">
-            Support
-          </a>
-        </nav>
-        <button type="button" className="header-cta">
-          Portal Access
-        </button>
-      </header>
       <main className="site-main">
         <div className="app">
           {isLoading || !config ? (
@@ -107,16 +98,6 @@ const App = () => {
           )}
         </div>
       </main>
-      <footer className="site-footer">
-        <div>
-          <strong>GrantFlow</strong> - Delivering simple, structured application experiences.
-        </div>
-        <div className="footer-links">
-          <a href="#privacy">Privacy</a>
-          <a href="#status">Status</a>
-          <a href="#contact">Contact</a>
-        </div>
-      </footer>
     </div>
   );
 };
