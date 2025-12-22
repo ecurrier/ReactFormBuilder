@@ -1,85 +1,134 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import FieldInput from './fields/FieldInput.jsx';
+import React, { useCallback, useMemo } from "react";
+import PropTypes from "prop-types";
+import FieldInput from "./fields/FieldInput.jsx";
+import TableEntryAction from "./TableEntryAction.tsx";
+import { ActionType } from "../constants/enums.js";
+import { retrieveMultipleRecords } from "../hooks/api/Api.ts";
+import { buildFetchXmlForChildRecords } from "../utilities/FetchXmlBuilder.ts";
 
-const Step = ({ step, hasNext, hasPrev, onNext, onPrev, positionLabel }) => {
-  const fieldActions = Array.isArray(step.Actions)
-    ? step.Actions.filter((action) => action.Type === 'Field_Input').sort(
-        (a, b) => (a.Order ?? 0) - (b.Order ?? 0),
-      )
-    : [];
+const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formState, urlParams }) => {
+	// Memoize sorted actions to prevent infinite loops
+	const actions = useMemo(() => {
+		return Array.isArray(step.Actions) ? [...step.Actions].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0)) : [];
+	}, [step.Actions]);
 
-  if (fieldActions.length === 0) {
-    return null;
-  }
+	// Memoize fetchData functions for each TableEntry action to prevent recreation on every render
+	const tableEntryFetchFunctions = useMemo(() => {
+		const fetchFuncs = new Map();
 
-  const stepIdentifier = step.StepId ?? step.Name ?? 'step';
-  const entityName = step.EntityName ?? 'Not specified';
-  const configOrder =
-    typeof step.Order === 'number' ? `Config order ${step.Order}` : null;
+		actions.forEach((action) => {
+			if (action.Type === ActionType.TableEntry) {
+				const config = action.Properties;
+				const fetchFunc = async (sort, pagination) => {
+					// Only fetch if we have a recordId
+					if (!recordId) {
+						return {
+							results: [],
+							totalRecordCount: 0,
+						};
+					}
 
-  return (
-    <section className="step" aria-labelledby={`step-${stepIdentifier}`}>
-      <header>
-        {positionLabel ? (
-          <p className="step-position" aria-live="polite">
-            {positionLabel}
-          </p>
-        ) : null}
-        <h2 id={`step-${stepIdentifier}`}>{step.Name ?? entityName}</h2>
-        <small>
-          Entity: {entityName}
-          {configOrder ? ` - ${configOrder}` : null}
-        </small>
-      </header>
-      <div className="fields">
-        {fieldActions.map((action) => (
-          <FieldInput key={action.ActionId ?? action.Name} action={action} />
-        ))}
-      </div>
-      <footer className="step-footer" aria-label="Step navigation buttons">
-        <button
-          type="button"
-          className="nav-button"
-          onClick={onPrev}
-          disabled={!hasPrev}
-        >
-          Previous
-        </button>
-        <button
-          type="button"
-          className="nav-button primary"
-          onClick={onNext}
-          disabled={!hasNext}
-        >
-          Next
-        </button>
-      </footer>
-    </section>
-  );
+					const columns = config.ChildViewSteps?.[0]?.Actions?.map((a) => a.Properties.LogicalName) || [];
+					const fetchXml = buildFetchXmlForChildRecords(config.ChildEntityLogicalName, config.ReferencingAttribute, recordId, columns);
+
+					try {
+						const response = await retrieveMultipleRecords(config.ChildEntityLogicalName, fetchXml, {});
+
+						return {
+							results: response.results,
+							totalRecordCount: response.totalRecordCount || 0,
+						};
+					} catch (error) {
+						console.error("Error fetching child records:", error);
+						return {
+							results: [],
+							totalRecordCount: 0,
+						};
+					}
+				};
+
+				fetchFuncs.set(action.Id ?? action.Name, fetchFunc);
+			}
+		});
+
+		return fetchFuncs;
+	}, [actions, recordId]);
+
+	// Stable callbacks for TableEntry actions
+	const handleTableEntrySave = useCallback(async (data, recordId) => {
+		// TODO: Implement API call
+		console.log("Save table entry:", data, recordId);
+	}, []);
+
+	const handleTableEntryDelete = useCallback(async (recordId) => {
+		// TODO: Implement
+		console.log("Delete table entry:", recordId);
+	}, []);
+
+	if (actions.length === 0) {
+		return null;
+	}
+
+	const stepIdentifier = step.Id ?? step.Name ?? "step";
+	const entityName = step.EntityLogicalName ?? "Not specified";
+
+	return (
+		<div className="step" style={{ display: isActive ? "block" : "none" }}>
+			<h2 className="form-subheading">{step.Name ?? entityName}</h2>
+			{step.Description && <div className="instructions" dangerouslySetInnerHTML={{ __html: step.Description }} />}
+			<p className="control-label block text-right mb-4 required-legend">Required</p>
+			<div className="multi-step-form-main-content">
+				<div className="actions">
+					{actions.map((action) => {
+						if (action.Type === ActionType.FieldInput) {
+							return <FieldInput key={action.Id ?? action.Name} action={action} formState={formState} />;
+						}
+
+						if (action.Type === ActionType.TableEntry) {
+							const fetchFunc = tableEntryFetchFunctions.get(action.Id ?? action.Name);
+
+							return (
+								<TableEntryAction
+									key={action.Id ?? action.Name}
+									config={action.Properties}
+									fetchData={fetchFunc}
+									shouldLoadData={hasBeenVisited}
+									parentRecordId={recordId}
+									formState={formState}
+									onSave={handleTableEntrySave}
+									onDelete={handleTableEntryDelete}
+								/>
+							);
+						}
+						return null;
+					})}
+				</div>
+			</div>
+		</div>
+	);
 };
-
 Step.propTypes = {
-  step: PropTypes.shape({
-    StepId: PropTypes.string,
-    Name: PropTypes.string,
-    EntityName: PropTypes.string,
-    Order: PropTypes.number,
-    Actions: PropTypes.arrayOf(PropTypes.object),
-  }).isRequired,
-  hasNext: PropTypes.bool,
-  hasPrev: PropTypes.bool,
-  onNext: PropTypes.func,
-  onPrev: PropTypes.func,
-  positionLabel: PropTypes.string,
+	step: PropTypes.shape({
+		Id: PropTypes.string,
+		Name: PropTypes.string,
+		Description: PropTypes.string,
+		EntityLogicalName: PropTypes.string,
+		ReferencingAttributeLogicalName: PropTypes.string,
+		Order: PropTypes.number,
+		Actions: PropTypes.arrayOf(PropTypes.object),
+	}).isRequired,
+	isActive: PropTypes.bool.isRequired,
+	hasBeenVisited: PropTypes.bool.isRequired,
+	positionLabel: PropTypes.string,
+	recordId: PropTypes.string,
+	formState: PropTypes.object.isRequired,
+	urlParams: PropTypes.object,
 };
 
 Step.defaultProps = {
-  hasNext: false,
-  hasPrev: false,
-  onNext: undefined,
-  onPrev: undefined,
-  positionLabel: undefined,
+	positionLabel: undefined,
+	recordId: undefined,
+	urlParams: undefined,
 };
 
 export default Step;

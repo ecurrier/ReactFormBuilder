@@ -1,0 +1,36 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"jsx": "react-jsx",
+		"allowJs": true,
+		"checkJs": false,
+		"strict": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"resolveJsonModule": true,
+		"baseUrl": ".",
+		"paths": {
+			"@api/*": ["src/hooks/api/*"],
+			"@api": ["src/hooks/api"],
+			"@types/*": ["src/types/*"],
+			"@types": ["src/types"],
+			"@utilities/*": ["src/utilities/*"],
+			"@utilities": ["src/utilities"],
+			"@components/*": ["src/components/*"],
+			"@components": ["src/components"],
+			"@hooks/*": ["src/hooks/*"],
+			"@hooks": ["src/hooks"],
+			"@constants/*": ["src/constants/*"],
+			"@constants": ["src/constants"],
+			"@services/*": ["src/services/*"],
+			"@services": ["src/services"],
+            "@mocks/*": ["src/mocks/*"],
+			"@mocks": ["src/mocks"],
+		}
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist"]
+}
