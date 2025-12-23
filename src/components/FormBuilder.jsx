@@ -178,8 +178,15 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 						<div className="banner-title">
 							<h1>{config?.FundingOpportunity.FullName}</h1>
 						</div>
-						<div className="banner-details"></div>
-						<div className="banner-actions">
+						<div className="banner-details">
+							<p>
+								Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ipsam, incidunt quibusdam eius rerum harum ullam dicta asperiores
+								officiis temporibus tenetur, accusamus illo? Delectus soluta, maxime vero at officia aliquam molestiae. Lorem ipsum dolor, sit
+								amet consectetur adipisicing elit. Cum, maxime fugit explicabo aliquam iusto atque voluptatum sit dolorum officiis ad amet
+								dolor, nemo vero eius, maiores pariatur corrupti labore deleniti!
+							</p>
+						</div>
+						<div className="banner-actions-primary">
 							<button
 								type="button"
 								className="btn btn-default"
