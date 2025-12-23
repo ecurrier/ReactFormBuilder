@@ -327,7 +327,7 @@
 				"Id": "ce35df82-3fdd-f011-8544-6045bdd311df",
 				"Name": "Application Overview",
 				"EntityLogicalName": "eyfrcc_childapplicationtest",
-				"ReferencingAttributeLogicalName": null,
+				"ReferencingAttribute": null,
 				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This is the description of the Application Overview step.</p></div>",
 				"Order": 1,
 				"Actions": [
@@ -357,87 +357,227 @@
 				"Conditions": []
 			},
 			{
-				"Id": "63755ce0-3fdd-f011-8544-6045bdd311df",
-				"Name": "SF424",
-				"EntityLogicalName": "eyfrcc_standardform424",
-				"ReferencingAttributeLogicalName": "eyfrcc_childapplication",
-				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This form step resides on a different table than the form's primary table.</p></div>",
+				"Id": "3eea7f25-40dd-f011-8544-6045bdd311df",
+				"Name": "Primary Record - All Controls",
+				"EntityLogicalName": "eyfrcc_childapplicationtest",
+				"ReferencingAttribute": null,
+				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This step will store every variation of all controls.</p></div>",
 				"Order": 2,
 				"Actions": [
 					{
-						"Id": "89faad05-40dd-f011-8544-6045bdd311df",
-						"Name": "SF424 - Field Input - Attestation",
+						"Id": "080e6365-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Address",
 						"Order": 1,
 						"ChildOrder": 0,
 						"Type": 203300000,
 						"Properties": {
-							"LogicalName": "eyfrcc_attestation",
-							"SchemaName": "eyfrcc_attestation",
-							"Label": "Attestation",
-							"DataType": 643260007,
+							"ChildActions": [
+								{
+									"Id": "180e6365-0ce0-f011-8544-7ced8d21d821",
+									"Name": " - Field Input - Address Test 123 - Street 1",
+									"Order": 1,
+									"ChildOrder": 0,
+									"Type": 203300000,
+									"Properties": {
+										"LogicalName": "eyfrcc_addresstest123_street1",
+										"SchemaName": "eyfrcc_addresstest123_street1",
+										"Label": "Address Test 123 - Street 1",
+										"DataType": 643260000,
+										"IsRequired": false,
+										"IsReadOnly": false,
+										"IsHidden": false,
+										"ValidationType": null,
+										"ValidationValue": null,
+										"ValidationMessage": null,
+										"Description": "Address Test 123 - Street 1",
+										"MaxLength": 1000,
+										"Format": "Text"
+									}
+								},
+								{
+									"Id": "190e6365-0ce0-f011-8544-7ced8d21d821",
+									"Name": " - Field Input - Address Test 123 - Street 2",
+									"Order": 2,
+									"ChildOrder": 0,
+									"Type": 203300000,
+									"Properties": {
+										"LogicalName": "eyfrcc_addresstest123_street2",
+										"SchemaName": "eyfrcc_addresstest123_street2",
+										"Label": "Address Test 123 - Street 2",
+										"DataType": 643260000,
+										"IsRequired": false,
+										"IsReadOnly": false,
+										"IsHidden": false,
+										"ValidationType": null,
+										"ValidationValue": null,
+										"ValidationMessage": null,
+										"Description": "Address Test 123 - Street 2",
+										"MaxLength": 1000,
+										"Format": "Text"
+									}
+								},
+								{
+									"Id": "1e0e6365-0ce0-f011-8544-7ced8d21d821",
+									"Name": " - Field Input - Address Test 123 - City",
+									"Order": 3,
+									"ChildOrder": 0,
+									"Type": 203300000,
+									"Properties": {
+										"LogicalName": "eyfrcc_addresstest123_city",
+										"SchemaName": "eyfrcc_addresstest123_city",
+										"Label": "Address Test 123 - City",
+										"DataType": 643260000,
+										"IsRequired": false,
+										"IsReadOnly": false,
+										"IsHidden": false,
+										"ValidationType": null,
+										"ValidationValue": null,
+										"ValidationMessage": null,
+										"Description": "Address Test 123 - City",
+										"MaxLength": 1000,
+										"Format": "Text"
+									}
+								},
+								{
+									"Id": "1f0e6365-0ce0-f011-8544-7ced8d21d821",
+									"Name": " - Field Input - Address Test 123 - State",
+									"Order": 4,
+									"ChildOrder": 0,
+									"Type": 203300000,
+									"Properties": {
+										"LogicalName": "eyfrcc_addresstest123_state",
+										"SchemaName": "eyfrcc_addresstest123_state",
+										"Label": "Address Test 123 - State",
+										"DataType": 643260000,
+										"IsRequired": false,
+										"IsReadOnly": false,
+										"IsHidden": false,
+										"ValidationType": null,
+										"ValidationValue": null,
+										"ValidationMessage": null,
+										"Description": "Address Test 123 - State",
+										"MaxLength": 1000,
+										"Format": "Text"
+									}
+								},
+								{
+									"Id": "200e6365-0ce0-f011-8544-7ced8d21d821",
+									"Name": " - Field Input - Address Test 123 - ZIP",
+									"Order": 5,
+									"ChildOrder": 0,
+									"Type": 203300000,
+									"Properties": {
+										"LogicalName": "eyfrcc_addresstest123_zip",
+										"SchemaName": "eyfrcc_addresstest123_zip",
+										"Label": "Address Test 123 - ZIP",
+										"DataType": 643260000,
+										"IsRequired": false,
+										"IsReadOnly": false,
+										"IsHidden": false,
+										"ValidationType": null,
+										"ValidationValue": null,
+										"ValidationMessage": null,
+										"Description": "Address Test 123 - ZIP",
+										"MaxLength": 1000,
+										"Format": "Text"
+									}
+								}
+							]
+						}
+					},
+					{
+						"Id": "45faca7d-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Approved Indirect Cost Rate (Child Application)",
+						"Order": 2,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_totalapprovedindirectcostrate",
+							"SchemaName": "eyfrcc_totalapprovedindirectcostrate",
+							"Label": "Approved Indirect Cost Rate",
+							"DataType": 643260004,
 							"IsRequired": true,
 							"IsReadOnly": false,
 							"IsHidden": false,
 							"ValidationType": null,
 							"ValidationValue": null,
 							"ValidationMessage": null,
-							"Description": "The attestation required to be confirmed in order to submit the form.",
-							"Choices": [
-								{
-									"Value": 1,
-									"Label": "Yes"
-								},
-								{
-									"Value": 0,
-									"Label": "No"
-								}
-							],
-							"DefaultValue": false
+							"Description": "The approved percentage for the indirect cost rate based on the calculation of the \"Total Approved Indirect Budget\" over the \"Total Approved Direct Budget\".",
+							"MinValue": 0.0,
+							"MaxValue": 1000000000.0,
+							"Precision": 2
 						}
-					}
-				],
-				"Conditions": []
-			},
-			{
-				"Id": "3eea7f25-40dd-f011-8544-6045bdd311df",
-				"Name": "Accessibility",
-				"EntityLogicalName": "eyfrcc_childapplicationtest",
-				"ReferencingAttributeLogicalName": null,
-				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This step will store every variation of all controls.</p></div>",
-				"Order": 3,
-				"Actions": [
+					},
 					{
-						"Id": "0eb5e738-40dd-f011-8544-6045bdd311df",
-						"Name": "Accessibility - Field Input - State or Territory (Child Application)",
-						"Order": 1,
+						"Id": "c7e5d189-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Areas Impacted (Child Application)",
+						"Order": 3,
 						"ChildOrder": 0,
 						"Type": 203300000,
 						"Properties": {
-							"LogicalName": "eyfrcc_stateorterritory",
-							"SchemaName": "eyfrcc_stateorterritory",
-							"Label": "State or Territory",
-							"DataType": 643260009,
+							"LogicalName": "eyfrcc_areasimpacted",
+							"SchemaName": "eyfrcc_areasimpacted",
+							"Label": "Areas Impacted",
+							"DataType": 643260001,
 							"IsRequired": false,
 							"IsReadOnly": false,
 							"IsHidden": false,
 							"ValidationType": null,
 							"ValidationValue": null,
 							"ValidationMessage": null,
-							"Description": "State or Territory",
-							"Targets": [
+							"Description": "A list of geographic areas or entities aided within the function or activity for a Federal award using categories specified in the Federal agency instructions (e.g., Cities, Counties, States). This comes from the Federal Integrated Business Framework (FIBF) model.",
+							"MaxLength": 100000,
+							"Format": null
+						}
+					},
+					{
+						"Id": "0653c595-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Budget Status (Child Application)",
+						"Order": 4,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_budgetstatus",
+							"SchemaName": "eyfrcc_budgetstatus",
+							"Label": "Budget Status",
+							"DataType": 643260006,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "A code denoting the current state of the Federal award project budget as proposed or approved status. This comes from the Federal Integrated Business Framework (FIBF) model.",
+							"CanSelectMultiple": false,
+							"Choices": [
 								{
-									"EntityLogicalName": "eyfrcc_stateterritory",
-									"Columns": ["eyfrcc_stateterritoryname", "createdon"],
-									"NavigationProperty": null,
-									"ReferencingAttribute": "eyfrcc_stateorterritory"
+									"Value": 643260000,
+									"Label": "Approved"
+								},
+								{
+									"Value": 643260001,
+									"Label": "Proposed"
+								},
+								{
+									"Value": 643260002,
+									"Label": "Revision Approved"
+								},
+								{
+									"Value": 643260003,
+									"Label": "Revision Proposed"
+								},
+								{
+									"Value": 643260004,
+									"Label": "Rejected"
 								}
-							]
+							],
+							"DefaultValue": -1
 						}
 					},
 					{
 						"Id": "52e23263-40dd-f011-8544-6045bdd311df",
 						"Name": "Accessibility - Table Entry - Subapplicant",
-						"Order": 2,
+						"Order": 5,
 						"ChildOrder": 0,
 						"Type": 203300002,
 						"Properties": {
@@ -455,7 +595,7 @@
 									"Id": "8deb7f0b-2ffd-ee11-a1ff-00224825b17a",
 									"Name": "Step 1",
 									"EntityLogicalName": "eyfrcc_subrecipient",
-									"ReferencingAttributeLogicalName": null,
+									"ReferencingAttribute": null,
 									"Description": null,
 									"Order": 1,
 									"Actions": [
@@ -512,7 +652,7 @@
 									"Id": "60e52750-2ffd-ee11-a1ff-00224825b17a",
 									"Name": "Step 1",
 									"EntityLogicalName": "eyfrcc_subrecipient",
-									"ReferencingAttributeLogicalName": null,
+									"ReferencingAttribute": null,
 									"Description": null,
 									"Order": 1,
 									"Actions": [
@@ -542,6 +682,534 @@
 									"Conditions": []
 								}
 							]
+						}
+					},
+					{
+						"Id": "94ccd2a7-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Approved Cost Share or Match (Child Application)",
+						"Order": 6,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_approvedcostshareormatch",
+							"SchemaName": "eyfrcc_approvedcostshareormatch",
+							"Label": "Approved Cost Share or Match",
+							"DataType": 643260002,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "An amount of approved cost sharing or matching, where applicable. This comes from the Federal Integrated Business Framework (FIBF) model.",
+							"MinValue": 0.0,
+							"MaxValue": 1000000000.0,
+							"Precision": 2
+						}
+					},
+					{
+						"Id": "644639ae-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Risk Indicator (Child Application)",
+						"Order": 7,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_riskindicator2",
+							"SchemaName": "eyfrcc_riskindicator2",
+							"Label": "Risk Indicator",
+							"DataType": 643260004,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "A score that represents the risk level associated with this application and submitter. This is auto calculated based on the risk assessment configured by a Program Manager on the related funding opportunity. The higher the number, the greater the risk.",
+							"MinValue": -100000000000.0,
+							"MaxValue": 100000000000.0,
+							"Precision": 2
+						}
+					},
+					{
+						"Id": "cee0f4ba-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Fully Disbursed (Child Application)",
+						"Order": 8,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_fullydisbursed",
+							"SchemaName": "eyfrcc_fullydisbursed",
+							"Label": "Fully Disbursed",
+							"DataType": 643260007,
+							"IsRequired": true,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "The indication of whether the application has been fully disbursed or not.",
+							"Choices": [
+								{
+									"Value": 1,
+									"Label": "Yes"
+								},
+								{
+									"Value": 0,
+									"Label": "No"
+								}
+							],
+							"DefaultValue": false
+						}
+					},
+					{
+						"Id": "6d57e7cd-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Document Upload - SupportingDocumentation",
+						"Order": 9,
+						"ChildOrder": 0,
+						"Type": 203300001,
+						"Properties": {
+							"FolderName": "SupportingDocumentation",
+							"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Please upload any supporting documentation</p></div>",
+							"ValidationMessage": null
+						}
+					},
+					{
+						"Id": "0eb5e738-40dd-f011-8544-6045bdd311df",
+						"Name": "Primary Record - All Controls - Field Input - Project (Child Application)",
+						"Order": 10,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_applicationprojectid",
+							"SchemaName": "eyfrcc_applicationprojectid",
+							"Label": "Project",
+							"DataType": 643260009,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "The project that the application is providing information for.",
+							"Targets": [
+								{
+									"EntityLogicalName": "eyfrcc_project",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_applicationprojectid"
+								}
+							]
+						}
+					},
+					{
+						"Id": "0f17c076-0de0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Quick View Form",
+						"Order": 11,
+						"ChildOrder": 0,
+						"Type": 643260003,
+						"Properties": {
+							"DisplayName": "State/Territory Quick View",
+							"ParentLookup": "eyfrcc_applicationprojectid",
+							"QuickViewSteps": [
+								{
+									"Id": "3b26873a-0de0-f011-8544-7ced8d21d821",
+									"Name": "Quick View Fields",
+									"EntityLogicalName": "eyfrcc_project",
+									"ReferencingAttribute": null,
+									"Description": null,
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "06b19e40-0de0-f011-8544-7ced8d21d821",
+											"Name": "Quick View Fields - Field Input - Description (Project)",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_description",
+												"SchemaName": "eyfrcc_description",
+												"Label": "Description",
+												"DataType": 643260001,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The main description of this record that provides a brief, description of the project.",
+												"MaxLength": 100000,
+												"Format": null
+											}
+										},
+										{
+											"Id": "681c8652-0de0-f011-8544-7ced8d21d821",
+											"Name": "Quick View Fields - Field Input - Proposed Start Date",
+											"Order": 2,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_proposedstartdate",
+												"SchemaName": "eyfrcc_proposedstartdate",
+												"Label": "Proposed Start Date",
+												"DataType": 643260008,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The proposed start date for this project.",
+												"DateTimeFormat": "DateOnly",
+												"DateTimeBehavior": "UserLocal"
+											}
+										},
+										{
+											"Id": "42f39858-0de0-f011-8544-7ced8d21d821",
+											"Name": "Quick View Fields - Field Input - Proposed End Date",
+											"Order": 3,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_proposedenddate",
+												"SchemaName": "eyfrcc_proposedenddate",
+												"Label": "Proposed End Date",
+												"DataType": 643260008,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The proposed end date for this project.",
+												"DateTimeFormat": "DateOnly",
+												"DateTimeBehavior": "UserLocal"
+											}
+										}
+									],
+									"Conditions": []
+								}
+							]
+						}
+					}
+				],
+				"Conditions": []
+			},
+			{
+				"Id": "63755ce0-3fdd-f011-8544-6045bdd311df",
+				"Name": "SF424 (Secondary Table)",
+				"EntityLogicalName": "eyfrcc_standardform424",
+				"ReferencingAttribute": "eyfrcc_childapplication",
+				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This form step resides on a different table than the form's primary table.</p></div>",
+				"Order": 3,
+				"Actions": [
+					{
+						"Id": "89faad05-40dd-f011-8544-6045bdd311df",
+						"Name": "SF424 - Field Input - Attestation",
+						"Order": 1,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_attestation",
+							"SchemaName": "eyfrcc_attestation",
+							"Label": "Attestation",
+							"DataType": 643260007,
+							"IsRequired": true,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "The attestation required to be confirmed in order to submit the form.",
+							"Choices": [
+								{
+									"Value": 1,
+									"Label": "Yes"
+								},
+								{
+									"Value": 0,
+									"Label": "No"
+								}
+							],
+							"DefaultValue": false
+						}
+					}
+				],
+				"Conditions": []
+			},
+			{
+				"Id": "ff7634e7-17e0-f011-8544-0022482dfe82",
+				"Name": "SF425 (Secondary Table)",
+				"EntityLogicalName": "eyfrcc_standardform425",
+				"ReferencingAttribute": "eyfrcc_childapplication",
+				"Description": null,
+				"Order": 4,
+				"Actions": [
+					{
+						"Id": "ad124460-18e0-f011-8544-0022482dfe82",
+						"Name": "SF425 (Secondary Table) - Table Entry - Expenditure",
+						"Order": 1,
+						"ChildOrder": 0,
+						"Type": 203300002,
+						"Properties": {
+							"DisplayName": "Indirect Expenses",
+							"ChildEntityLogicalName": "eyfrcc_expenditure",
+							"RelationshipName": "eyfrcc_expenditure_eyfrcc_childsecondaryreport_eyfrcc_standardform425",
+							"ValidationMessage": null,
+							"CreateEnabled": true,
+							"EditEnabled": true,
+							"DeleteEnabled": true,
+							"ValidationType": 643260001,
+							"ReferencingAttribute": "eyfrcc_childsecondaryreport",
+							"ChildFormSteps": [
+								{
+									"Id": "f07fea43-71c7-ee11-9079-0022482a91d0",
+									"Name": "Indirect Expenses",
+									"EntityLogicalName": "eyfrcc_expenditure",
+									"ReferencingAttribute": null,
+									"Description": null,
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "b58e1671-71c7-ee11-9079-0022482a91d0",
+											"Name": "Indirect Expenses - Field Input - Indirect Cost Rate",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_indirectcostrate",
+												"SchemaName": "eyfrcc_indirectcostrate",
+												"Label": "Indirect Cost Rate",
+												"DataType": 643260009,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "<div data-wrapper=\"true\" dir=\"ltr\" style=\"font-size:9pt;font-family:'Segoe UI','Helvetica Neue',sans-serif;\"><div><em>Select the indirect cost rate line that represents the type of indirect expense, the indirect cost rate in effect during the reporting period, and the beginning and ending effective dates for the rate.</em></div></div>",
+												"Targets": [
+													{
+														"EntityLogicalName": "eyfrcc_indirectcostratelines",
+														"Columns": ["eyfrcc_name", "createdon"],
+														"NavigationProperty": "eyfrcc_indirectcostrate"
+													}
+												]
+											}
+										},
+										{
+											"Id": "661bee86-71c7-ee11-9079-0022482a91d0",
+											"Name": "Indirect Expenses - Field Input - Indirect Cost Rate Base",
+											"Order": 2,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_indirectcostratebase",
+												"SchemaName": "eyfrcc_indirectcostratebase",
+												"Label": "Base",
+												"DataType": 643260002,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "<div data-wrapper=\"true\" dir=\"ltr\" style=\"font-size:9pt;font-family:'Segoe UI','Helvetica Neue',sans-serif;\"><div><em>Enter the amount of the base against which the rate(s) was applied.</em></div></div>",
+												"MinValue": 0.0,
+												"MaxValue": 1000000000.0,
+												"Precision": 2
+											}
+										},
+										{
+											"Id": "fb908a93-71c7-ee11-9079-0022482a91d0",
+											"Name": "Indirect Expenses - Field Input - Amount Charged",
+											"Order": 3,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_amountcharged",
+												"SchemaName": "eyfrcc_amountcharged",
+												"Label": "Amount Charged",
+												"DataType": 643260002,
+												"IsRequired": false,
+												"IsReadOnly": true,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "<div data-wrapper=\"true\" dir=\"ltr\" style=\"font-size:9pt;font-family:'Segoe UI','Helvetica Neue',sans-serif;\"><div><em>&nbsp;The amount of indirect costs charged during the time period specified. This field is automatically calculated.</em></div></div>",
+												"MinValue": 0.0,
+												"MaxValue": 1000000000.0,
+												"Precision": 2
+											}
+										},
+										{
+											"Id": "02b898b4-71c7-ee11-9079-0022482a91d0",
+											"Name": "Indirect Expenses - Field Input - Federal Share",
+											"Order": 4,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_federalshare",
+												"SchemaName": "eyfrcc_federalshare",
+												"Label": "Federal Share",
+												"DataType": 643260002,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "<div data-wrapper=\"true\" dir=\"ltr\" style=\"font-size:9pt;font-family:'Segoe UI','Helvetica Neue',sans-serif;\"><div><em>Enter the Federal share of the amount from \"Amount Charged\".</em></div></div>",
+												"MinValue": 0.0,
+												"MaxValue": 1000000000.0,
+												"Precision": 2
+											}
+										}
+									],
+									"Conditions": []
+								}
+							],
+							"ChildViewSteps": [
+								{
+									"Id": "983e498a-72c7-ee11-9079-0022482a91d0",
+									"Name": "Indirect Expenses",
+									"EntityLogicalName": "eyfrcc_expenditure",
+									"ReferencingAttribute": null,
+									"Description": null,
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "8d273d98-72c7-ee11-9079-0022482a91d0",
+											"Name": "Indirect Expenses - Field Input - Indirect Cost Rate",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_indirectcostrate",
+												"SchemaName": "eyfrcc_indirectcostrate",
+												"Label": "Indirect Cost Rate",
+												"DataType": 643260009,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The related indirect cost rate line from a negotiated indirect cost rate agreement in which assess the amount charged.",
+												"Targets": [
+													{
+														"EntityLogicalName": "eyfrcc_indirectcostratelines",
+														"Columns": ["eyfrcc_name", "createdon"],
+														"NavigationProperty": "eyfrcc_indirectcostrate"
+													}
+												]
+											}
+										},
+										{
+											"Id": "2867779f-72c7-ee11-9079-0022482a91d0",
+											"Name": "Indirect Expenses - Field Input - Indirect Cost Rate Base",
+											"Order": 2,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_indirectcostratebase",
+												"SchemaName": "eyfrcc_indirectcostratebase",
+												"Label": "Indirect Cost Rate Base",
+												"DataType": 643260002,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The amount of the base against which the rate(s) was applied.",
+												"MinValue": 0.0,
+												"MaxValue": 1000000000.0,
+												"Precision": 2
+											}
+										},
+										{
+											"Id": "58d2bba8-72c7-ee11-9079-0022482a91d0",
+											"Name": "Indirect Expenses - Field Input - Amount Charged",
+											"Order": 3,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_amountcharged",
+												"SchemaName": "eyfrcc_amountcharged",
+												"Label": "Amount Charged",
+												"DataType": 643260002,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The auto calculated amount of indirect costs charged during the time period specified. This is the related indirect cost rate multiplied by the base.",
+												"MinValue": 0.0,
+												"MaxValue": 1000000000.0,
+												"Precision": 2
+											}
+										},
+										{
+											"Id": "27d0bdae-72c7-ee11-9079-0022482a91d0",
+											"Name": "Indirect Expenses - Field Input - Federal Share",
+											"Order": 4,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_federalshare",
+												"SchemaName": "eyfrcc_federalshare",
+												"Label": "Federal Share",
+												"DataType": 643260002,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The Federal share of the amount in \"Amount Charged\".",
+												"MinValue": 0.0,
+												"MaxValue": 1000000000.0,
+												"Precision": 2
+											}
+										}
+									],
+									"Conditions": []
+								}
+							]
+						}
+					}
+				],
+				"Conditions": []
+			},
+			{
+				"Id": "a7e5ff8e-18e0-f011-8544-0022482dfe82",
+				"Name": "Submission",
+				"EntityLogicalName": "eyfrcc_childapplicationtest",
+				"ReferencingAttribute": null,
+				"Description": null,
+				"Order": 5,
+				"Actions": [
+					{
+						"Id": "eeff07c1-18e0-f011-8544-0022482dfe82",
+						"Name": "Submission - Field Input - Test Form Field",
+						"Order": 1,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_testformfield",
+							"SchemaName": "eyfrcc_testformfield",
+							"Label": "Test Form Field",
+							"DataType": 643260000,
+							"IsRequired": true,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "Test Form Field",
+							"MaxLength": 1000,
+							"Format": "Text"
 						}
 					}
 				],
