@@ -172,9 +172,41 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 
 	return (
 		<main className="page-content">
-			<div className="banner"></div>
+			<div className="banner">
+				<div className="container">
+					<div className="banner-main-content">
+						<div className="banner-title">
+							<h1>{config?.FundingOpportunity.FullName}</h1>
+						</div>
+						<div className="banner-details"></div>
+						<div className="banner-actions">
+							<button
+								type="button"
+								className="btn btn-default"
+								onClick={handleSaveDraft}
+								disabled={isSaving || (!formState.hasChanges && !formState.hasPendingChildren)}>
+								{isSaving ? "Saving..." : "Save Draft"}
+							</button>
+							<button type="button" className="btn btn-primary" onClick={handleValidateAndSubmit} disabled={isSaving}>
+								{isSaving ? "Submitting..." : "Validate & Submit"}
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
 			<div className="body-content">
 				<div className="container">
+					<div className="alert-container">
+						{/* Save message */}
+						{saveMessage && (
+							<div
+								className={`alert ${saveMessage.type === "success" ? "alert-success" : "alert-danger"}`}
+								role="alert"
+								style={{ margin: "20px 0" }}>
+								{saveMessage.text}
+							</div>
+						)}
+					</div>
 					<div className="multi-step-form-layout">
 						<nav className="multi-step-form-list-group">
 							<div className="progress list-group left">
@@ -191,6 +223,14 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 										</button>
 									);
 								})}
+							</div>
+							<div style={{ display: "flex", gap: "10px" }}>
+								<button type="button" className="nav-button" onClick={goToPrevious} disabled={!hasPrevious || isSaving}>
+									Previous
+								</button>
+								<button type="button" className="nav-button primary" onClick={goToNext} disabled={!hasNext || isSaving}>
+									Next
+								</button>
 							</div>
 						</nav>
 						<div className="steps-container">
@@ -212,42 +252,6 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 									/>
 								);
 							})}
-
-							{/* Save message */}
-							{saveMessage && (
-								<div
-									className={`alert ${saveMessage.type === "success" ? "alert-success" : "alert-danger"}`}
-									role="alert"
-									style={{ margin: "20px 0" }}>
-									{saveMessage.text}
-								</div>
-							)}
-
-							{/* Navigation and Save buttons */}
-							<footer className="step-footer" aria-label="Step navigation buttons">
-								<div style={{ display: "flex", gap: "10px", justifyContent: "space-between", flexWrap: "wrap" }}>
-									<div style={{ display: "flex", gap: "10px" }}>
-										<button type="button" className="nav-button" onClick={goToPrevious} disabled={!hasPrevious || isSaving}>
-											Previous
-										</button>
-										<button type="button" className="nav-button primary" onClick={goToNext} disabled={!hasNext || isSaving}>
-											Next
-										</button>
-									</div>
-									<div style={{ display: "flex", gap: "10px" }}>
-										<button
-											type="button"
-											className="btn btn-default"
-											onClick={handleSaveDraft}
-											disabled={isSaving || (!formState.hasChanges && !formState.hasPendingChildren)}>
-											{isSaving ? "Saving..." : "Save Draft"}
-										</button>
-										<button type="button" className="btn btn-primary" onClick={handleValidateAndSubmit} disabled={isSaving}>
-											{isSaving ? "Submitting..." : "Validate & Submit"}
-										</button>
-									</div>
-								</div>
-							</footer>
 						</div>
 					</div>
 				</div>

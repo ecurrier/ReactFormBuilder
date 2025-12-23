@@ -75,7 +75,7 @@ const App = () => {
 		} catch (error) {
 			console.error("Failed to load form configuration", error);
 			setErrorMessage(`Unable to load the form configuration: ${error.message}. Showing debug data instead.`);
-			setConfig(null);
+			setConfig(formConfig);
 			setIsDebugData(true);
 			setUrlParams({
 				recordId: null,

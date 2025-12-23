@@ -100,4 +100,27 @@ export const handlers = [
 			],
 		});
 	}),
+	http.get("*/_api/eyfrcc_projects*", async () => {
+		await delay(500);
+		return HttpResponse.json({
+			"@odata.context":
+				"https://eyga-fedcore2.crm.dynamics.com/api/data/v9.2/$metadata#eyfrcc_forminstances(eyfrcc_forminstanceid,eyfrcc_primaryrecordid,eyfrcc_primaryrecordlogicalname,_eyfrcc_versionid_value,eyfrcc_VersionId,eyfrcc_relatedrecords,eyfrcc_VersionId())",
+			value: [
+				{
+					"@odata.etag": 'W/"51348017"',
+					eyfrcc_name: "Evan's Test Project",
+					eyfrcc_projectid: "b1a5c3f4-6f4e-ec11-b6e6-0022481f8475",
+					createdon: "2024-05-01T15:52:12Z",
+					eyfrcc_description: "This is a test project created by Evan.",
+				},
+				{
+					"@odata.etag": 'W/"51348017"',
+					eyfrcc_name: "Cheryl's Test Project",
+					eyfrcc_projectid: "b1a5c3f4-6f4e-ec11-b6e6-0022481f8476",
+					createdon: "2024-05-02T10:30:00Z",
+					eyfrcc_description: "This is a test project created by Cheryl.",
+				},
+			],
+		});
+	}),
 ];
