@@ -157,23 +157,62 @@ export async function loadChildRecords(parentRecordId: string, config: ReactForm
  * @param entityName - Entity logical name (used for field path construction)
  * @returns Map of field path to field value
  */
-export function populateFieldsFromData(recordData: Entity, entityName: string): Map<string, any> {
+export function populateFieldsFromData(recordData: Entity, entityName: string, config?: ReactFormConfiguration): Map<string, any> {
 	const fieldValues = new Map<string, any>();
 
 	if (!recordData) {
 		return fieldValues;
 	}
 
+	const lookupFields = new Map<string, any>();
+	if (config?.Form?.Steps) {
+		config.Form.Steps.forEach((step) => {
+			step.Actions?.forEach((action) => {
+				if (action.Type === ActionType.FieldInput && action.Properties?.DataType === 643260009 && action.Properties?.LogicalName) {
+					lookupFields.set(action.Properties.LogicalName, action.Properties);
+				}
+			});
+		});
+	}
+
 	// Iterate through all properties in the record
 	Object.entries(recordData).forEach(([key, value]) => {
 		// Skip OData metadata fields
-		if (key.startsWith("@odata") || key.startsWith("_") || key.includes(".")) {
+		if (key.startsWith("@odata") || key.includes(".")) {
+			return;
+		}
+
+		if (key.startsWith("_")) {
 			return;
 		}
 
 		// Create field path: entityName.fieldLogicalName
 		const fieldPath = `${entityName}.${key}`;
 		fieldValues.set(fieldPath, value);
+	});
+
+	// Map lookup fields to EntityReference shape when present
+	lookupFields.forEach((properties, logicalName) => {
+		const idKey = `_${logicalName}_value`;
+		const lookupId = recordData[idKey];
+		if (!lookupId) {
+			return;
+		}
+
+		const logicalNameKey = `${idKey}@Microsoft.Dynamics.CRM.lookuplogicalname`;
+		const formattedValueKey = `${idKey}@OData.Community.Display.V1.FormattedValue`;
+		const lookupLogicalName = recordData[logicalNameKey] || properties.Targets?.[0]?.EntityLogicalName;
+		const lookupName = recordData[formattedValueKey];
+
+		if (!lookupLogicalName) {
+			return;
+		}
+
+		fieldValues.set(`${entityName}.${logicalName}`, {
+			id: lookupId,
+			logicalName: lookupLogicalName,
+			name: lookupName,
+		});
 	});
 
 	return fieldValues;

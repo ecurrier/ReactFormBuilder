@@ -33,7 +33,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	// Load record data into form state when recordData is provided
 	useEffect(() => {
 		if (recordData && primaryEntity) {
-			const fieldData = populateFieldsFromData(recordData, primaryEntity);
+			const fieldData = populateFieldsFromData(recordData, primaryEntity, config);
 			formState.initializeFormData(fieldData);
 		}
 	}, [recordData, primaryEntity, formState.initializeFormData]);
@@ -107,7 +107,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 					// Reload form data
 					const reloadedData = await reloadFormData({ formState, config, urlParams }, result.recordId);
 					if (reloadedData) {
-						const fieldData = populateFieldsFromData(reloadedData, primaryEntity);
+						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
 						formState.initializeFormData(fieldData);
 					}
 
@@ -152,7 +152,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 					// Reload form data
 					const reloadedData = await reloadFormData({ formState, config, urlParams }, result.recordId);
 					if (reloadedData) {
-						const fieldData = populateFieldsFromData(reloadedData, primaryEntity);
+						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
 						formState.initializeFormData(fieldData);
 					}
 				}
