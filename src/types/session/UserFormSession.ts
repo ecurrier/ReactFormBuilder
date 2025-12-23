@@ -1,3 +1,5 @@
+import { UserFormSessionEvent } from "./UserFormSessionEvent";
+
 export interface UserFormSession {
     Id: string;
     FormInstanceId: string;

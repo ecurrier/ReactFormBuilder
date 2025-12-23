@@ -1,9 +1,10 @@
 import { UserFormSession } from "./UserFormSession";
+import { Version } from "./Version";
 
 export interface FormInstance {
     Id: string;
     FormId: string;
-    VersionId: string;
+    Version: Version;
     PrimaryRecordId: string;
     PrimaryRecordLogicalName: string;
     RelatedRecords: FormInstanceRelatedRecord[];
