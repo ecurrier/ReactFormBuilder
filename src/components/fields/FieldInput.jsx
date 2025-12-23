@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { DataType, ActionType } from "../../constants/enums.js";
+import LookupControl from "./LookupControl.jsx";
 
 const formatDescription = (description) => {
 	if (!description) {
@@ -33,7 +34,7 @@ const getPlaceholder = (dataType) => {
 	}
 };
 
-const renderInput = (properties, inputId, placeholder, value, onChange) => {
+const renderInput = (properties, inputId, placeholder, value, onChange, label) => {
 	const commonProps = {
 		id: inputId,
 		name: properties.LogicalName ?? inputId,
@@ -104,10 +105,25 @@ const renderInput = (properties, inputId, placeholder, value, onChange) => {
 				</>
 			);
 		case DataType.SingleLineText:
-		case DataType.Lookup:
 			return (
 				<>
 					<input {...commonProps} type="text" maxLength={properties.MaxLength} />
+					<span className="ui"></span>
+				</>
+			);
+		case DataType.Lookup:
+			return (
+				<>
+					<LookupControl
+						inputId={inputId}
+						label={label}
+						placeholder={placeholder}
+						value={value}
+						onChange={onChange}
+						targets={properties.Targets || []}
+						isReadOnly={properties.IsReadOnly}
+						isRequired={properties.IsRequired}
+					/>
 					<span className="ui"></span>
 				</>
 			);
@@ -244,7 +260,7 @@ const FieldInput = ({ action, formState }) => {
 				label && (
 					<fieldset required={properties.IsRequired} role="radiogroup">
 						<legend className={`legend--label ${labelClassNames.join(" ")}`}>{label}</legend>
-						{renderInput(properties, inputId, placeholder, fieldValue, handleChange)}
+						{renderInput(properties, inputId, placeholder, fieldValue, handleChange, label)}
 					</fieldset>
 				)
 			) : (
@@ -254,7 +270,7 @@ const FieldInput = ({ action, formState }) => {
 							{label}
 						</label>
 					)}
-					{renderInput(properties, inputId, placeholder, fieldValue, handleChange)}
+					{renderInput(properties, inputId, placeholder, fieldValue, handleChange, label)}
 				</>
 			)}
 			{formatDescription(properties.Description)}
@@ -281,6 +297,14 @@ FieldInput.propTypes = {
 			IsHidden: PropTypes.bool,
 			ValidationMessage: PropTypes.string,
 			ChildActions: PropTypes.arrayOf(PropTypes.object),
+			Targets: PropTypes.arrayOf(
+				PropTypes.shape({
+					EntityLogicalName: PropTypes.string,
+					Columns: PropTypes.arrayOf(PropTypes.string),
+					NavigationProperty: PropTypes.string,
+					ReferencingAttribute: PropTypes.string,
+				})
+			),
 			Choices: PropTypes.arrayOf(
 				PropTypes.shape({
 					Value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
