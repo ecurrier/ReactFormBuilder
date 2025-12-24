@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import Step from "./Step.jsx";
 import { ActionType } from "../constants/enums.js";
@@ -22,6 +22,8 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const [visitedSteps, setVisitedSteps] = useState(new Set([0]));
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveMessage, setSaveMessage] = useState(null);
+	const [isBannerSticky, setIsBannerSticky] = useState(false);
+	const bannerSentinelRef = useRef(null);
 
 	// Get primary entity and record ID from URL params
 	const primaryEntity = config?.Form?.PrimaryApplicationTable?.TableLogicalName;
@@ -42,6 +44,23 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		setActiveStepIndex(0);
 		setVisitedSteps(new Set([0]));
 	}, [visibleSteps.length]);
+
+	useEffect(() => {
+		const sentinel = bannerSentinelRef.current;
+		if (!sentinel || typeof IntersectionObserver === "undefined") {
+			return;
+		}
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				setIsBannerSticky(!entry.isIntersecting);
+			},
+			{ threshold: 0 }
+		);
+
+		observer.observe(sentinel);
+		return () => observer.disconnect();
+	}, []);
 
 	if (visibleSteps.length === 0) {
 		return <p>No field inputs were provided in this configuration.</p>;
@@ -172,7 +191,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 
 	return (
 		<main className="page-content">
-			<div className="banner">
+			<div className={`banner${isBannerSticky ? " banner--sticky" : ""}`}>
 				<div className="container">
 					<div className="banner-main-content">
 						<div className="banner-title">
@@ -201,6 +220,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 					</div>
 				</div>
 			</div>
+			<div className="banner-sentinel" ref={bannerSentinelRef} aria-hidden="true" />
 			<div className="body-content">
 				<div className="container">
 					<div className="alert-container">
@@ -231,12 +251,28 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 									);
 								})}
 							</div>
-							<div style={{ display: "flex", gap: "10px" }}>
-								<button type="button" className="nav-button" onClick={goToPrevious} disabled={!hasPrevious || isSaving}>
-									Previous
+							<div className="step-nav-controls">
+								<button
+									type="button"
+									className="nav-button nav-button--previous"
+									onClick={goToPrevious}
+									disabled={!hasPrevious || isSaving}
+									aria-label="Previous step">
+									<span className="nav-button__icon" aria-hidden="true">
+										←
+									</span>
+									<span className="sr-only">Previous</span>
 								</button>
-								<button type="button" className="nav-button primary" onClick={goToNext} disabled={!hasNext || isSaving}>
-									Next
+								<button
+									type="button"
+									className="nav-button nav-button--next"
+									onClick={goToNext}
+									disabled={!hasNext || isSaving}
+									aria-label="Next step">
+									<span className="nav-button__icon" aria-hidden="true">
+										→
+									</span>
+									<span className="sr-only">Next</span>
 								</button>
 							</div>
 						</nav>
