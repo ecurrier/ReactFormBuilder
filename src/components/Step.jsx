@@ -94,6 +94,7 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 									fetchData={fetchFunc}
 									shouldLoadData={hasBeenVisited}
 									parentRecordId={recordId}
+									parentEntityName={step.EntityLogicalName}
 									formState={formState}
 									onSave={handleTableEntrySave}
 									onDelete={handleTableEntryDelete}

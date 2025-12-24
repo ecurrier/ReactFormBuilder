@@ -30,6 +30,7 @@ interface TableEntryActionConfig {
 	DeleteEnabled: boolean;
 	ValidationType?: number;
 	ReferencingAttribute: string;
+	ReferencingNavigationProperty?: string;
 	ChildFormSteps: FormStep[];
 	ChildViewSteps: FormStep[];
 }
@@ -44,28 +45,76 @@ interface TableEntryFormProps {
 
 export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialData, parentRecordId, onSave, onCancel }) => {
 	const [formData, setFormData] = useState<any>(initialData || {});
+	const metadataRef = React.useRef<Record<string, any>>({});
+	const getFieldKey = React.useCallback((path: string) => {
+		const parts = String(path).split(".");
+		return parts[parts.length - 1] || path;
+	}, []);
+
+	const registerField = React.useCallback(
+		(path: string, metadata: any, initialValue?: any) => {
+			metadataRef.current[path] = metadata;
+
+			if (initialValue !== undefined) {
+				const key = getFieldKey(path);
+				setFormData((prev) => (prev[key] === undefined ? { ...prev, [key]: initialValue } : prev));
+			}
+		},
+		[getFieldKey]
+	);
+
+	const updateFieldValue = React.useCallback(
+		(path: string, value: any) => {
+			const key = getFieldKey(path);
+			setFormData((prev) => ({ ...prev, [key]: value }));
+		},
+		[getFieldKey]
+	);
+
+	const getFieldValue = React.useCallback(
+		(path: string) => {
+			const key = getFieldKey(path);
+			return formData?.[key] ?? null;
+		},
+		[formData, getFieldKey]
+	);
+
+	const localFormState = React.useMemo(
+		() => ({
+			primaryEntityName: config.ChildEntityLogicalName,
+			registerField,
+			updateFieldValue,
+			getFieldValue,
+			getFieldMetadata: (path: string) => metadataRef.current[path],
+		}),
+		[config.ChildEntityLogicalName, getFieldValue, registerField, updateFieldValue]
+	);
 
 	// Collect all field actions from all steps
 	const allFieldActions = React.useMemo(() => {
-		const actions: FieldAction[] = [];
-		config.ChildFormSteps.forEach((step) => {
-			step.Actions.forEach((action) => {
+		const actions: Array<{ action: FieldAction; entityName?: string }> = [];
+		(config.ChildFormSteps || []).forEach((step) => {
+			(step.Actions || []).forEach((action) => {
 				if (action.Type === ActionType.FieldInput) {
-					actions.push(action);
+					actions.push({ action, entityName: step.EntityLogicalName });
 				}
 			});
 		});
-		return actions.sort((a, b) => a.Order - b.Order);
-	}, [config]);
+		return actions.sort((a, b) => (a.action.Order ?? 0) - (b.action.Order ?? 0));
+	}, [config.ChildFormSteps]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
 		// Add parent record reference
-		const dataToSave = {
-			...formData,
-			[config.ReferencingAttribute]: parentRecordId,
-		};
+		const referencingKey = config.ReferencingNavigationProperty || config.ReferencingAttribute;
+		const dataToSave =
+			referencingKey && parentRecordId
+				? {
+						...formData,
+						[referencingKey]: parentRecordId,
+					}
+				: { ...formData };
 
 		onSave(dataToSave);
 	};
@@ -85,10 +134,10 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 
 	return (
 		<form onSubmit={handleSubmit} className="table-entry-form">
-            <p className="control-label block text-right mb-4 required-legend">Required</p>
+			<p className="control-label block text-right mb-4 required-legend">Required</p>
 			<div className="form-fields">
-				{allFieldActions.map((action) => (
-					<FieldInput key={action.Id ?? action.Name} action={action} />
+				{allFieldActions.map(({ action, entityName }) => (
+					<FieldInput key={action.Id ?? action.Name} action={action} formState={localFormState} entityName={entityName} />
 				))}
 			</div>
 

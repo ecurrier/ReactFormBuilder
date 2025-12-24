@@ -328,6 +328,7 @@
 				"Name": "Application Overview",
 				"EntityLogicalName": "eyfrcc_childapplicationtest",
 				"ReferencingAttribute": null,
+				"ReferencingNavigationProperty": null,
 				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This is the description of the Application Overview step.</p></div>",
 				"Order": 1,
 				"Actions": [
@@ -361,6 +362,7 @@
 				"Name": "Primary Record - All Controls",
 				"EntityLogicalName": "eyfrcc_childapplicationtest",
 				"ReferencingAttribute": null,
+				"ReferencingNavigationProperty": null,
 				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This step will store every variation of all controls.</p></div>",
 				"Order": 2,
 				"Actions": [
@@ -590,12 +592,14 @@
 							"DeleteEnabled": true,
 							"ValidationType": 643260000,
 							"ReferencingAttribute": "eyfrcc_childapplication",
+							"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
 							"ChildFormSteps": [
 								{
 									"Id": "8deb7f0b-2ffd-ee11-a1ff-00224825b17a",
 									"Name": "Step 1",
 									"EntityLogicalName": "eyfrcc_subrecipient",
 									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
 									"Description": null,
 									"Order": 1,
 									"Actions": [
@@ -653,6 +657,7 @@
 									"Name": "Step 1",
 									"EntityLogicalName": "eyfrcc_subrecipient",
 									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
 									"Description": null,
 									"Order": 1,
 									"Actions": [
@@ -815,6 +820,7 @@
 									"Name": "Quick View Fields",
 									"EntityLogicalName": "eyfrcc_project",
 									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
 									"Description": null,
 									"Order": 1,
 									"Actions": [
@@ -898,6 +904,7 @@
 				"Name": "SF424 (Secondary Table)",
 				"EntityLogicalName": "eyfrcc_standardform424",
 				"ReferencingAttribute": "eyfrcc_childapplication",
+				"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
 				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This form step resides on a different table than the form's primary table.</p></div>",
 				"Order": 3,
 				"Actions": [
@@ -940,6 +947,7 @@
 				"Name": "SF425 (Secondary Table)",
 				"EntityLogicalName": "eyfrcc_standardform425",
 				"ReferencingAttribute": "eyfrcc_childapplication",
+				"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
 				"Description": null,
 				"Order": 4,
 				"Actions": [
@@ -959,12 +967,14 @@
 							"DeleteEnabled": true,
 							"ValidationType": 643260001,
 							"ReferencingAttribute": "eyfrcc_childsecondaryreport",
+							"ReferencingNavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_standardform425",
 							"ChildFormSteps": [
 								{
 									"Id": "f07fea43-71c7-ee11-9079-0022482a91d0",
 									"Name": "Indirect Expenses",
 									"EntityLogicalName": "eyfrcc_expenditure",
 									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
 									"Description": null,
 									"Order": 1,
 									"Actions": [
@@ -1074,6 +1084,7 @@
 									"Name": "Indirect Expenses",
 									"EntityLogicalName": "eyfrcc_expenditure",
 									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
 									"Description": null,
 									"Order": 1,
 									"Actions": [
@@ -1187,6 +1198,7 @@
 				"Name": "Submission",
 				"EntityLogicalName": "eyfrcc_childapplicationtest",
 				"ReferencingAttribute": null,
+				"ReferencingNavigationProperty": null,
 				"Description": null,
 				"Order": 5,
 				"Actions": [

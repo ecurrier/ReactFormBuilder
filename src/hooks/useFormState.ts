@@ -1,5 +1,5 @@
 import { useReducer, useCallback, useMemo } from "react";
-import type { FormState, FormStateAction, FieldMetadata, EntityChanges, PendingChildRecord } from "../types/FormState";
+import type { FormState, FormStateAction, FieldMetadata, EntityChanges, PendingChildRecord, RelatedRecordInfo } from "../types/FormState";
 import type { Entity } from "../types/Entity";
 import { serializeForApi, getEntitySetName } from "../utilities";
 
@@ -11,6 +11,7 @@ const initialFormState: FormState = {
 	metadata: {},
 	recordId: null,
 	primaryEntityName: "",
+	relatedRecords: {},
 	pendingChildRecords: {},
 };
 
@@ -98,6 +99,34 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
 			});
 
 			return { ...state, fields: updatedFields };
+		}
+
+		case "SET_RELATED_RECORD": {
+			const { entityName, record } = action;
+			return {
+				...state,
+				relatedRecords: {
+					...state.relatedRecords,
+					[entityName]: record,
+				},
+			};
+		}
+
+		case "CLEAR_RELATED_RECORDS": {
+			const { entityName } = action;
+			if (!entityName) {
+				return {
+					...state,
+					relatedRecords: {},
+				};
+			}
+
+			const updatedRecords = { ...state.relatedRecords };
+			delete updatedRecords[entityName];
+			return {
+				...state,
+				relatedRecords: updatedRecords,
+			};
 		}
 
 		case "ADD_PENDING_CHILD": {
@@ -251,6 +280,39 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	}, []);
 
 	/**
+	 * Tracks a related record ID for a secondary step entity.
+	 */
+	const setRelatedRecord = useCallback(
+		(entityName: string, recordId: string, referencingAttribute?: string, referencingNavigationProperty?: string) => {
+			const record: RelatedRecordInfo = {
+				recordId,
+				referencingAttribute,
+				referencingNavigationProperty,
+			};
+
+			dispatch({ type: "SET_RELATED_RECORD", entityName, record });
+		},
+		[]
+	);
+
+	/**
+	 * Retrieves related record info for a secondary step entity.
+	 */
+	const getRelatedRecord = useCallback(
+		(entityName: string): RelatedRecordInfo | undefined => {
+			return state.relatedRecords[entityName];
+		},
+		[state.relatedRecords]
+	);
+
+	/**
+	 * Clears related record entries, optionally filtered by entity name.
+	 */
+	const clearRelatedRecords = useCallback((entityName?: string) => {
+		dispatch({ type: "CLEAR_RELATED_RECORDS", entityName });
+	}, []);
+
+	/**
 	 * Adds a pending child record (for new records before parent exists).
 	 */
 	const addPendingChildRecord = useCallback((record: PendingChildRecord) => {
@@ -400,6 +462,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		// State
 		recordId: state.recordId,
 		primaryEntityName: state.primaryEntityName,
+		relatedRecords: state.relatedRecords,
 		pendingChildRecords: state.pendingChildRecords,
 		hasChanges,
 		hasPendingChildren,
@@ -412,6 +475,9 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		resetDirty,
 		resetForm,
 		initializeFormData,
+		setRelatedRecord,
+		getRelatedRecord,
+		clearRelatedRecords,
 
 		// Pending child record operations
 		addPendingChildRecord,

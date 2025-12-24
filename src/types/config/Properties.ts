@@ -96,6 +96,8 @@ export interface TableEntryProperties {
 	RelationshipName?: string;
 	/** Referencing attribute (lookup field on child) */
 	ReferencingAttribute?: string;
+	/** Navigation property for parent relationship */
+	ReferencingNavigationProperty?: string;
 	/** Validation type */
 	ValidationType?: number;
 	/** Validation error message */

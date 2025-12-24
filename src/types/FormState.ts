@@ -30,6 +30,18 @@ export interface FieldValue {
 }
 
 /**
+ * Tracks related record IDs for secondary step entities.
+ */
+export interface RelatedRecordInfo {
+	/** Record ID for the related entity */
+	recordId: string;
+	/** Referencing attribute for the relationship */
+	referencingAttribute?: string;
+	/** Navigation property for the relationship */
+	referencingNavigationProperty?: string;
+}
+
+/**
  * Represents a pending child record operation (create or update).
  * Used to track child records before parent record exists.
  */
@@ -40,6 +52,10 @@ export interface PendingChildRecord {
 	entityName: string;
 	/** Parent lookup field logical name */
 	referencingAttribute: string;
+	/** Navigation property for parent relationship (preferred for OData binds) */
+	referencingNavigationProperty?: string;
+	/** Parent entity logical name for this child record */
+	parentEntityName?: string;
 	/** Field data for the child record */
 	data: Partial<Entity>;
 	/** Whether this is a new record (vs update to unsaved record) */
@@ -59,6 +75,8 @@ export interface FormState {
 	recordId: string | null;
 	/** Primary entity name for this form */
 	primaryEntityName: string;
+	/** Related record IDs for secondary step entities */
+	relatedRecords: Record<string, RelatedRecordInfo>;
 	/** Map of pending child records keyed by entityName_tempId */
 	pendingChildRecords: Record<string, PendingChildRecord>;
 }
@@ -73,6 +91,8 @@ export type FormStateAction =
 	| { type: "RESET_DIRTY"; paths?: string[] }
 	| { type: "RESET_FORM" }
 	| { type: "INITIALIZE_FORM_DATA"; fieldData: Map<string, any> }
+	| { type: "SET_RELATED_RECORD"; entityName: string; record: RelatedRecordInfo }
+	| { type: "CLEAR_RELATED_RECORDS"; entityName?: string }
 	| { type: "ADD_PENDING_CHILD"; record: PendingChildRecord }
 	| { type: "UPDATE_PENDING_CHILD"; key: string; data: Partial<Entity> }
 	| { type: "DELETE_PENDING_CHILD"; key: string }

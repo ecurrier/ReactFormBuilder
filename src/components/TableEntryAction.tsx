@@ -21,6 +21,7 @@ interface FormStep {
 	Name: string;
 	EntityLogicalName: string;
 	ReferencingAttributeLogicalName: string | null;
+	ReferencingNavigationProperty?: string | null;
 	Order: number;
 	Actions: FieldAction[];
 	Conditions: any[];
@@ -35,6 +36,7 @@ interface TableEntryActionConfig {
 	DeleteEnabled: boolean;
 	ValidationType?: number;
 	ReferencingAttribute: string;
+	ReferencingNavigationProperty?: string;
 	ChildFormSteps: FormStep[];
 	ChildViewSteps: FormStep[];
 }
@@ -42,6 +44,7 @@ interface TableEntryActionConfig {
 export interface TableEntryActionProps {
 	config: TableEntryActionConfig;
 	parentRecordId?: string;
+	parentEntityName?: string;
 	formState?: any;
 	fetchData: (sort?: TableSortState, pagination?: PaginationOptions) => Promise<TableDataResponse<any>>;
 	shouldLoadData?: boolean;
@@ -69,6 +72,7 @@ const generateTempId = (): string => {
 export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	config,
 	parentRecordId,
+	parentEntityName,
 	formState,
 	fetchData,
 	shouldLoadData = true,
@@ -196,7 +200,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 									}}
 									aria-label="Actions"
 									aria-expanded={actionMenuOpen === row.id}>
-									⋮
+									...
 								</button>
 								<DropdownMenu
 									isOpen={actionMenuOpen === row.id}
@@ -213,7 +217,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		}
 
 		return cols;
-	}, [config, config.EditEnabled, config.DeleteEnabled]);
+	}, [actionMenuOpen, config, config.EditEnabled, config.DeleteEnabled, formState]);
 
 	const handleCreate = () => {
 		const tempId = generateTempId();
@@ -221,7 +225,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		setSidepaneOpen(true);
 	};
 
-	const handleEdit = async (record: any) => {
+	async function handleEdit(record: any) {
 		const recordId = record.id;
 
 		// Check if this is a pending record
@@ -269,9 +273,9 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				setIsLoadingRecord(false);
 			}
 		}
-	};
+	}
 
-	const handleDelete = async (record: any) => {
+	async function handleDelete(record: any) {
 		const recordId = record.id;
 
 		if (confirm(`Are you sure you want to delete this record?`)) {
@@ -289,11 +293,12 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				}
 			}
 		}
-	};
+	}
 
 	const handleFormSave = async (formData: any) => {
 		const recordId = editingRecord?.id;
 		const isNew = editingRecord?._isNew || !recordId;
+		const resolvedParentEntityName = parentEntityName || formState?.primaryEntityName;
 
 		// Check if this is a pending record (new or unsaved edit)
 		if (isTempId(recordId) || isNew) {
@@ -304,6 +309,8 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					id: pendingRecordId,
 					entityName: config.ChildEntityLogicalName,
 					referencingAttribute: config.ReferencingAttribute,
+					referencingNavigationProperty: config.ReferencingNavigationProperty || config.ReferencingAttribute,
+					parentEntityName: resolvedParentEntityName,
 					data: formData,
 					isNew,
 				};
