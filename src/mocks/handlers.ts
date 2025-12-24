@@ -123,6 +123,39 @@ export const handlers = [
 			],
 		});
 	}),
+	http.get("*/_api/eyfrcc_expenditures*", async () => {
+		await delay(500);
+		return HttpResponse.json({
+			value: [
+				{
+					"_eyfrcc_indirectcostrate_value@OData.Community.Display.V1.FormattedValue": "IDCR-00001000",
+					"_eyfrcc_indirectcostrate_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "eyfrcc_indirectcostrate",
+					"_eyfrcc_indirectcostrate_value@Microsoft.Dynamics.CRM.lookuplogicalname": "eyfrcc_indirectcostratelines",
+					_eyfrcc_indirectcostrate_value: "94b76e5c-3771-f011-b4cb-6045bdd311df",
+					"eyfrcc_indirectcostratebase_base@OData.Community.Display.V1.FormattedValue": "$500.00",
+					eyfrcc_indirectcostratebase_base: 500.0,
+					"eyfrcc_amountcharged@OData.Community.Display.V1.FormattedValue": "$50.00",
+					eyfrcc_amountcharged: 50.0,
+					"eyfrcc_federalshare@OData.Community.Display.V1.FormattedValue": "$2,000.00",
+					eyfrcc_federalshare: 2000.0,
+				},
+			],
+		});
+	}),
+	http.get("*/_api/eyfrcc_indirectcostratelineses*", async () => {
+		await delay(500);
+		return HttpResponse.json({
+			value: [
+				{
+					"@odata.etag": 'W/"41904727"',
+					"createdon@OData.Community.Display.V1.FormattedValue": "8/4/2025 9:31 AM",
+					createdon: "2025-08-04T13:31:49Z",
+					eyfrcc_name: "IDCR-00001000",
+					eyfrcc_indirectcostratelinesid: "94b76e5c-3771-f011-b4cb-6045bdd311df",
+				},
+			],
+		});
+	}),
 	http.post("*/_api/eyfrcc_childapplicationtests*", async ({ request }) => {
 		await delay(500);
 
@@ -130,6 +163,46 @@ export const handlers = [
 
 		const response = HttpResponse.json({}, 204);
 		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8499");
+
+		return response;
+	}),
+	http.post("*/_api/eyfrcc_standardform424s*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] Standard Form 424 POST request:", { request });
+
+		const response = HttpResponse.json({}, 204);
+		response.headers.set("entityid", "d3a5c3f4-6f4e-ec11-b6e6-0022481f8500");
+
+		return response;
+	}),
+	http.post("*/_api/eyfrcc_standardform425s*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] Standard Form 425 POST request:", { request });
+
+		const response = HttpResponse.json({}, 204);
+		response.headers.set("entityid", "c3a5c3f4-6f4e-ec11-b6e6-0022481f8500");
+
+		return response;
+	}),
+	http.post("*/_api/eyfrcc_subrecipients*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] Subrecipients POST request:", { request });
+
+		const response = HttpResponse.json({}, 204);
+		response.headers.set("entityid", "e4a5c3f4-6f4e-ec11-b6e6-0022481f8501");
+
+		return response;
+	}),
+	http.post("*/_api/eyfrcc_expenditures*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] Expenditures POST request:", { request });
+
+		const response = HttpResponse.json({}, 204);
+		response.headers.set("entityid", "f5a5c3f4-6f4e-ec11-b6e6-0022481f8502");
 
 		return response;
 	}),
