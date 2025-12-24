@@ -31,6 +31,8 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 	try {
 		// Step 1: Get all changed data from form state
 		const entityChanges = formState.serializeForSubmission();
+		const primaryEntity = config.Form?.PrimaryApplicationTable?.TableLogicalName;
+		const otherEntityChanges = entityChanges.filter((change: any) => change.entityName !== primaryEntity);
 		
 		if (entityChanges.length === 0 && !formState.hasPendingChildren) {
 			return {
@@ -40,9 +42,9 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 		}
 
 		// Step 2: Save parent record first
-		const primaryEntity = config.Form?.PrimaryApplicationTable?.TableLogicalName;
 		const parentChanges = entityChanges.find((change: any) => change.entityName === primaryEntity);
 		let parentRecordId = formState.recordId;
+		const shouldEnsureParentExists = !parentRecordId && (formState.hasPendingChildren || otherEntityChanges.length > 0);
 
 		if (parentChanges && parentChanges.data && Object.keys(parentChanges.data).length > 0) {
 			if (parentRecordId) {
@@ -59,6 +61,14 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 				// Update form state with new record ID
 				formState.setRecordId(parentRecordId);
 			}
+		} else if (shouldEnsureParentExists) {
+			parentRecordId = await createRecord(primaryEntity, {});
+
+			if (!parentRecordId) {
+				throw new Error("Failed to create parent record");
+			}
+
+			formState.setRecordId(parentRecordId);
 		}
 
 		// Step 3: Process pending child operations
@@ -103,10 +113,6 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 		}
 
 		// Step 4: Save dirty fields from other entities (child step entities)
-		const otherEntityChanges = entityChanges.filter(
-			(change: any) => change.entityName !== primaryEntity
-		);
-
 		for (const change of otherEntityChanges) {
 			try {
 				if (change.recordId) {

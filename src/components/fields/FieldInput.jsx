@@ -180,7 +180,7 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 	}
 };
 
-const FieldInput = ({ action, formState }) => {
+const FieldInput = ({ action, formState, entityName: stepEntityName }) => {
 	const properties = action?.Properties ?? {};
 	const inputId = properties.LogicalName ?? action.Id ?? action.Name ?? "field-input";
 	const label = properties.Label ?? action.Name ?? properties.LogicalName;
@@ -191,7 +191,7 @@ const FieldInput = ({ action, formState }) => {
 	const placeholder = hasChildFieldInputs ? undefined : getPlaceholder(properties.DataType);
 
 	// Get entity name from properties or default to primary entity
-	const entityName = properties.EntityName || formState?.primaryEntityName || "";
+	const entityName = properties.EntityName || stepEntityName || formState?.primaryEntityName || "";
 	const fieldPath = `${entityName}.${properties.LogicalName}`;
 
 	// Get field value from formState
@@ -230,7 +230,7 @@ const FieldInput = ({ action, formState }) => {
 				{formatDescription(properties.Description)}
 				<div className="child-action-group">
 					{childFieldActions.map((child) => (
-						<FieldInput key={child.Id ?? child.Name} action={child} formState={formState} />
+						<FieldInput key={child.Id ?? child.Name} action={child} formState={formState} entityName={entityName} />
 					))}
 				</div>
 			</div>
@@ -314,6 +314,7 @@ FieldInput.propTypes = {
 			CanSelectMultiple: PropTypes.bool,
 		}),
 	}).isRequired,
+	entityName: PropTypes.string,
 };
 
 export default FieldInput;

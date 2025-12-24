@@ -81,7 +81,7 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 				<div className="actions">
 					{actions.map((action) => {
 						if (action.Type === ActionType.FieldInput) {
-							return <FieldInput key={action.Id ?? action.Name} action={action} formState={formState} />;
+							return <FieldInput key={action.Id ?? action.Name} action={action} formState={formState} entityName={step.EntityLogicalName} />;
 						}
 
 						if (action.Type === ActionType.TableEntry) {
