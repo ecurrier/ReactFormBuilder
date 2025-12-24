@@ -1,5 +1,5 @@
 import { DOMParser, XMLSerializer } from "xmldom";
-import { getEntitySetName, serializeForApi } from "@utilities";
+import { getEntitySetName, sanitizeGuid, serializeForApi } from "@utilities";
 import type { ExtendedWindow } from "@types";
 import type { Entity } from "@types";
 import { ApiError, parseApiError } from "@api";
@@ -292,6 +292,7 @@ export const createRecord = async <T extends Entity>(entityName: string, data: P
 export const updateRecord = async <T extends Entity>(entityName: string, id: string, data: Partial<T>): Promise<void> => {
 	try {
 		const apiData = serializeForApi(data, entityName);
+		const normalizedId = sanitizeGuid(id);
 
 		const authorizationToken = await getAuthorizationToken();
 		const headers: HeadersInit = {
@@ -303,7 +304,7 @@ export const updateRecord = async <T extends Entity>(entityName: string, id: str
 			headers.__RequestVerificationToken = authorizationToken;
 		}
 
-		const response = await fetch(`${baseUrl}${getEntitySetName(entityName)}(${id})`, {
+		const response = await fetch(`${baseUrl}${getEntitySetName(entityName)}(${normalizedId})`, {
 			method: "PATCH",
 			headers,
 			body: JSON.stringify(apiData),
@@ -326,7 +327,8 @@ export const updateRecord = async <T extends Entity>(entityName: string, id: str
 
 export const deleteRecord = async (entityName: string, id: string): Promise<void> => {
 	try {
-		const response = await fetch(`${baseUrl}${getEntitySetName(entityName)}(${id})`, {
+		const normalizedId = sanitizeGuid(id);
+		const response = await fetch(`${baseUrl}${getEntitySetName(entityName)}(${normalizedId})`, {
 			method: "DELETE",
 			headers: {
 				Accept: "application/json",

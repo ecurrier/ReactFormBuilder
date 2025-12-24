@@ -3,7 +3,7 @@ import TableEntry, { TableColumn, TableSortState, PaginationOptions, TableDataRe
 import Sidepane from "./Sidepane";
 import TableEntryForm from "./TableEntryForm";
 import DropdownMenu, { DropdownMenuItem } from "./DropdownMenu";
-import { ActionType } from "../constants/enums.js";
+import { ActionType, DataType } from "../constants/enums.js";
 import { retrieveRecord } from "../hooks/api/Api";
 import { buildFetchXmlForRecord } from "../utilities/FetchXmlBuilder";
 
@@ -53,13 +53,19 @@ export interface TableEntryActionProps {
 	className?: string;
 }
 
+const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Check if an ID is a temporary UUID (starts with a specific pattern or doesn't match GUID format)
  */
-const isTempId = (id: string): boolean => {
+const isTempId = (id?: string | null): boolean => {
+	if (!id || typeof id !== "string") {
+		return false;
+	}
+
 	// Temp IDs are UUIDs but we can distinguish them by checking if they start with our pattern
 	// or by checking if they exist in pending records
-	return id.startsWith("temp-") || !id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+	return id.startsWith("temp-") || !guidPattern.test(id);
 };
 
 /**
@@ -67,6 +73,122 @@ const isTempId = (id: string): boolean => {
  */
 const generateTempId = (): string => {
 	return `temp-${crypto.randomUUID()}`;
+};
+
+const getFormattedValue = (row: Record<string, any>, logicalName: string): string | undefined => {
+	const formattedKey = `${logicalName}@OData.Community.Display.V1.FormattedValue`;
+	if (row[formattedKey]) {
+		return row[formattedKey];
+	}
+
+	const altFormattedKey = `_${logicalName}_value@OData.Community.Display.V1.FormattedValue`;
+	if (row[altFormattedKey]) {
+		return row[altFormattedKey];
+	}
+
+	return undefined;
+};
+
+const getLookupLogicalName = (row: Record<string, any>, logicalName: string, fallback?: string): string | undefined => {
+	const logicalNameKey = `${logicalName}@Microsoft.Dynamics.CRM.lookuplogicalname`;
+	if (row[logicalNameKey]) {
+		return row[logicalNameKey];
+	}
+
+	const altLogicalNameKey = `_${logicalName}_value@Microsoft.Dynamics.CRM.lookuplogicalname`;
+	if (row[altLogicalNameKey]) {
+		return row[altLogicalNameKey];
+	}
+
+	return fallback;
+};
+
+const normalizeLookupValue = (row: Record<string, any>, logicalName: string, fallbackLogicalName?: string) => {
+	const value = row[logicalName];
+	const altValueKey = `_${logicalName}_value`;
+	const rawValue = value ?? row[altValueKey];
+
+	if (value && typeof value === "object") {
+		if (!value.name) {
+			const formatted = getFormattedValue(row, logicalName);
+			if (formatted) {
+				return { ...value, name: formatted };
+			}
+		}
+		return value;
+	}
+
+	const formatted = getFormattedValue(row, logicalName);
+	if (formatted && rawValue) {
+		return {
+			id: rawValue,
+			logicalName: getLookupLogicalName(row, logicalName, fallbackLogicalName),
+			name: formatted,
+		};
+	}
+
+	if (rawValue) {
+		return {
+			id: rawValue,
+			logicalName: getLookupLogicalName(row, logicalName, fallbackLogicalName),
+			name: formatted,
+		};
+	}
+
+	return value;
+};
+
+const getDisplayValue = (row: Record<string, any>, logicalName: string): string => {
+	const value = row[logicalName];
+	if (value && typeof value === "object") {
+		if (value.name) {
+			return String(value.name);
+		}
+		if (value.id) {
+			return String(value.id);
+		}
+		return "";
+	}
+
+	const formatted = getFormattedValue(row, logicalName);
+	if (formatted) {
+		return String(formatted);
+	}
+
+	return value !== null && value !== undefined ? String(value) : "";
+};
+
+const resolveRecordId = (row: Record<string, any> | null | undefined, entityName?: string): string | undefined => {
+	if (!row) {
+		return undefined;
+	}
+
+	if (row.id && typeof row.id === "string") {
+		return row.id;
+	}
+
+	if (entityName) {
+		const primaryKey = `${entityName}id`;
+		const primaryValue = row[primaryKey];
+		if (typeof primaryValue === "string") {
+			return primaryValue;
+		}
+	}
+
+	const candidate = Object.entries(row).find(([key, value]) => {
+		if (typeof value !== "string") {
+			return false;
+		}
+		if (!guidPattern.test(value)) {
+			return false;
+		}
+		if (key.startsWith("_") || key.includes("@")) {
+			return false;
+		}
+		return key.toLowerCase().endsWith("id");
+	});
+
+	return candidate?.[1];
 };
 
 export const TableEntryAction: React.FC<TableEntryActionProps> = ({
@@ -85,6 +207,25 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	const [isLoadingRecord, setIsLoadingRecord] = useState(false);
 	const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
 	const tableRef = useRef<any>(null);
+	const getPendingChildRecords = formState?.getPendingChildRecords;
+
+	const lookupFieldInfo = React.useMemo(() => {
+		const info: Record<string, string | undefined> = {};
+		const viewStep = config.ChildViewSteps?.[0];
+		if (!viewStep?.Actions) {
+			return info;
+		}
+
+		viewStep.Actions.forEach((action) => {
+			if (action.Type === ActionType.FieldInput && action.Properties?.LogicalName && action.Properties?.DataType === DataType.Lookup) {
+				info[action.Properties.LogicalName] = action.Properties.Targets?.[0]?.EntityLogicalName;
+			}
+		});
+
+		return info;
+	}, [config.ChildViewSteps]);
+
+	const lookupFieldNames = React.useMemo(() => Object.keys(lookupFieldInfo), [lookupFieldInfo]);
 
 	// Create stable empty fetch function
 	const emptyFetch = React.useCallback(async () => ({ results: [], totalRecordCount: 0 }), []);
@@ -94,9 +235,24 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		async (sort?: TableSortState, pagination?: PaginationOptions): Promise<TableDataResponse<any>> => {
 			// Get persisted records from API
 			const apiResponse = await fetchData(sort, pagination);
+			const normalizedResults = apiResponse.results.map((row) => {
+				const updated = { ...row };
+				if (lookupFieldNames.length > 0) {
+					lookupFieldNames.forEach((logicalName) => {
+						updated[logicalName] = normalizeLookupValue(updated, logicalName, lookupFieldInfo[logicalName]);
+					});
+				}
+
+				const resolvedId = resolveRecordId(updated, config.ChildEntityLogicalName);
+				if (resolvedId && updated.id !== resolvedId) {
+					updated.id = resolvedId;
+				}
+
+				return updated;
+			});
 
 			// Get pending records from formState
-			const pendingRecords = formState?.getPendingChildRecords(config.ChildEntityLogicalName) || [];
+			const pendingRecords = getPendingChildRecords ? getPendingChildRecords(config.ChildEntityLogicalName) : [];
 
 			// Convert pending records to table format
 			const pendingTableRecords = pendingRecords.map((pending: any) => ({
@@ -106,15 +262,25 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			}));
 
 			// Merge: pending records go to top
-			const allResults = [...pendingTableRecords, ...apiResponse.results];
+			const allResults = [...pendingTableRecords, ...normalizedResults];
 
 			return {
 				results: allResults,
 				totalRecordCount: (apiResponse.totalRecordCount || 0) + pendingRecords.length,
 			};
 		},
-		[fetchData, formState, config.ChildEntityLogicalName]
+		[fetchData, getPendingChildRecords, config.ChildEntityLogicalName, lookupFieldInfo, lookupFieldNames]
 	);
+
+	const pendingCount = getPendingChildRecords ? getPendingChildRecords(config.ChildEntityLogicalName).length : 0;
+
+	React.useEffect(() => {
+		if (!shouldLoadData) {
+			return;
+		}
+
+		tableRef.current?.refresh();
+	}, [pendingCount, shouldLoadData]);
 
 	// Build columns from ChildViewSteps
 	const columns: TableColumn[] = React.useMemo(() => {
@@ -130,11 +296,8 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 						label: action.Properties.Label,
 						sortEnabled: true,
 						render: (row) => {
-							const value = row[action.Properties.LogicalName];
 							const isPending = row._isPending;
-
-							// Add visual distinction for pending records
-							const content = value !== null && value !== undefined ? String(value) : "";
+							const content = getDisplayValue(row, action.Properties.LogicalName);
 
 							if (isPending) {
 								return <span style={{ fontStyle: "italic", opacity: 0.8 }}>{content}</span>;
@@ -154,6 +317,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				label: "Actions",
 				sortEnabled: false,
 				render: (row) => {
+					const rowId = resolveRecordId(row, config.ChildEntityLogicalName);
 					const isPending = row._isPending;
 					const menuItems: DropdownMenuItem[] = [];
 
@@ -190,16 +354,18 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					return (
 						<div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
 							{badge}
-							<div className={`dropdown ${actionMenuOpen === row.id ? "open" : ""}`} style={{ position: "relative", display: "inline-block" }}>
+							<div
+								className={`dropdown ${actionMenuOpen === rowId ? "open" : ""}`}
+								style={{ position: "relative", display: "inline-block" }}>
 								<button
 									type="button"
 									className="btn btn-default dropdown-toggle"
 									onClick={(e) => {
 										e.stopPropagation();
-										setActionMenuOpen(actionMenuOpen === row.id ? null : row.id);
+										setActionMenuOpen(actionMenuOpen === rowId ? null : rowId || null);
 									}}
 									aria-label="Actions"
-									aria-expanded={actionMenuOpen === row.id}>
+									aria-expanded={actionMenuOpen === rowId}>
 									...
 								</button>
 								<DropdownMenu
@@ -217,7 +383,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		}
 
 		return cols;
-	}, [actionMenuOpen, config, config.EditEnabled, config.DeleteEnabled, formState]);
+	}, [actionMenuOpen, config, config.EditEnabled, config.DeleteEnabled]);
 
 	const handleCreate = () => {
 		const tempId = generateTempId();
@@ -226,7 +392,12 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	};
 
 	async function handleEdit(record: any) {
-		const recordId = record.id;
+		const recordId = resolveRecordId(record, config.ChildEntityLogicalName);
+
+		if (!recordId) {
+			console.error("Missing record ID for edit:", record);
+			return;
+		}
 
 		// Check if this is a pending record
 		if (isTempId(recordId)) {
@@ -246,7 +417,8 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			try {
 				// Get all field logical names from ChildFormSteps
 				const fieldNames = new Set<string>();
-				fieldNames.add(`${config.ChildEntityLogicalName}id`); // Add primary key
+				const primaryKey = `${config.ChildEntityLogicalName}id`;
+				fieldNames.add(primaryKey); // Add primary key
 
 				config.ChildFormSteps?.forEach((step) => {
 					step.Actions?.forEach((action) => {
@@ -262,7 +434,8 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				const fullRecord = await retrieveRecord(config.ChildEntityLogicalName, fetchXml);
 
 				if (fullRecord) {
-					setEditingRecord({ id: recordId, ...fullRecord, _isNew: false });
+					const resolvedId = recordId || fullRecord[primaryKey];
+					setEditingRecord({ id: resolvedId, ...fullRecord, _isNew: false });
 					setSidepaneOpen(true);
 				} else {
 					console.error("Failed to load record:", recordId);
@@ -276,7 +449,12 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	}
 
 	async function handleDelete(record: any) {
-		const recordId = record.id;
+		const recordId = resolveRecordId(record, config.ChildEntityLogicalName);
+
+		if (!recordId) {
+			console.error("Missing record ID for delete:", record);
+			return;
+		}
 
 		if (confirm(`Are you sure you want to delete this record?`)) {
 			// Check if this is a pending record

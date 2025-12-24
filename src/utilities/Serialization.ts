@@ -1,6 +1,14 @@
 import type { Entity, EntityReference } from "../types/Entity";
 import { getEntitySetName } from "./Common";
 
+export const sanitizeGuid = (value: string): string => {
+	if (!value) {
+		return value;
+	}
+
+	return value.startsWith("temp-") ? value.slice(5) : value;
+};
+
 /**
  * Serializes entity data for Dataverse Web API submission.
  * Transforms entity objects into OData-compatible format.
@@ -31,7 +39,8 @@ export const serializeForApi = (data: Partial<Entity>, entityName: string): Reco
 		if (typeof value === "object" && "id" in value && "logicalName" in value) {
 			const ref = value as EntityReference;
 			const targetEntitySetName = getEntitySetName(ref.logicalName);
-			serialized[`${key}@odata.bind`] = `/${targetEntitySetName}(${ref.id})`;
+			const normalizedId = sanitizeGuid(ref.id);
+			serialized[`${key}@odata.bind`] = `/${targetEntitySetName}(${normalizedId})`;
 			continue;
 		}
 

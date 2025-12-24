@@ -1,4 +1,5 @@
 import { getEntitySetName } from "./Common";
+import { sanitizeGuid } from "./Serialization";
 
 /**
  * FetchXML Builder Utilities
@@ -97,12 +98,13 @@ export const buildFetchXmlForChildRecords = (
 	columns: string[]
 ): string => {
 	const attributeElements = columns.map((col) => `<attribute name="${col}" />`).join("");
+	const normalizedParentId = sanitizeGuid(parentId);
 
 	return `<fetch>
 		<entity name="${childEntityName}">
 			${attributeElements}
 			<filter type="and">
-				<condition attribute="${referencingAttribute}" operator="eq" value="${parentId}" />
+				<condition attribute="${referencingAttribute}" operator="eq" value="${normalizedParentId}" />
 			</filter>
 		</entity>
 	</fetch>`;
@@ -211,12 +213,13 @@ export const addLinkEntity = (
  */
 export const buildFetchXmlForRecord = (entityName: string, recordId: string, columns: string[]): string => {
 	const attributeElements = columns.map((col) => `<attribute name="${col}" />`).join("");
+	const normalizedRecordId = sanitizeGuid(recordId);
 
 	return `<fetch top="1">
 		<entity name="${entityName}">
 			${attributeElements}
 			<filter type="and">
-				<condition attribute="${entityName}id" operator="eq" value="${recordId}" />
+				<condition attribute="${entityName}id" operator="eq" value="${normalizedRecordId}" />
 			</filter>
 		</entity>
 	</fetch>`;

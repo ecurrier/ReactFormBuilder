@@ -12,6 +12,10 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 		return Array.isArray(step.Actions) ? [...step.Actions].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0)) : [];
 	}, [step.Actions]);
 
+	const primaryEntityName = formState?.primaryEntityName;
+	const primaryRecordId = recordId || formState?.recordId;
+	const getRelatedRecord = formState?.getRelatedRecord;
+
 	// Memoize fetchData functions for each TableEntry action to prevent recreation on every render
 	const tableEntryFetchFunctions = useMemo(() => {
 		const fetchFuncs = new Map();
@@ -21,18 +25,41 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 				const config = action.Properties;
 				const fetchFunc = async (sort, pagination) => {
 					// Only fetch if we have a recordId
-					if (!recordId) {
+					const resolvedParentRecordId =
+						step.EntityLogicalName && primaryEntityName && step.EntityLogicalName !== primaryEntityName
+							? getRelatedRecord?.(step.EntityLogicalName)?.recordId
+							: primaryRecordId;
+
+					if (!resolvedParentRecordId) {
 						return {
 							results: [],
 							totalRecordCount: 0,
 						};
 					}
 
-					const columns = config.ChildViewSteps?.[0]?.Actions?.map((a) => a.Properties.LogicalName) || [];
-					const fetchXml = buildFetchXmlForChildRecords(config.ChildEntityLogicalName, config.ReferencingAttribute, recordId, columns);
+					const columns = config.ChildViewSteps?.[0]?.Actions?.map((a) => a.Properties.LogicalName).filter(Boolean) || [];
+					const primaryKey = `${config.ChildEntityLogicalName}id`;
+					if (!columns.includes(primaryKey)) {
+						columns.push(primaryKey);
+					}
+
+					const fetchXml = buildFetchXmlForChildRecords(
+						config.ChildEntityLogicalName,
+						config.ReferencingAttribute,
+						resolvedParentRecordId,
+						columns
+					);
 
 					try {
-						const response = await retrieveMultipleRecords(config.ChildEntityLogicalName, fetchXml, {});
+						const options = {};
+						if (sort?.key) {
+							options.orderBy = `${sort.key} ${sort.direction}`;
+						}
+						if (pagination) {
+							options.pagination = pagination;
+						}
+
+						const response = await retrieveMultipleRecords(config.ChildEntityLogicalName, fetchXml, options);
 
 						return {
 							results: response.results,
@@ -52,7 +79,7 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 		});
 
 		return fetchFuncs;
-	}, [actions, recordId]);
+	}, [actions, getRelatedRecord, primaryEntityName, primaryRecordId, step.EntityLogicalName]);
 
 	// Stable callbacks for TableEntry actions
 	const handleTableEntrySave = useCallback(async (data, recordId) => {
@@ -93,7 +120,11 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 									config={action.Properties}
 									fetchData={fetchFunc}
 									shouldLoadData={hasBeenVisited}
-									parentRecordId={recordId}
+									parentRecordId={
+										step.EntityLogicalName && primaryEntityName && step.EntityLogicalName !== primaryEntityName
+											? getRelatedRecord?.(step.EntityLogicalName)?.recordId
+											: primaryRecordId
+									}
 									parentEntityName={step.EntityLogicalName}
 									formState={formState}
 									onSave={handleTableEntrySave}
