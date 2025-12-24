@@ -9676,8 +9676,8 @@ a.label:focus {
 	top: 0;
 	z-index: 100;
 	align-self: start;
-	padding-top: 20px;
-	padding-bottom: 20px;
+	padding-top: 8px;
+	padding-bottom: 8px;
 	box-shadow:
 		0px 0px 10px 0px rgba(0, 0, 0, 0.4),
 		0px 1px 0px 0px rgba(0, 0, 0, 0.1);
@@ -9694,6 +9694,12 @@ a.label:focus {
 	-webkit-line-clamp: 3;
 	-webkit-box-orient: vertical;
 	padding-bottom: 1px;
+	font-size: 32px;
+}
+
+.banner--sticky .banner-actions-primary {
+	padding-top: 8px;
+	padding-bottom: 8px;
 }
 
 .banner-sentinel {
