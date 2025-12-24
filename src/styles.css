@@ -9696,6 +9696,11 @@ a.label:focus {
 	padding-bottom: 1px;
 }
 
+.banner-sentinel {
+	height: 1px;
+	width: 100%;
+}
+
 @keyframes stickyBannerAnimation {
 	0% {
 		transform: translateY(-100%);
@@ -30127,6 +30132,50 @@ html[dir="rtl"] .crmEntityFormView .cell.crmquickform-cell:first-child {
 
 .multi-step-form-list-group {
 	margin-bottom: 20px;
+}
+.multi-step-form-list-group .step-nav-controls {
+	display: flex;
+	justify-content: center;
+	gap: 12px;
+	margin-top: 16px;
+}
+.multi-step-form-list-group .nav-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 999px;
+	border: 1px solid var(--border-color-default);
+	background: var(--bg-default);
+	color: var(--text-default);
+	box-shadow: 0px 1px 3px 0px var(--shadow-color);
+	padding: 0;
+	transition:
+		transform 0.15s ease,
+		box-shadow 0.15s ease,
+		background-color 0.15s ease,
+		border-color 0.15s ease;
+}
+.multi-step-form-list-group .nav-button__icon {
+	font-size: 16px;
+	line-height: 1;
+}
+.multi-step-form-list-group .nav-button:hover:not(:disabled),
+.multi-step-form-list-group .nav-button:focus-visible:not(:disabled) {
+	transform: translateY(-1px);
+	box-shadow: 0px 2px 6px 0px var(--shadow-color);
+}
+.multi-step-form-list-group .nav-button--next {
+	background: var(--bg-primary);
+	border-color: var(--bg-primary);
+	color: var(--white);
+}
+.multi-step-form-list-group .nav-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	box-shadow: none;
+	transform: none;
 }
 .multi-step-form-list-group > .div-left {
 	width: 100% !important;
