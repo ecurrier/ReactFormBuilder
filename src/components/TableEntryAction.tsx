@@ -299,17 +299,21 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		if (isTempId(recordId) || isNew) {
 			// Save to pending state
 			if (formState) {
+				const pendingRecordId = recordId || generateTempId();
 				const pendingRecord = {
-					id: recordId || generateTempId(),
+					id: pendingRecordId,
+					entityName: config.ChildEntityLogicalName,
+					referencingAttribute: config.ReferencingAttribute,
 					data: formData,
+					isNew,
 				};
 
-				const key = `${config.ChildEntityLogicalName}_${pendingRecord.id}`;
+				const key = `${config.ChildEntityLogicalName}_${pendingRecordId}`;
 
 				if (isNew) {
-					formState.addPendingChildRecord(key, pendingRecord);
+					formState.addPendingChildRecord(pendingRecord);
 				} else {
-					formState.updatePendingChildRecord(key, pendingRecord);
+					formState.updatePendingChildRecord(key, formData);
 				}
 
 				setSidepaneOpen(false);

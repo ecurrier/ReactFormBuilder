@@ -15,7 +15,15 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		return [...config.Form.Steps].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0));
 	}, [config]);
 
-	const visibleSteps = useMemo(() => orderedSteps.filter((step) => step.Actions?.some((action) => action.Type === ActionType.FieldInput)), [orderedSteps]);
+	const visibleSteps = useMemo(
+		() =>
+			orderedSteps.filter((step) =>
+				step.Actions?.some((action) =>
+					[ActionType.FieldInput, ActionType.TableEntry, ActionType.FileUpload].includes(action.Type)
+				)
+			),
+		[orderedSteps]
+	);
 
 	const [activeStepIndex, setActiveStepIndex] = useState(0);
 	// Track which steps have been visited for lazy loading

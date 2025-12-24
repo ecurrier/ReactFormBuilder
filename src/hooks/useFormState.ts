@@ -354,6 +354,16 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	);
 
 	/**
+	 * Gets the metadata for a field path.
+	 */
+	const getFieldMetadata = useCallback(
+		(path: string): FieldMetadata | undefined => {
+			return state.metadata[path];
+		},
+		[state.metadata]
+	);
+
+	/**
 	 * Checks if a field is dirty.
 	 */
 	const isFieldDirty = useCallback(
@@ -390,6 +400,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		// State
 		recordId: state.recordId,
 		primaryEntityName: state.primaryEntityName,
+		pendingChildRecords: state.pendingChildRecords,
 		hasChanges,
 		hasPendingChildren,
 		dirtyFields,
@@ -411,6 +422,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 
 		// Getters
 		getFieldValue,
+		getFieldMetadata,
 		isFieldDirty,
 		getChangedData,
 		serializeForSubmission,
