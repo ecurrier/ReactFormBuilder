@@ -123,4 +123,14 @@ export const handlers = [
 			],
 		});
 	}),
+	http.post("*/_api/eyfrcc_childapplicationtests*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] Child Application Test POST request:", { request });
+
+		const response = HttpResponse.json({}, 204);
+		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8499");
+
+		return response;
+	}),
 ];

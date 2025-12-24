@@ -23571,8 +23571,8 @@ html[dir="ltr"] li a {
 	content: "";
 	position: absolute;
 	left: 26px;
-	top: 14px;
-	bottom: 14px;
+	top: 0;
+	bottom: 0;
 	width: 2px;
 	background: var(--gray-300);
 }
@@ -23669,9 +23669,9 @@ html[dir="ltr"] li a {
 /* sticky behavior for desktop */
 @media (min-width: 992px) {
 	.list-group.progress.left {
-		position: static;
-		top: auto;
-		align-self: stretch;
+		position: sticky;
+		top: 110px;
+		align-self: flex-start;
 	}
 }
 
