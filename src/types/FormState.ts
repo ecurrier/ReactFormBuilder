@@ -77,6 +77,8 @@ export interface FormState {
 	primaryEntityName: string;
 	/** Related record IDs for secondary step entities */
 	relatedRecords: Record<string, RelatedRecordInfo>;
+	/** Map of child entity names to record maps */
+	childRecords: Record<string, Record<string, Entity>>;
 	/** Map of pending child records keyed by entityName_tempId */
 	pendingChildRecords: Record<string, PendingChildRecord>;
 }
@@ -93,6 +95,9 @@ export type FormStateAction =
 	| { type: "INITIALIZE_FORM_DATA"; fieldData: Map<string, any> }
 	| { type: "SET_RELATED_RECORD"; entityName: string; record: RelatedRecordInfo }
 	| { type: "CLEAR_RELATED_RECORDS"; entityName?: string }
+	| { type: "SET_CHILD_RECORDS"; entityName: string; records: Entity[] }
+	| { type: "UPSERT_CHILD_RECORD"; entityName: string; record: Entity }
+	| { type: "CLEAR_CHILD_RECORDS"; entityName?: string }
 	| { type: "ADD_PENDING_CHILD"; record: PendingChildRecord }
 	| { type: "UPDATE_PENDING_CHILD"; key: string; data: Partial<Entity> }
 	| { type: "DELETE_PENDING_CHILD"; key: string }

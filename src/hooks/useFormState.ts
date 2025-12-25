@@ -12,7 +12,22 @@ const initialFormState: FormState = {
 	recordId: null,
 	primaryEntityName: "",
 	relatedRecords: {},
+	childRecords: {},
 	pendingChildRecords: {},
+};
+
+const resolveRecordId = (entityName: string, record: Entity): string | null => {
+	if (record && typeof record.id === "string") {
+		return record.id;
+	}
+
+	const entityKey = `${entityName}id`;
+	const entityValue = record?.[entityKey];
+	if (typeof entityValue === "string") {
+		return entityValue;
+	}
+
+	return null;
 };
 
 /**
@@ -126,6 +141,62 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
 			return {
 				...state,
 				relatedRecords: updatedRecords,
+			};
+		}
+
+		case "SET_CHILD_RECORDS": {
+			const { entityName, records } = action;
+			const recordMap: Record<string, Entity> = {};
+
+			records.forEach((record) => {
+				const recordId = resolveRecordId(entityName, record);
+				if (recordId) {
+					recordMap[recordId] = record;
+				}
+			});
+
+			return {
+				...state,
+				childRecords: {
+					...state.childRecords,
+					[entityName]: recordMap,
+				},
+			};
+		}
+
+		case "UPSERT_CHILD_RECORD": {
+			const { entityName, record } = action;
+			const recordId = resolveRecordId(entityName, record);
+			if (!recordId) {
+				return state;
+			}
+
+			return {
+				...state,
+				childRecords: {
+					...state.childRecords,
+					[entityName]: {
+						...(state.childRecords[entityName] || {}),
+						[recordId]: record,
+					},
+				},
+			};
+		}
+
+		case "CLEAR_CHILD_RECORDS": {
+			const { entityName } = action;
+			if (!entityName) {
+				return {
+					...state,
+					childRecords: {},
+				};
+			}
+
+			const updatedChildRecords = { ...state.childRecords };
+			delete updatedChildRecords[entityName];
+			return {
+				...state,
+				childRecords: updatedChildRecords,
 			};
 		}
 
@@ -313,6 +384,37 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	}, []);
 
 	/**
+	 * Sets all child records for an entity.
+	 */
+	const setChildRecords = useCallback((entityName: string, records: Entity[]) => {
+		dispatch({ type: "SET_CHILD_RECORDS", entityName, records });
+	}, []);
+
+	/**
+	 * Adds or updates a child record for an entity.
+	 */
+	const upsertChildRecord = useCallback((entityName: string, record: Entity) => {
+		dispatch({ type: "UPSERT_CHILD_RECORD", entityName, record });
+	}, []);
+
+	/**
+	 * Clears child records, optionally filtered by entity name.
+	 */
+	const clearChildRecords = useCallback((entityName?: string) => {
+		dispatch({ type: "CLEAR_CHILD_RECORDS", entityName });
+	}, []);
+
+	/**
+	 * Gets child records for an entity.
+	 */
+	const getChildRecords = useCallback(
+		(entityName: string): Entity[] => {
+			return Object.values(state.childRecords[entityName] || {});
+		},
+		[state.childRecords]
+	);
+
+	/**
 	 * Adds a pending child record (for new records before parent exists).
 	 */
 	const addPendingChildRecord = useCallback((record: PendingChildRecord) => {
@@ -463,6 +565,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		recordId: state.recordId,
 		primaryEntityName: state.primaryEntityName,
 		relatedRecords: state.relatedRecords,
+		childRecords: state.childRecords,
 		pendingChildRecords: state.pendingChildRecords,
 		hasChanges,
 		hasPendingChildren,
@@ -478,6 +581,10 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		setRelatedRecord,
 		getRelatedRecord,
 		clearRelatedRecords,
+		setChildRecords,
+		upsertChildRecord,
+		clearChildRecords,
+		getChildRecords,
 
 		// Pending child record operations
 		addPendingChildRecord,
