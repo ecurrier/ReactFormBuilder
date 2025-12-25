@@ -30,6 +30,8 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const [visitedSteps, setVisitedSteps] = useState(new Set([0]));
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveMessage, setSaveMessage] = useState(null);
+	const [saveProgress, setSaveProgress] = useState([]);
+	const [saveErrors, setSaveErrors] = useState([]);
 	const [isBannerSticky, setIsBannerSticky] = useState(false);
 	const bannerSentinelRef = useRef(null);
 
@@ -69,6 +71,110 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		observer.observe(sentinel);
 		return () => observer.disconnect();
 	}, []);
+
+	const getScopeLabel = (scope) => {
+		const normalizedScope = typeof scope === "string" ? scope.toLowerCase() : "primary";
+
+		switch (normalizedScope) {
+			case "primary":
+				return "Primary";
+			case "secondary":
+				return "Secondary";
+			case "child":
+				return "Child";
+			default:
+				return normalizedScope.charAt(0).toUpperCase() + normalizedScope.slice(1);
+		}
+	};
+
+	const formatSaveError = (error, fallbackEntityName = "Unknown") => {
+		if (typeof error === "string") {
+			return error;
+		}
+
+		const entityName = error?.entityName || fallbackEntityName;
+		const recordLabel = error?.recordId ? ` (${error.recordId})` : "";
+		const message = error?.message || "Unknown error";
+		return `${entityName}${recordLabel}: ${message}`;
+	};
+
+	const groupedSaveErrors = useMemo(() => {
+		const grouped = new Map();
+
+		const ensureGroup = (scope, entityName) => {
+			const normalizedScope = scope || "primary";
+			const normalizedEntity = entityName || "Unknown";
+			const key = `${normalizedScope}:${normalizedEntity}`;
+
+			if (!grouped.has(key)) {
+				grouped.set(key, {
+					scope: normalizedScope,
+					entityName: normalizedEntity,
+					total: 0,
+					saved: 0,
+					failed: 0,
+					errors: [],
+				});
+			}
+
+			return grouped.get(key);
+		};
+
+		saveProgress.forEach((entry) => {
+			if (!entry) {
+				return;
+			}
+
+			const scope = entry.scope || entry.entityScope || "primary";
+			const entityName = entry.entityName || entry.entity || "Unknown";
+			const group = ensureGroup(scope, entityName);
+			const hasCounts = ["total", "saved", "failed"].some((key) => Number.isFinite(entry[key]));
+
+			if (hasCounts) {
+				const total = Number.isFinite(entry.total) ? entry.total : (Number.isFinite(entry.saved) ? entry.saved : 0) + (Number.isFinite(entry.failed) ? entry.failed : 0);
+				group.total += total;
+				group.saved += Number.isFinite(entry.saved) ? entry.saved : 0;
+				group.failed += Number.isFinite(entry.failed) ? entry.failed : 0;
+			} else {
+				group.total += 1;
+				const status = entry.status || entry.result || entry.state;
+				const isSuccess = entry.success === true || status === "success" || status === "saved";
+				const isFailure = entry.success === false || status === "failed" || status === "error";
+
+				if (isSuccess) {
+					group.saved += 1;
+				}
+
+				if (isFailure) {
+					group.failed += 1;
+				}
+			}
+		});
+
+		saveErrors.forEach((error) => {
+			if (!error) {
+				return;
+			}
+
+			if (typeof error === "string") {
+				const group = ensureGroup("primary", "Unknown");
+				group.errors.push({ message: error });
+				group.total = Math.max(group.total, group.errors.length);
+				group.failed = Math.max(group.failed, group.errors.length);
+				return;
+			}
+
+			const scope = error.scope || error.entityScope || "primary";
+			const entityName = error.entityName || "Unknown";
+			const group = ensureGroup(scope, entityName);
+
+			group.errors.push(error);
+			group.total = Math.max(group.total, group.errors.length);
+			group.failed = Math.max(group.failed, group.errors.length);
+		});
+
+		return Array.from(grouped.values());
+	}, [saveErrors, saveProgress]);
 
 	if (visibleSteps.length === 0) {
 		return <p>No field inputs were provided in this configuration.</p>;
@@ -113,6 +219,8 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const handleSaveDraft = async () => {
 		setIsSaving(true);
 		setSaveMessage(null);
+		setSaveErrors([]);
+		setSaveProgress([]);
 
 		try {
 			const result = await executeSaveDraft({
@@ -120,6 +228,9 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 				config,
 				urlParams,
 			});
+
+			setSaveErrors(result.errors || []);
+			setSaveProgress(result.saveProgress || []);
 
 			if (result.success) {
 				setSaveMessage({ type: "success", text: "Draft saved successfully" });
@@ -142,9 +253,10 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 					// window.history.replaceState({}, '', `?recordId=${result.recordId}&versionId=${urlParams.versionId}`);
 				}
 			} else {
+				const errorText = result.errors?.map((error) => formatSaveError(error)).join(", ");
 				setSaveMessage({
 					type: "error",
-					text: result.errors?.join(", ") || "Failed to save draft",
+					text: errorText || "Failed to save draft",
 				});
 			}
 		} catch (error) {
@@ -158,6 +270,8 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const handleValidateAndSubmit = async () => {
 		setIsSaving(true);
 		setSaveMessage(null);
+		setSaveErrors([]);
+		setSaveProgress([]);
 
 		try {
 			const result = await executeValidateAndSubmit({
@@ -165,6 +279,9 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 				config,
 				urlParams,
 			});
+
+			setSaveErrors(result.errors || []);
+			setSaveProgress(result.saveProgress || []);
 
 			if (result.success) {
 				setSaveMessage({ type: "success", text: "Form submitted successfully" });
@@ -184,9 +301,10 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 					}
 				}
 			} else {
+				const errorText = result.errors?.map((error) => formatSaveError(error)).join(", ");
 				setSaveMessage({
 					type: "error",
-					text: result.errors?.join(", ") || "Validation failed",
+					text: errorText || "Validation failed",
 				});
 			}
 		} catch (error) {
@@ -195,6 +313,20 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		} finally {
 			setIsSaving(false);
 		}
+	};
+
+	const renderGroupStatusIcon = (group) => {
+		const computedTotal = Math.max(group.total, group.saved + group.failed, group.errors.length);
+
+		if (computedTotal > 0 && group.saved >= computedTotal) {
+			return "✅";
+		}
+
+		if (computedTotal > 0 && group.failed >= computedTotal) {
+			return "❌";
+		}
+
+		return "⚠️";
 	};
 
 	return (
@@ -239,6 +371,55 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 								role="alert"
 								style={{ margin: "20px 0" }}>
 								{saveMessage.text}
+							</div>
+						)}
+						{(isSaving || groupedSaveErrors.length > 0) && (
+							<div className="save-progress-overlay" role="status" aria-live="polite">
+								<div className="save-progress-overlay__content">
+									<h2 className="save-progress-overlay__title">Save summary</h2>
+									{groupedSaveErrors.length === 0 ? (
+										<p className="save-progress-overlay__message">Saving records...</p>
+									) : (
+										<ul className="save-progress-overlay__groups">
+											{groupedSaveErrors.map((group) => {
+												const total = Math.max(group.total, group.saved + group.failed, group.errors.length);
+												let failed = Math.min(Math.max(group.failed, group.errors.length), total);
+												let saved = Math.min(group.saved, total);
+
+												if (saved + failed < total) {
+													saved = total - failed;
+												}
+
+												const scopeLabel = getScopeLabel(group.scope);
+
+												return (
+													<li key={`${group.scope}-${group.entityName}`} className="save-progress-overlay__group">
+														<div className="save-progress-overlay__group-header">
+															<span className="save-progress-overlay__group-status" aria-hidden="true">
+																{renderGroupStatusIcon({ ...group, total, saved, failed })}
+															</span>
+															<span className="save-progress-overlay__group-title">
+																{scopeLabel}: {group.entityName}
+															</span>
+														</div>
+														<div className="save-progress-overlay__group-counts">
+															<span>Total: {total}</span>
+															<span>Saved: {saved}</span>
+															<span>Failed: {failed}</span>
+														</div>
+														{group.errors.length > 0 && (
+															<ul className="save-progress-overlay__errors">
+																{group.errors.map((error, index) => (
+																	<li key={`${group.entityName}-error-${index}`}>{formatSaveError(error, group.entityName)}</li>
+																))}
+															</ul>
+														)}
+													</li>
+												);
+											})}
+										</ul>
+									)}
+								</div>
 							</div>
 						)}
 					</div>
