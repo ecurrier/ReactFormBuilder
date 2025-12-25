@@ -32,6 +32,9 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveMessage, setSaveMessage] = useState(null);
 	const [saveProgress, setSaveProgress] = useState([]);
+	const [saveErrors, setSaveErrors] = useState([]);
+	const [savePhase, setSavePhase] = useState("idle");
+	const [showSaveOverlay, setShowSaveOverlay] = useState(false);
 	const [isBannerSticky, setIsBannerSticky] = useState(false);
 	const bannerSentinelRef = useRef(null);
 
@@ -141,6 +144,32 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		});
 	}, []);
 
+	const groupedErrorSummary = React.useMemo(() => {
+		const groups = new Map();
+
+		saveErrors.forEach((error) => {
+			if (!error) {
+				return;
+			}
+
+			const scope = error.phase === "secondary" ? "secondary" : error.phase === "child" ? "child" : "primary";
+			const entityName = error.entityName || "Unknown";
+			const key = `${scope}:${entityName}`;
+
+			if (!groups.has(key)) {
+				groups.set(key, {
+					scope,
+					entityName,
+					errors: [],
+				});
+			}
+
+			groups.get(key).errors.push(error);
+		});
+
+		return Array.from(groups.values());
+	}, [saveErrors]);
+
 	const groupedSaveProgress = React.useMemo(() => {
 		const groups = new Map();
 
@@ -171,6 +200,39 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		return Array.from(groups.values());
 	}, [saveProgress]);
 
+	const groupedSaveSummary = React.useMemo(() => {
+		const progressMap = new Map();
+
+		groupedSaveProgress.forEach((group) => {
+			progressMap.set(`${group.scope}:${group.entityName}`, {
+				scope: group.scope,
+				entityName: group.entityName,
+				total: group.total,
+				saved: group.saved,
+				failed: group.failed,
+				errors: [],
+			});
+		});
+
+		groupedErrorSummary.forEach((group) => {
+			const key = `${group.scope}:${group.entityName}`;
+			if (!progressMap.has(key)) {
+				progressMap.set(key, {
+					scope: group.scope,
+					entityName: group.entityName,
+					total: 0,
+					saved: 0,
+					failed: group.errors.length,
+					errors: [],
+				});
+			}
+
+			progressMap.get(key).errors = group.errors;
+		});
+
+		return Array.from(progressMap.values());
+	}, [groupedSaveProgress, groupedErrorSummary]);
+
 	const renderGroupStatus = (group) => {
 		if (group.total === 0) {
 			return { icon: "⏳", text: "Queued" };
@@ -181,6 +243,26 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		}
 
 		if (group.failed === group.total) {
+			return { icon: "❌", text: "Failed" };
+		}
+
+		if (group.failed > 0) {
+			return { icon: "⚠️", text: `${group.saved}/${group.total} saved` };
+		}
+
+		return { icon: "⏳", text: `${group.saved}/${group.total} saved` };
+	};
+
+	const renderSummaryStatus = (group) => {
+		if (group.total === 0 && group.failed > 0) {
+			return { icon: "❌", text: "Failed" };
+		}
+
+		if (group.total > 0 && group.saved === group.total) {
+			return { icon: "✅", text: "Saved" };
+		}
+
+		if (group.total > 0 && group.failed === group.total) {
 			return { icon: "❌", text: "Failed" };
 		}
 
@@ -214,6 +296,44 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 			})
 			.join(", ");
 	};
+
+	const handleCloseSaveOverlay = () => {
+		setShowSaveOverlay(false);
+		setSavePhase("idle");
+		setSaveProgress([]);
+		setSaveErrors([]);
+	};
+
+	const stepErrorMap = React.useMemo(() => {
+		const errorEntities = new Set(
+			saveErrors
+				.map((error) => error?.entityName)
+				.filter(Boolean)
+		);
+
+		if (errorEntities.size === 0) {
+			return new Set();
+		}
+
+		const indices = new Set();
+
+		visibleSteps.forEach((step, index) => {
+			if (step.EntityLogicalName && errorEntities.has(step.EntityLogicalName)) {
+				indices.add(index);
+				return;
+			}
+
+			step.Actions?.forEach((action) => {
+				if (action.Type === ActionType.TableEntry && action.Properties?.ChildEntityLogicalName) {
+					if (errorEntities.has(action.Properties.ChildEntityLogicalName)) {
+						indices.add(index);
+					}
+				}
+			});
+		});
+
+		return indices;
+	}, [saveErrors, visibleSteps]);
 
 	const clampIndex = (index) => {
 		if (visibleSteps.length === 0) {
@@ -255,6 +375,9 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		setIsSaving(true);
 		setSaveMessage(null);
 		setSaveProgress(buildInitialSaveProgress());
+		setSaveErrors([]);
+		setSavePhase("saving");
+		setShowSaveOverlay(true);
 
 		try {
 			const result = await executeSaveDraft({
@@ -266,6 +389,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 
 			if (result.success) {
 				setSaveMessage({ type: "success", text: "Draft saved successfully" });
+				setSaveErrors([]);
 
 				// If this was a new record, populate form lookup and reload
 				if (!primaryRecordId && result.recordId) {
@@ -289,12 +413,15 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 					type: "error",
 					text: formatSaveErrors(result.errors),
 				});
+				setSaveErrors(result.errors || []);
 			}
 		} catch (error) {
 			console.error("Save draft error:", error);
 			setSaveMessage({ type: "error", text: error.message || "An error occurred while saving" });
+			setSaveErrors([{ message: error.message || "An error occurred while saving", phase: "save" }]);
 		} finally {
 			setIsSaving(false);
+			setSavePhase("summary");
 		}
 	};
 
@@ -302,6 +429,9 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		setIsSaving(true);
 		setSaveMessage(null);
 		setSaveProgress(buildInitialSaveProgress());
+		setSaveErrors([]);
+		setSavePhase("saving");
+		setShowSaveOverlay(true);
 
 		try {
 			const result = await executeValidateAndSubmit({
@@ -313,6 +443,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 
 			if (result.success) {
 				setSaveMessage({ type: "success", text: "Form submitted successfully" });
+				setSaveErrors([]);
 
 				// If this was a new record, populate form lookup and reload
 				if (!primaryRecordId && result.recordId) {
@@ -333,19 +464,26 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 					type: "error",
 					text: formatSaveErrors(result.errors),
 				});
+				setSaveErrors(result.errors || []);
 			}
 		} catch (error) {
 			console.error("Validate and submit error:", error);
 			setSaveMessage({ type: "error", text: error.message || "An error occurred during submission" });
+			setSaveErrors([{ message: error.message || "An error occurred during submission", phase: "save" }]);
 		} finally {
 			setIsSaving(false);
+			setSavePhase("summary");
 		}
 	};
 
 	return (
 		<main className="page-content">
-			<LoadingIndicator visible={isSaving} variant="full-screen" message="Saving records...">
-				{groupedSaveProgress.length > 0 && (
+			<LoadingIndicator
+				visible={showSaveOverlay}
+				variant="full-screen"
+				message={savePhase === "summary" ? "Save complete" : "Saving records..."}
+				showSpinner={savePhase !== "summary"}>
+				{groupedSaveProgress.length > 0 && savePhase === "saving" && (
 					<div style={{ textAlign: "left", maxWidth: "520px", margin: "16px auto 0" }}>
 						<strong>Saving status</strong>
 						<ul style={{ marginTop: "8px", paddingLeft: "20px" }}>
@@ -359,6 +497,36 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 								);
 							})}
 						</ul>
+					</div>
+				)}
+				{savePhase === "summary" && groupedSaveSummary.length > 0 && (
+					<div style={{ textAlign: "left", maxWidth: "640px", margin: "16px auto 0" }}>
+						<strong>Save summary</strong>
+						<ul style={{ marginTop: "8px", paddingLeft: "20px" }}>
+							{groupedSaveSummary.map((group) => {
+								const status = renderSummaryStatus(group);
+								return (
+									<li key={`${group.scope}-${group.entityName}`} style={{ marginBottom: "10px" }}>
+										<div>
+											<span style={{ marginRight: "6px" }}>{status.icon}</span>
+											{formatScopeLabel(group.scope)}: {group.entityName} — {status.text}
+										</div>
+										{group.errors?.length > 0 && (
+											<ul style={{ marginTop: "6px", paddingLeft: "18px" }}>
+												{group.errors.map((error, index) => (
+													<li key={`${group.scope}-${group.entityName}-${index}`}>{error.message}</li>
+												))}
+											</ul>
+										)}
+									</li>
+								);
+							})}
+						</ul>
+						<div style={{ marginTop: "16px", textAlign: "center" }}>
+							<button type="button" className="btn btn-primary" onClick={handleCloseSaveOverlay}>
+								Close
+							</button>
+						</div>
 					</div>
 				)}
 			</LoadingIndicator>
@@ -410,6 +578,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 							<div className="progress list-group left">
 								{visibleSteps.map((step, index) => {
 									const isActive = index === activeStepIndex;
+									const hasErrors = stepErrorMap.has(index);
 									return (
 										<button
 											key={step.Id ?? step.Name}
@@ -417,7 +586,16 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 											className={`list-group-item${isActive ? " active" : ""}`}
 											aria-current={isActive ? "step" : undefined}
 											onClick={() => goToStep(index)}>
-											<span className="step-title">{step.Name ?? `Step ${index + 1}`}</span>
+											<span className="step-title">
+												{step.Name ?? `Step ${index + 1}`}
+												{hasErrors && (
+													<span
+														style={{ marginLeft: "6px", color: "#c0392b", fontWeight: 700 }}
+														aria-label="Step has errors">
+														●
+													</span>
+												)}
+											</span>
 										</button>
 									);
 								})}
