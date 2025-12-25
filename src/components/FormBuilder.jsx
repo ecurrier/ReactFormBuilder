@@ -30,6 +30,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const [visitedSteps, setVisitedSteps] = useState(new Set([0]));
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveMessage, setSaveMessage] = useState(null);
+	const [saveProgress, setSaveProgress] = useState([]);
 	const [isBannerSticky, setIsBannerSticky] = useState(false);
 	const bannerSentinelRef = useRef(null);
 
@@ -74,6 +75,36 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		return <p>No field inputs were provided in this configuration.</p>;
 	}
 
+	const handleSaveProgress = React.useCallback((event) => {
+		setSaveProgress((prev) => {
+			const existingIndex = prev.findIndex((item) => item.id === event.id);
+			if (existingIndex === -1) {
+				return [...prev, event];
+			}
+
+			const next = [...prev];
+			next[existingIndex] = { ...next[existingIndex], ...event };
+			return next;
+		});
+	}, []);
+
+	const formatSaveErrors = (errors) => {
+		if (!Array.isArray(errors) || errors.length === 0) {
+			return "An error occurred while saving";
+		}
+
+		return errors
+			.map((error) => {
+				if (!error) {
+					return "Unknown error";
+				}
+
+				const prefix = error.entityName ? `${error.entityName}: ` : "";
+				return `${prefix}${error.message || "Unknown error"}`;
+			})
+			.join(", ");
+	};
+
 	const clampIndex = (index) => {
 		if (visibleSteps.length === 0) {
 			return 0;
@@ -113,12 +144,14 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const handleSaveDraft = async () => {
 		setIsSaving(true);
 		setSaveMessage(null);
+		setSaveProgress([]);
 
 		try {
 			const result = await executeSaveDraft({
 				formState,
 				config,
 				urlParams,
+				onProgress: handleSaveProgress,
 			});
 
 			if (result.success) {
@@ -144,7 +177,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 			} else {
 				setSaveMessage({
 					type: "error",
-					text: result.errors?.join(", ") || "Failed to save draft",
+					text: formatSaveErrors(result.errors),
 				});
 			}
 		} catch (error) {
@@ -158,12 +191,14 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const handleValidateAndSubmit = async () => {
 		setIsSaving(true);
 		setSaveMessage(null);
+		setSaveProgress([]);
 
 		try {
 			const result = await executeValidateAndSubmit({
 				formState,
 				config,
 				urlParams,
+				onProgress: handleSaveProgress,
 			});
 
 			if (result.success) {
@@ -186,7 +221,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 			} else {
 				setSaveMessage({
 					type: "error",
-					text: result.errors?.join(", ") || "Validation failed",
+					text: formatSaveErrors(result.errors),
 				});
 			}
 		} catch (error) {
@@ -239,6 +274,23 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 								role="alert"
 								style={{ margin: "20px 0" }}>
 								{saveMessage.text}
+							</div>
+						)}
+						{saveProgress.length > 0 && (
+							<div className="alert alert-info" role="status" style={{ margin: "20px 0" }}>
+								<strong>Saving:</strong>
+								<ul style={{ marginTop: "8px" }}>
+									{saveProgress.map((item) => (
+										<li key={item.id}>
+											{item.scope === "primary" && "Primary: "}
+											{item.scope === "secondary" && "Secondary: "}
+											{item.scope === "child" && "Child: "}
+											{item.entityName}
+											{item.label ? ` (${item.label})` : ""} - {item.status}
+											{item.message ? ` (${item.message})` : ""}
+										</li>
+									))}
+								</ul>
 							</div>
 						)}
 					</div>
