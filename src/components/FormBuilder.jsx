@@ -5,6 +5,7 @@ import { ActionType } from "../constants/enums.js";
 import { useFormState } from "../hooks/useFormState.ts";
 import { populateFieldsFromData } from "../services/dataLoader.ts";
 import { executeSaveDraft, executeValidateAndSubmit, populateFormLookup, reloadFormData } from "../services/saveOrchestrator.ts";
+import LoadingIndicator from "./LoadingIndicator.tsx";
 
 const FormBuilder = ({ config, recordData, urlParams }) => {
 	const orderedSteps = useMemo(() => {
@@ -75,6 +76,58 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		return <p>No field inputs were provided in this configuration.</p>;
 	}
 
+	const buildProgressId = (scope, entityName, recordId) => {
+		if (recordId) {
+			return `${scope}:${entityName}:${recordId}`;
+		}
+
+		return `${scope}:${entityName}`;
+	};
+
+	const buildInitialSaveProgress = React.useCallback(() => {
+		const primaryEntityName = config?.Form?.PrimaryApplicationTable?.TableLogicalName;
+		const changes = formState.serializeForSubmission();
+		const secondaryChanges = changes.filter((change) => change.entityName !== primaryEntityName);
+		const primaryChanges = changes.find((change) => change.entityName === primaryEntityName);
+		const shouldEnsurePrimaryExists =
+			!formState.recordId && (formState.hasPendingChildren || secondaryChanges.length > 0);
+		const items = [];
+
+		if (
+			primaryEntityName &&
+			((primaryChanges && primaryChanges.data && Object.keys(primaryChanges.data).length > 0) || shouldEnsurePrimaryExists)
+		) {
+			items.push({
+				id: buildProgressId("primary", primaryEntityName),
+				scope: "primary",
+				entityName: primaryEntityName,
+				status: "saving",
+			});
+		}
+
+		secondaryChanges.forEach((change) => {
+			items.push({
+				id: buildProgressId("secondary", change.entityName),
+				scope: "secondary",
+				entityName: change.entityName,
+				status: "saving",
+			});
+		});
+
+		const pendingRecords = Object.values(formState.pendingChildRecords || {});
+		pendingRecords.forEach((pending) => {
+			items.push({
+				id: buildProgressId("child", pending.entityName, pending.id),
+				scope: "child",
+				entityName: pending.entityName,
+				label: pending.id,
+				status: "saving",
+			});
+		});
+
+		return items;
+	}, [config?.Form?.PrimaryApplicationTable?.TableLogicalName, formState]);
+
 	const handleSaveProgress = React.useCallback((event) => {
 		setSaveProgress((prev) => {
 			const existingIndex = prev.findIndex((item) => item.id === event.id);
@@ -87,6 +140,63 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 			return next;
 		});
 	}, []);
+
+	const groupedSaveProgress = React.useMemo(() => {
+		const groups = new Map();
+
+		saveProgress.forEach((item) => {
+			const key = `${item.scope}:${item.entityName}`;
+			if (!groups.has(key)) {
+				groups.set(key, {
+					scope: item.scope,
+					entityName: item.entityName,
+					total: 0,
+					saved: 0,
+					failed: 0,
+				});
+			}
+
+			const group = groups.get(key);
+			group.total += 1;
+
+			if (item.status === "saved") {
+				group.saved += 1;
+			}
+
+			if (item.status === "failed") {
+				group.failed += 1;
+			}
+		});
+
+		return Array.from(groups.values());
+	}, [saveProgress]);
+
+	const renderGroupStatus = (group) => {
+		if (group.total === 0) {
+			return { icon: "⏳", text: "Queued" };
+		}
+
+		if (group.saved === group.total) {
+			return { icon: "✅", text: "Saved" };
+		}
+
+		if (group.failed === group.total) {
+			return { icon: "❌", text: "Failed" };
+		}
+
+		if (group.failed > 0) {
+			return { icon: "⚠️", text: `${group.saved}/${group.total} saved` };
+		}
+
+		return { icon: "⏳", text: `${group.saved}/${group.total} saved` };
+	};
+
+	const formatScopeLabel = (scope) => {
+		if (scope === "primary") return "Primary";
+		if (scope === "secondary") return "Secondary";
+		if (scope === "child") return "Child";
+		return scope;
+	};
 
 	const formatSaveErrors = (errors) => {
 		if (!Array.isArray(errors) || errors.length === 0) {
@@ -144,7 +254,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const handleSaveDraft = async () => {
 		setIsSaving(true);
 		setSaveMessage(null);
-		setSaveProgress([]);
+		setSaveProgress(buildInitialSaveProgress());
 
 		try {
 			const result = await executeSaveDraft({
@@ -191,7 +301,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const handleValidateAndSubmit = async () => {
 		setIsSaving(true);
 		setSaveMessage(null);
-		setSaveProgress([]);
+		setSaveProgress(buildInitialSaveProgress());
 
 		try {
 			const result = await executeValidateAndSubmit({
@@ -234,6 +344,24 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 
 	return (
 		<main className="page-content">
+			<LoadingIndicator visible={isSaving} variant="full-screen" message="Saving records...">
+				{groupedSaveProgress.length > 0 && (
+					<div style={{ textAlign: "left", maxWidth: "520px", margin: "16px auto 0" }}>
+						<strong>Saving status</strong>
+						<ul style={{ marginTop: "8px", paddingLeft: "20px" }}>
+							{groupedSaveProgress.map((group) => {
+								const status = renderGroupStatus(group);
+								return (
+									<li key={`${group.scope}-${group.entityName}`} style={{ marginBottom: "6px" }}>
+										<span style={{ marginRight: "6px" }}>{status.icon}</span>
+										{formatScopeLabel(group.scope)}: {group.entityName} — {status.text}
+									</li>
+								);
+							})}
+						</ul>
+					</div>
+				)}
+			</LoadingIndicator>
 			<div className={`banner${isBannerSticky ? " banner--sticky" : ""}`}>
 				<div className="container">
 					<div className="banner-main-content">
@@ -274,23 +402,6 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 								role="alert"
 								style={{ margin: "20px 0" }}>
 								{saveMessage.text}
-							</div>
-						)}
-						{saveProgress.length > 0 && (
-							<div className="alert alert-info" role="status" style={{ margin: "20px 0" }}>
-								<strong>Saving:</strong>
-								<ul style={{ marginTop: "8px" }}>
-									{saveProgress.map((item) => (
-										<li key={item.id}>
-											{item.scope === "primary" && "Primary: "}
-											{item.scope === "secondary" && "Secondary: "}
-											{item.scope === "child" && "Child: "}
-											{item.entityName}
-											{item.label ? ` (${item.label})` : ""} - {item.status}
-											{item.message ? ` (${item.message})` : ""}
-										</li>
-									))}
-								</ul>
 							</div>
 						)}
 					</div>

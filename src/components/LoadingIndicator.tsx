@@ -4,9 +4,15 @@ export interface LoadingIndicatorProps {
 	visible?: boolean;
 	variant?: "contextual" | "inline" | "full-screen";
 	message?: string;
+	children?: React.ReactNode;
 }
 
-export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ visible = false, variant = "contextual", message = "Loading..." }) => {
+export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
+	visible = false,
+	variant = "contextual",
+	message = "Loading...",
+	children,
+}) => {
 	return (
 		<div className={`loading-ui ${variant} ${visible ? "visible" : ""}`} role="alert" aria-live="assertive" aria-busy="true">
 			<div>
@@ -129,6 +135,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ visible = fa
 					</svg>
 				</div>
 				<p>{message}</p>
+				{children}
 			</div>
 		</div>
 	);
