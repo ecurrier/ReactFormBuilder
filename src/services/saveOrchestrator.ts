@@ -29,6 +29,31 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 	const errors: string[] = [];
 	
 	try {
+		/*
+			TO-DO: Refactor and clean up this function for better readability and maintainability.
+			Possible improvements:
+			- Break down into smaller helper functions for each step
+			- Improve error handling and reporting
+			- Optimize data structures used for tracking state
+
+			Other things:
+			- Update naming conventions: use primary, secondary, and child
+				secondary refers to other related entities at the same level as primary (but are a child of primary)
+				child refers to entities that are children of primary or secondary
+			- Where possible, use await Promise.all for parallel saves
+			- While saving is occurring, display a saving indicator in the UI
+				- Ideally, this will display all the entities being saved in a list with progress like:
+					Saving:
+					- Primary Record... Saved
+					- Secondary Records:
+						- Standard Form 424... Saved
+						- Standard Form 425... Saved
+					- Child Records:
+						- Subrecipient 1... Saved
+						- Subrecipient 2... Failed (with error)
+
+			- Future state, if we could mark which steps had issued saving, we could highlight or add notifications
+		*/
 		// Step 1: Get all changed data from form state
 		const primaryEntity = config.Form?.PrimaryApplicationTable?.TableLogicalName;
 		const entityChanges = formState.serializeForSubmission();
