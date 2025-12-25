@@ -157,6 +157,7 @@ const LookupControl = ({ inputId, label, placeholder, value, onChange, targets, 
 					readOnly={isReadOnly}
 					required={isRequired}
 					aria-label={label}
+					autoComplete="off"
 				/>
 				<span className="input-group-btn">
 					<button type="button" className="btn btn-default" onClick={handleOpenAdvanced} disabled={isReadOnly}>

@@ -19,9 +19,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const visibleSteps = useMemo(
 		() =>
 			orderedSteps.filter((step) =>
-				step.Actions?.some((action) =>
-					[ActionType.FieldInput, ActionType.TableEntry, ActionType.FileUpload].includes(action.Type)
-				)
+				step.Actions?.some((action) => [ActionType.FieldInput, ActionType.TableEntry, ActionType.FileUpload].includes(action.Type))
 			),
 		[orderedSteps]
 	);
@@ -30,7 +28,6 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	// Track which steps have been visited for lazy loading
 	const [visitedSteps, setVisitedSteps] = useState(new Set([0]));
 	const [isSaving, setIsSaving] = useState(false);
-	const [saveMessage, setSaveMessage] = useState(null);
 	const [saveProgress, setSaveProgress] = useState([]);
 	const [saveErrors, setSaveErrors] = useState([]);
 	const [savePhase, setSavePhase] = useState("idle");
@@ -92,14 +89,10 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 		const changes = formState.serializeForSubmission();
 		const secondaryChanges = changes.filter((change) => change.entityName !== primaryEntityName);
 		const primaryChanges = changes.find((change) => change.entityName === primaryEntityName);
-		const shouldEnsurePrimaryExists =
-			!formState.recordId && (formState.hasPendingChildren || secondaryChanges.length > 0);
+		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingChildren || secondaryChanges.length > 0);
 		const items = [];
 
-		if (
-			primaryEntityName &&
-			((primaryChanges && primaryChanges.data && Object.keys(primaryChanges.data).length > 0) || shouldEnsurePrimaryExists)
-		) {
+		if (primaryEntityName && ((primaryChanges && primaryChanges.data && Object.keys(primaryChanges.data).length > 0) || shouldEnsurePrimaryExists)) {
 			items.push({
 				id: buildProgressId("primary", primaryEntityName),
 				scope: "primary",
@@ -305,11 +298,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	};
 
 	const stepErrorMap = React.useMemo(() => {
-		const errorEntities = new Set(
-			saveErrors
-				.map((error) => error?.entityName)
-				.filter(Boolean)
-		);
+		const errorEntities = new Set(saveErrors.map((error) => error?.entityName).filter(Boolean));
 
 		if (errorEntities.size === 0) {
 			return new Set();
@@ -373,7 +362,6 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	// Save handlers
 	const handleSaveDraft = async () => {
 		setIsSaving(true);
-		setSaveMessage(null);
 		setSaveProgress(buildInitialSaveProgress());
 		setSaveErrors([]);
 		setSavePhase("saving");
@@ -388,7 +376,6 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 			});
 
 			if (result.success) {
-				setSaveMessage({ type: "success", text: "Draft saved successfully" });
 				setSaveErrors([]);
 
 				// If this was a new record, populate form lookup and reload
@@ -409,15 +396,10 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 					// window.history.replaceState({}, '', `?recordId=${result.recordId}&versionId=${urlParams.versionId}`);
 				}
 			} else {
-				setSaveMessage({
-					type: "error",
-					text: formatSaveErrors(result.errors),
-				});
 				setSaveErrors(result.errors || []);
 			}
 		} catch (error) {
 			console.error("Save draft error:", error);
-			setSaveMessage({ type: "error", text: error.message || "An error occurred while saving" });
 			setSaveErrors([{ message: error.message || "An error occurred while saving", phase: "save" }]);
 		} finally {
 			setIsSaving(false);
@@ -427,7 +409,6 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 
 	const handleValidateAndSubmit = async () => {
 		setIsSaving(true);
-		setSaveMessage(null);
 		setSaveProgress(buildInitialSaveProgress());
 		setSaveErrors([]);
 		setSavePhase("saving");
@@ -459,15 +440,10 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 					}
 				}
 			} else {
-				setSaveMessage({
-					type: "error",
-					text: formatSaveErrors(result.errors),
-				});
 				setSaveErrors(result.errors || []);
 			}
 		} catch (error) {
 			console.error("Validate and submit error:", error);
-			setSaveMessage({ type: "error", text: error.message || "An error occurred during submission" });
 			setSaveErrors([{ message: error.message || "An error occurred during submission", phase: "save" }]);
 		} finally {
 			setIsSaving(false);
@@ -565,17 +541,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 			<div className="banner-sentinel" ref={bannerSentinelRef} aria-hidden="true" />
 			<div className="body-content">
 				<div className="container">
-					<div className="alert-container">
-						{/* Save message */}
-						{saveMessage && (
-							<div
-								className={`alert ${saveMessage.type === "success" ? "alert-success" : "alert-danger"}`}
-								role="alert"
-								style={{ margin: "20px 0" }}>
-								{saveMessage.text}
-							</div>
-						)}
-					</div>
+					<div className="alert-container">{/* TO-DO: Step-level alerts for validations */}</div>
 					<div className="multi-step-form-layout">
 						<nav className="multi-step-form-list-group">
 							<div className="progress list-group left">
@@ -592,9 +558,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 											<span className="step-title">
 												{step.Name ?? `Step ${index + 1}`}
 												{hasErrors && (
-													<span
-														style={{ marginLeft: "6px", color: "#c0392b", fontWeight: 700 }}
-														aria-label="Step has errors">
+													<span style={{ marginLeft: "6px", color: "#c0392b", fontWeight: 700 }} aria-label="Step has errors">
 														●
 													</span>
 												)}
