@@ -57,11 +57,21 @@ export const searchLookupQuick = async (
 	top: number = 8
 ): Promise<LookupSearchResult[]> => {
 	const trimmed = query?.trim();
+	const columns = buildLookupColumns(target);
+	const primaryColumn = getPrimaryColumn(target);
 	if (!trimmed) {
-		return [];
+		const fetchXml = buildFetchXmlForLookup(
+			target.EntityLogicalName,
+			primaryColumn,
+			columns.filter((column) => column !== primaryColumn)
+		);
+		const response = await retrieveMultipleRecords(target.EntityLogicalName, fetchXml, {
+			top,
+		});
+
+		return mapLookupResults(target, response.results || []);
 	}
 
-	const columns = buildLookupColumns(target);
 	const filters = (target.Columns || [getPrimaryColumn(target)]).map((column) => ({
 		attribute: column,
 		operator: "like",

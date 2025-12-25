@@ -442,7 +442,6 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 			});
 
 			if (result.success) {
-				setSaveMessage({ type: "success", text: "Form submitted successfully" });
 				setSaveErrors([]);
 
 				// If this was a new record, populate form lookup and reload
@@ -499,29 +498,33 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 						</ul>
 					</div>
 				)}
-				{savePhase === "summary" && groupedSaveSummary.length > 0 && (
+				{savePhase === "summary" && (
 					<div style={{ textAlign: "left", maxWidth: "640px", margin: "16px auto 0" }}>
 						<strong>Save summary</strong>
-						<ul style={{ marginTop: "8px", paddingLeft: "20px" }}>
-							{groupedSaveSummary.map((group) => {
-								const status = renderSummaryStatus(group);
-								return (
-									<li key={`${group.scope}-${group.entityName}`} style={{ marginBottom: "10px" }}>
-										<div>
-											<span style={{ marginRight: "6px" }}>{status.icon}</span>
-											{formatScopeLabel(group.scope)}: {group.entityName} — {status.text}
-										</div>
-										{group.errors?.length > 0 && (
-											<ul style={{ marginTop: "6px", paddingLeft: "18px" }}>
-												{group.errors.map((error, index) => (
-													<li key={`${group.scope}-${group.entityName}-${index}`}>{error.message}</li>
-												))}
-											</ul>
-										)}
-									</li>
-								);
-							})}
-						</ul>
+						{groupedSaveSummary.length > 0 ? (
+							<ul style={{ marginTop: "8px", paddingLeft: "20px" }}>
+								{groupedSaveSummary.map((group) => {
+									const status = renderSummaryStatus(group);
+									return (
+										<li key={`${group.scope}-${group.entityName}`} style={{ marginBottom: "10px" }}>
+											<div>
+												<span style={{ marginRight: "6px" }}>{status.icon}</span>
+												{formatScopeLabel(group.scope)}: {group.entityName} — {status.text}
+											</div>
+											{group.errors?.length > 0 && (
+												<ul style={{ marginTop: "6px", paddingLeft: "18px" }}>
+													{group.errors.map((error, index) => (
+														<li key={`${group.scope}-${group.entityName}-${index}`}>{error.message}</li>
+													))}
+												</ul>
+											)}
+										</li>
+									);
+								})}
+							</ul>
+						) : (
+							<p style={{ marginTop: "8px" }}>No changes to save.</p>
+						)}
 						<div style={{ marginTop: "16px", textAlign: "center" }}>
 							<button type="button" className="btn btn-primary" onClick={handleCloseSaveOverlay}>
 								Close

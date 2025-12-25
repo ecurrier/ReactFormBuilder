@@ -413,6 +413,8 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			}
 		} else {
 			// Load from API - fetch full record with all fields
+			setEditingRecord({ id: recordId, ...record, _isNew: false });
+			setSidepaneOpen(true);
 			setIsLoadingRecord(true);
 			try {
 				// Get all field logical names from ChildFormSteps
@@ -436,7 +438,6 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				if (fullRecord) {
 					const resolvedId = recordId || fullRecord[primaryKey];
 					setEditingRecord({ id: resolvedId, ...fullRecord, _isNew: false });
-					setSidepaneOpen(true);
 				} else {
 					console.error("Failed to load record:", recordId);
 				}

@@ -56,11 +56,6 @@ const LookupControl = ({ inputId, label, placeholder, value, onChange, targets, 
 		}
 
 		const trimmed = searchText.trim();
-		if (!trimmed) {
-			setResults([]);
-			return;
-		}
-
 		const timer = setTimeout(async () => {
 			setIsLoading(true);
 			try {
