@@ -64,6 +64,9 @@ export interface FieldInputProperties {
 		Columns: string[];
 		NavigationProperty?: string;
 		ReferencingAttribute?: string;
+		EntitySetName?: string;
+		PrimaryIdAttribute?: string;
+		PrimaryNameAttribute?: string;
 	}>;
 
 	// Nested child actions (for grouped fields)

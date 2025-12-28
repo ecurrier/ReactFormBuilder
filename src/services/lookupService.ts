@@ -1,11 +1,15 @@
 import { retrieveMultipleRecords } from "../hooks/api/Api";
 import { buildFetchXmlForLookup, buildFetchXmlWithFilter } from "../utilities/FetchXmlBuilder";
+import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "../utilities/entityMetadata";
 
 export interface LookupTargetConfig {
 	EntityLogicalName: string;
 	Columns: string[];
 	NavigationProperty?: string;
 	ReferencingAttribute?: string;
+	EntitySetName?: string;
+	PrimaryIdAttribute?: string;
+	PrimaryNameAttribute?: string;
 }
 
 export interface LookupSearchResult {
@@ -16,22 +20,26 @@ export interface LookupSearchResult {
 }
 
 const getPrimaryColumn = (target: LookupTargetConfig): string => {
+	if (target.PrimaryNameAttribute) {
+		return target.PrimaryNameAttribute;
+	}
+
 	if (target.Columns && target.Columns.length > 0) {
 		return target.Columns[0];
 	}
 
-	return `${target.EntityLogicalName}name`;
+	return resolvePrimaryNameAttribute(target.EntityLogicalName);
 };
 
 const buildLookupColumns = (target: LookupTargetConfig): string[] => {
 	const primaryColumn = getPrimaryColumn(target);
-	const idColumn = `${target.EntityLogicalName}id`;
+	const idColumn = target.PrimaryIdAttribute || resolvePrimaryIdAttribute(target.EntityLogicalName);
 	const columnSet = new Set<string>([idColumn, primaryColumn, ...(target.Columns || [])]);
 	return Array.from(columnSet);
 };
 
 const mapLookupResults = (target: LookupTargetConfig, rows: Record<string, any>[]): LookupSearchResult[] => {
-	const idColumn = `${target.EntityLogicalName}id`;
+	const idColumn = target.PrimaryIdAttribute || resolvePrimaryIdAttribute(target.EntityLogicalName);
 	const primaryColumn = getPrimaryColumn(target);
 
 	return rows

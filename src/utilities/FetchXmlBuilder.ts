@@ -1,5 +1,5 @@
-import { getEntitySetName } from "./Common";
 import { sanitizeGuid } from "./Serialization";
+import { resolvePrimaryIdAttribute } from "./entityMetadata";
 
 /**
  * FetchXML Builder Utilities
@@ -214,12 +214,13 @@ export const addLinkEntity = (
 export const buildFetchXmlForRecord = (entityName: string, recordId: string, columns: string[]): string => {
 	const attributeElements = columns.map((col) => `<attribute name="${col}" />`).join("");
 	const normalizedRecordId = sanitizeGuid(recordId);
+	const primaryIdAttribute = resolvePrimaryIdAttribute(entityName);
 
 	return `<fetch top="1">
 		<entity name="${entityName}">
 			${attributeElements}
 			<filter type="and">
-				<condition attribute="${entityName}id" operator="eq" value="${normalizedRecordId}" />
+				<condition attribute="${primaryIdAttribute}" operator="eq" value="${normalizedRecordId}" />
 			</filter>
 		</entity>
 	</fetch>`;
