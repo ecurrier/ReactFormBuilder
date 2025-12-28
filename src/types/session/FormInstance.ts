@@ -7,11 +7,11 @@ export interface FormInstance {
     Version: Version;
     PrimaryRecordId: string;
     PrimaryRecordLogicalName: string;
-    RelatedRecords: FormInstanceRelatedRecord[];
+    SecondaryRecords: FormInstanceSecondaryRecord[];
     UserFormSessions: UserFormSession[];
 }
 
-export interface FormInstanceRelatedRecord {
+export interface FormInstanceSecondaryRecord {
     LogicalName: string;
     Id: string;
 }
