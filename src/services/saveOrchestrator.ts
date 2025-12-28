@@ -1,10 +1,10 @@
 import { createRecord, updateRecord } from "../hooks/api";
 import type { PendingChildRecord } from "../types/FormState";
-import type { Entity } from "../types/Entity";
+import type { Entity, EntityReference } from "../types/Entity";
 import type { SaveError, SaveProgressEvent, SaveResult } from "../types/SaveOrchestrator";
 import { validateField } from "./validation/validators";
-import { loadRecordData, loadChildRecords } from "./dataLoader";
-import type { ReactFormConfiguration } from "../types/config";
+import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "../types/config";
+import type { ExtendedWindow } from "../types";
 
 export interface SaveContext {
 	formState: any;
@@ -61,17 +61,99 @@ const buildStepReferenceMap = (config: ReactFormConfiguration, primaryEntity?: s
 	return stepReferenceByEntity;
 };
 
+const normalizeConfigurationIdentifierMetadata = (
+	metadata: ReactConfigurationIdentifierMetadata | ReactConfigurationIdentifierMetadata[]
+): ReactConfigurationIdentifierMetadata[] => {
+	if (Array.isArray(metadata)) {
+		return metadata;
+	}
+
+	if (!metadata) {
+		return [];
+	}
+
+	return [metadata];
+};
+
+const resolveRequestorId = (): string | null => {
+	if (typeof window === "undefined") {
+		return null;
+	}
+
+	const extWindow = window as ExtendedWindow;
+	return extWindow.Microsoft?.Dynamic365?.Portal?.User?.contactId ?? null;
+};
+
+const resolveDefaultLookupValue = (identifier: string, config: ReactFormConfiguration): EntityReference | null => {
+	switch (identifier) {
+		case "Form":
+			return config.Form?.Id ? { id: config.Form.Id, logicalName: "eyfrcc_form" } : null;
+		case "FundingOpportunity":
+		case "ApplicationType":
+			return config.FundingOpportunity?.Id ? { id: config.FundingOpportunity.Id, logicalName: "eyfrcc_applicationtype" } : null;
+		case "Requestor": {
+			const contactId = resolveRequestorId();
+			return contactId ? { id: contactId, logicalName: "contact" } : null;
+		}
+		default:
+			return null;
+	}
+};
+
+const buildDefaultOnCreateData = (entityName: string, config: ReactFormConfiguration): Partial<Entity> => {
+	const tableMetadata = config.Form?.TableMetadata?.[entityName] ?? config.TableMetadata?.[entityName];
+	const actions = tableMetadata?.DefaultOnCreateActions ?? [];
+	const defaults: Partial<Entity> = {};
+
+	actions.forEach((action) => {
+		const metadataEntries = normalizeConfigurationIdentifierMetadata(action.ConfigurationIdentifierMetadata);
+		metadataEntries.forEach((metadata) => {
+			const identifier = metadata.ConfigurationIdentifier;
+			if (!identifier) {
+				return;
+			}
+
+			const lookupValue = resolveDefaultLookupValue(identifier, config);
+			if (!lookupValue) {
+				return;
+			}
+
+			const targetField = metadata.NavigationPropertyName || metadata.FieldLogicalName;
+			if (!targetField || defaults[targetField] !== undefined) {
+				return;
+			}
+
+			defaults[targetField] = metadata.NavigationPropertyName ? lookupValue : lookupValue.id;
+		});
+	});
+
+	return defaults;
+};
+
+const mergeDefaultOnCreateData = (data: Partial<Entity>, defaults: Partial<Entity>): Partial<Entity> => {
+	const merged = { ...data };
+	Object.entries(defaults).forEach(([key, value]) => {
+		if (merged[key] === undefined) {
+			merged[key] = value;
+		}
+	});
+
+	return merged;
+};
+
 const savePrimaryRecord = async ({
 	formState,
 	primaryEntity,
 	primaryChanges,
 	shouldEnsurePrimaryExists,
+	config,
 	onProgress,
 }: {
 	formState: any;
 	primaryEntity?: string;
 	primaryChanges: any;
 	shouldEnsurePrimaryExists: boolean;
+	config: ReactFormConfiguration;
 	onProgress: SaveContext["onProgress"];
 }): Promise<string | null> => {
 	if (!primaryEntity) {
@@ -89,7 +171,9 @@ const savePrimaryRecord = async ({
 			if (primaryRecordId) {
 				await updateRecord(primaryEntity, primaryRecordId, primaryChanges.data);
 			} else {
-				primaryRecordId = await createRecord(primaryEntity, primaryChanges.data);
+				const defaults = buildDefaultOnCreateData(primaryEntity, config);
+				const dataToSave = mergeDefaultOnCreateData(primaryChanges.data, defaults);
+				primaryRecordId = await createRecord(primaryEntity, dataToSave);
 
 				if (!primaryRecordId) {
 					throw new Error("Failed to create primary record");
@@ -117,8 +201,9 @@ const savePrimaryRecord = async ({
 		reportProgress(onProgress, { id: progressId, scope: "primary", entityName: primaryEntity, status: "saving" });
 		let didReportFailure = false;
 
-		try {
-			primaryRecordId = await createRecord(primaryEntity, {});
+	try {
+			const defaults = buildDefaultOnCreateData(primaryEntity, config);
+			primaryRecordId = await createRecord(primaryEntity, defaults);
 
 			if (!primaryRecordId) {
 				throw new Error("Failed to create primary record");
@@ -151,6 +236,7 @@ const saveSecondaryRecord = async ({
 	formState,
 	recordIdsByEntity,
 	stepReferenceByEntity,
+	config,
 	onProgress,
 }: {
 	change: any;
@@ -159,6 +245,7 @@ const saveSecondaryRecord = async ({
 	formState: any;
 	recordIdsByEntity: Map<string, string>;
 	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
+	config: ReactFormConfiguration;
 	onProgress: SaveContext["onProgress"];
 }) => {
 	const progressId = buildProgressId("secondary", change.entityName);
@@ -166,13 +253,14 @@ const saveSecondaryRecord = async ({
 	let didReportFailure = false;
 
 	try {
-		const dataToSave = { ...change.data };
+		const defaults = buildDefaultOnCreateData(change.entityName, config);
+		const dataToSave = mergeDefaultOnCreateData({ ...change.data }, defaults);
 		const referenceInfo = stepReferenceByEntity.get(change.entityName);
 		const navigationProperty = referenceInfo?.navigationProperty;
 		const existingRecordId =
 			change.recordId || recordIdsByEntity.get(change.entityName) || formState.getRelatedRecord?.(change.entityName)?.recordId;
 
-		if (!existingRecordId && navigationProperty && primaryRecordId) {
+		if (!existingRecordId && navigationProperty && primaryRecordId && dataToSave[navigationProperty] === undefined) {
 			dataToSave[navigationProperty] = {
 				id: primaryRecordId,
 				logicalName: primaryEntity,
@@ -229,6 +317,7 @@ const ensureSecondaryParentRecord = async ({
 	formState,
 	recordIdsByEntity,
 	stepReferenceByEntity,
+	config,
 }: {
 	parentEntityName: string;
 	primaryEntity?: string;
@@ -236,6 +325,7 @@ const ensureSecondaryParentRecord = async ({
 	formState: any;
 	recordIdsByEntity: Map<string, string>;
 	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
+	config: ReactFormConfiguration;
 }) => {
 	let parentId = recordIdsByEntity.get(parentEntityName);
 
@@ -259,14 +349,14 @@ const ensureSecondaryParentRecord = async ({
 			throw new Error(`Missing referencing navigation property for ${parentEntityName}`);
 		}
 
-		const parentData = primaryRecordId
-			? {
-					[navigationProperty]: {
-						id: primaryRecordId,
-						logicalName: primaryEntity,
-					},
-				}
-			: {};
+		const defaults = buildDefaultOnCreateData(parentEntityName, config);
+		const parentData = mergeDefaultOnCreateData({}, defaults);
+		if (primaryRecordId) {
+			parentData[navigationProperty] = {
+				id: primaryRecordId,
+				logicalName: primaryEntity,
+			};
+		}
 
 		parentId = await createRecord(parentEntityName, parentData);
 
@@ -286,12 +376,14 @@ const saveChildRecord = async ({
 	parentEntityName,
 	parentId,
 	formState,
+	config,
 	onProgress,
 }: {
 	pending: PendingChildRecord;
 	parentEntityName: string;
 	parentId: string;
 	formState: any;
+	config: ReactFormConfiguration;
 	onProgress: SaveContext["onProgress"];
 }) => {
 	const progressId = buildProgressId("child", pending.entityName, pending.id);
@@ -305,7 +397,8 @@ const saveChildRecord = async ({
 	let didReportFailure = false;
 
 	try {
-		const childData = { ...pending.data };
+		const defaults = buildDefaultOnCreateData(pending.entityName, config);
+		const childData = mergeDefaultOnCreateData({ ...pending.data }, defaults);
 
 		if (pending.referencingAttribute) {
 			delete childData[pending.referencingAttribute];
@@ -398,6 +491,7 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 			primaryEntity,
 			primaryChanges,
 			shouldEnsurePrimaryExists,
+			config,
 			onProgress,
 		});
 
@@ -423,6 +517,7 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 						formState,
 						recordIdsByEntity,
 						stepReferenceByEntity,
+						config,
 						onProgress,
 					})
 				)
@@ -462,6 +557,7 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 						formState,
 						recordIdsByEntity,
 						stepReferenceByEntity,
+						config,
 					});
 				} catch (error) {
 					const message = buildErrorMessage(error);
@@ -482,6 +578,7 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 							parentEntityName,
 							parentId,
 							formState,
+							config,
 							onProgress,
 						})
 					)

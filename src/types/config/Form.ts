@@ -121,13 +121,13 @@ export interface ReactTableMetadataEntry {
 }
 
 export interface ReactDefaultOnCreateAction {
-	ConfigurationIdentifierMetadata: ReactConfigurationIdentifierMetadata[];
+	ConfigurationIdentifierMetadata: ReactConfigurationIdentifierMetadata | ReactConfigurationIdentifierMetadata[];
 }
 
 export interface ReactConfigurationIdentifierMetadata {
 	ConfigurationIdentifier: string;
 	FieldLogicalName: string;
-	NavigationPropertyName: string;
+	NavigationPropertyName?: string;
 }
 
 /**
