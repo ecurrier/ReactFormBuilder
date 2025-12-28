@@ -63,8 +63,6 @@ export interface ReactApplicationTableConfiguration {
 	Description?: string;
 	/** Usage type */
 	Usage?: number;
-	/** Configuration fields (key-value pairs) */
-	ConfigurationFields?: Record<string, string>;
 }
 
 /**
@@ -119,6 +117,17 @@ export interface ReactTableMetadataEntry {
 	PrimaryIdAttribute?: string;
 	/** Primary name attribute */
 	PrimaryNameAttribute?: string;
+	DefaultOnCreateActions?: ReactDefaultOnCreateAction[];
+}
+
+export interface ReactDefaultOnCreateAction {
+	ConfigurationIdentifierMetadata: ReactConfigurationIdentifierMetadata[];
+}
+
+export interface ReactConfigurationIdentifierMetadata {
+	ConfigurationIdentifier: string;
+	FieldLogicalName: string;
+	NavigationPropertyName: string;
 }
 
 /**
