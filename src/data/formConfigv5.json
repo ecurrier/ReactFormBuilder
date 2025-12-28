@@ -616,6 +616,360 @@
 								}
 							]
 						}
+					},
+					{
+						"Id": "505965f7-3be4-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Table Entry - Project",
+						"Order": 12,
+						"ChildOrder": 0,
+						"Type": 203300002,
+						"Properties": {
+							"DisplayName": "Projects",
+							"ChildEntityLogicalName": "eyfrcc_project",
+							"RelationshipName": "eyfrcc_project_eyfrcc_childapplication_eyfrcc_childapplicationtest",
+							"ValidationMessage": null,
+							"CreateEnabled": true,
+							"EditEnabled": true,
+							"DeleteEnabled": true,
+							"ValidationType": 643260001,
+							"ReferencingAttribute": "eyfrcc_childapplication",
+							"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
+							"ChildFormSteps": [
+								{
+									"Id": "5506c9e2-92b4-ee11-a569-0022482a96fe",
+									"Name": "Projects",
+									"EntityLogicalName": "eyfrcc_project",
+									"EntityDisplayName": "Project",
+									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
+									"Description": null,
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "49ffe4f1-92b4-ee11-a569-0022482a96fe",
+											"Name": "Projects - Field Input - Name (Project)",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_name",
+												"SchemaName": "eyfrcc_Name",
+												"Label": "Project:",
+												"DataType": 643260000,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The primary name of this record. Once saved, this name will appear at the top of the page.",
+												"MaxLength": 100,
+												"Format": "Text"
+											}
+										},
+										{
+											"Id": "d0edcb63-93b4-ee11-a569-0022482a96fe",
+											"Name": "Projects - Field Input - Description (Project)",
+											"Order": 3,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_description",
+												"SchemaName": "eyfrcc_description",
+												"Label": "Description of Applicant's Project:",
+												"DataType": 643260001,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The main description of this record that provides a brief, description of the project.",
+												"MaxLength": 100000,
+												"Format": null
+											}
+										},
+										{
+											"Id": "fe600bd0-09b7-ee11-a569-00224828012d",
+											"Name": "Projects - Field Input - Proposed Start Date",
+											"Order": 4,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_proposedstartdate",
+												"SchemaName": "eyfrcc_proposedstartdate",
+												"Label": "Proposed Start Date:",
+												"DataType": 643260008,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The proposed start date for this project.",
+												"DateTimeFormat": "DateOnly",
+												"DateTimeBehavior": "UserLocal"
+											}
+										},
+										{
+											"Id": "fb3886dc-09b7-ee11-a569-00224828012d",
+											"Name": "Projects - Field Input - Proposed End Date",
+											"Order": 5,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_proposedenddate",
+												"SchemaName": "eyfrcc_proposedenddate",
+												"Label": "Proposed End Date:",
+												"DataType": 643260008,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The proposed end date for this project.",
+												"DateTimeFormat": "DateOnly",
+												"DateTimeBehavior": "UserLocal"
+											}
+										},
+										{
+											"Id": "edfae4c9-95b4-ee11-a569-0022482a96fe",
+											"Name": "Projects - Field Input - Congressional Districts of Program/Project (Project)",
+											"Order": 7,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_projectcongressionaldistrict",
+												"SchemaName": "eyfrcc_projectcongressionaldistrict",
+												"Label": "Congressional Districts of Program/Project:",
+												"DataType": 643260000,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The list of congressional districts associated to this specified project.",
+												"MaxLength": 100,
+												"Format": "Text"
+											}
+										}
+									],
+									"Conditions": []
+								}
+							],
+							"ChildViewSteps": [
+								{
+									"Id": "01d4f832-91b4-ee11-a569-00224828012d",
+									"Name": "View",
+									"EntityLogicalName": "eyfrcc_project",
+									"EntityDisplayName": "Project",
+									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
+									"Description": "<div data-wrapper=\"true\" dir=\"ltr\" style=\"font-size:9pt;font-family:'Segoe UI','Helvetica Neue',sans-serif;\"><div>This is the view displayed in the Portal when the Standard Form 424 portal form is used within an application form.</div></div>",
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "4c446a86-91b4-ee11-a569-0022482a96fe",
+											"Name": "View - Field Input - Name (Project)",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_name",
+												"SchemaName": "eyfrcc_Name",
+												"Label": "Project",
+												"DataType": 643260000,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The primary name of this record. Once saved, this name will appear at the top of the page.",
+												"MaxLength": 100,
+												"Format": "Text"
+											}
+										},
+										{
+											"Id": "9d002d25-92b4-ee11-a569-0022482a96fe",
+											"Name": "View - Field Input - Start Date",
+											"Order": 2,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"ChildActions": [
+													{
+														"Id": "ab002d25-92b4-ee11-a569-0022482a96fe",
+														"Name": "View - Field Input - Start Date - Field Input - Start Date - Fiscal Year",
+														"Order": 1,
+														"ChildOrder": 0,
+														"Type": 203300000,
+														"Properties": {
+															"LogicalName": "eyfrcc_startdate_fiscalyear",
+															"SchemaName": "eyfrcc_startdate_fiscalyear",
+															"Label": "Start Date - Fiscal Year",
+															"DataType": 643260009,
+															"IsRequired": false,
+															"IsReadOnly": false,
+															"IsHidden": false,
+															"ValidationType": 643260002,
+															"ValidationValue": null,
+															"ValidationMessage": null,
+															"Description": "Start Date - Fiscal Year",
+															"Targets": [
+																{
+																	"EntityLogicalName": "eyfrcc_fiscalyear",
+																	"EntitySetName": "eyfrcc_fiscalyears",
+																	"PrimaryIdAttribute": "eyfrcc_fiscalyearid",
+																	"PrimaryNameAttribute": "eyfrcc_name",
+																	"Columns": ["eyfrcc_name", "createdon"],
+																	"NavigationProperty": "eyfrcc_startdate_fiscalyear"
+																}
+															]
+														}
+													}
+												]
+											}
+										},
+										{
+											"Id": "e4385231-92b4-ee11-a569-0022482a96fe",
+											"Name": "View - Field Input - End Date",
+											"Order": 3,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"ChildActions": [
+													{
+														"Id": "e8385231-92b4-ee11-a569-0022482a96fe",
+														"Name": "View - Field Input - End Date - Field Input - End Date - Fiscal Year",
+														"Order": 1,
+														"ChildOrder": 0,
+														"Type": 203300000,
+														"Properties": {
+															"LogicalName": "eyfrcc_enddate_fiscalyear",
+															"SchemaName": "eyfrcc_enddate_fiscalyear",
+															"Label": "End Date - Fiscal Year",
+															"DataType": 643260009,
+															"IsRequired": false,
+															"IsReadOnly": false,
+															"IsHidden": false,
+															"ValidationType": 643260002,
+															"ValidationValue": null,
+															"ValidationMessage": null,
+															"Description": "End Date - Fiscal Year",
+															"Targets": [
+																{
+																	"EntityLogicalName": "eyfrcc_fiscalyear",
+																	"EntitySetName": "eyfrcc_fiscalyears",
+																	"PrimaryIdAttribute": "eyfrcc_fiscalyearid",
+																	"PrimaryNameAttribute": "eyfrcc_name",
+																	"Columns": ["eyfrcc_name", "createdon"],
+																	"NavigationProperty": "eyfrcc_enddate_fiscalyear"
+																}
+															]
+														}
+													}
+												]
+											}
+										}
+									],
+									"Conditions": []
+								}
+							]
+						}
+					},
+					{
+						"Id": "1223e6ce-3ce4-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Table Entry - Standard Form 424A",
+						"Order": 13,
+						"ChildOrder": 0,
+						"Type": 203300002,
+						"Properties": {
+							"DisplayName": "Standard Form 424A",
+							"ChildEntityLogicalName": "eyfrcc_standardform424a",
+							"RelationshipName": "eyfrcc_standardform424a_eyfrcc_childapplication_eyfrcc_childapplicationtest",
+							"ValidationMessage": "Please upload at least one record",
+							"CreateEnabled": true,
+							"EditEnabled": true,
+							"DeleteEnabled": true,
+							"ValidationType": 643260000,
+							"ReferencingAttribute": "eyfrcc_childapplication",
+							"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
+							"ChildFormSteps": [
+								{
+									"Id": "73fbf258-3ce4-f011-8544-7ced8d21d821",
+									"Name": "Information",
+									"EntityLogicalName": "eyfrcc_standardform424a",
+									"EntityDisplayName": "Standard Form 424A",
+									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
+									"Description": null,
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "b3e9d171-3ce4-f011-8544-7ced8d21d821",
+											"Name": "Information - Field Input - Agency Use Only",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {}
+										},
+										{
+											"Id": "e09a2e84-3ce4-f011-8544-7ced8d21d821",
+											"Name": "Information - Document Upload - InformationUpload",
+											"Order": 2,
+											"ChildOrder": 0,
+											"Type": 203300001,
+											"Properties": {
+												"FolderName": "InformationUpload",
+												"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Please upload information</p></div>",
+												"ValidationMessage": null
+											}
+										}
+									],
+									"Conditions": []
+								}
+							],
+							"ChildViewSteps": [
+								{
+									"Id": "4dc24db6-3ce4-f011-8544-7ced8d21d821",
+									"Name": "View",
+									"EntityLogicalName": "eyfrcc_standardform424a",
+									"EntityDisplayName": "Standard Form 424A",
+									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
+									"Description": null,
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "c26bbbc8-3ce4-f011-8544-7ced8d21d821",
+											"Name": "View - Field Input - Name (Standard Form 424A)",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_name",
+												"SchemaName": "eyfrcc_name",
+												"Label": "Name",
+												"DataType": 643260000,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The primary attribute",
+												"MaxLength": 300,
+												"Format": "Text"
+											}
+										}
+									],
+									"Conditions": []
+								}
+							]
+						}
 					}
 				],
 				"Conditions": []
@@ -920,6 +1274,18 @@
 								}
 							]
 						}
+					},
+					{
+						"Id": "45ba3fb4-3be4-f011-8544-7ced8d21d821",
+						"Name": "SF425 (Secondary Table) - Document Upload - TaxDocuments",
+						"Order": 2,
+						"ChildOrder": 0,
+						"Type": 203300001,
+						"Properties": {
+							"FolderName": "TaxDocuments",
+							"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Upload supporting tax documentation</p></div>",
+							"ValidationMessage": "Please upload at least one file"
+						}
 					}
 				],
 				"Conditions": []
@@ -954,6 +1320,18 @@
 							"Description": "Test Form Field",
 							"MaxLength": 1000,
 							"Format": "Text"
+						}
+					},
+					{
+						"Id": "7a5cc683-3be4-f011-8544-7ced8d21d821",
+						"Name": "Submission - Document Upload - SupportingDocuments",
+						"Order": 2,
+						"ChildOrder": 0,
+						"Type": 203300001,
+						"Properties": {
+							"FolderName": "SupportingDocuments",
+							"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Please upload any supporting documentation</p></div>",
+							"ValidationMessage": null
 						}
 					}
 				],
@@ -1010,6 +1388,16 @@
 				"EntityDisplayName": "Project",
 				"EntityDescription": "A planned set of activities or services that the applicant will carry out using the funding, designed to address a specific need or goal in the community.",
 				"PrimaryIdAttribute": "eyfrcc_projectid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_standardform424a": {
+				"EntityLogicalName": "eyfrcc_standardform424a",
+				"EntitySchemaName": "eyfrcc_standardform424a",
+				"EntitySetName": "eyfrcc_standardform424as",
+				"EntityDisplayName": "Standard Form 424A",
+				"EntityDescription": "The Standard Form 424A (SF-424A) is used to budget and request grant funds for non-construction programs. It is part of the broader Standard Form 424 Form Family of government-wide standard data sets.",
+				"PrimaryIdAttribute": "eyfrcc_standardform424aid",
 				"PrimaryNameAttribute": "eyfrcc_name",
 				"DefaultOnCreateActions": []
 			},
@@ -1093,6 +1481,16 @@
 				"EntityDescription": "Person with whom a business unit has a relationship, such as customer, supplier, and colleague.",
 				"PrimaryIdAttribute": "contactid",
 				"PrimaryNameAttribute": "fullname",
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_fiscalyear": {
+				"EntityLogicalName": "eyfrcc_fiscalyear",
+				"EntitySchemaName": "eyfrcc_FiscalYear",
+				"EntitySetName": "eyfrcc_fiscalyears",
+				"EntityDisplayName": "Fiscal Year",
+				"EntityDescription": "A fiscal year is used in accounting and for budget purposes. It is used to help perform financial reporting on important, key dates used throughout the system.",
+				"PrimaryIdAttribute": "eyfrcc_fiscalyearid",
+				"PrimaryNameAttribute": "eyfrcc_name",
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_indirectcostratelines": {
