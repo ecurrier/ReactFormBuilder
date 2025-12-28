@@ -1,3 +1,5 @@
+import { getEntityMetadata } from "./entityMetadata";
+
 /**
  * Converts a Dataverse entity logical name to its entity set name (collection name).
  * Used for constructing Web API URLs.
@@ -10,9 +12,15 @@
  * @param entityName - Logical name of the entity
  * @returns Entity set name for API endpoints
  */
+
 export const getEntitySetName = (entityName: string): string => {
 	if (!entityName) {
 		return entityName;
+	}
+
+	const metadata = getEntityMetadata(entityName);
+	if (metadata?.EntitySetName) {
+		return metadata.EntitySetName;
 	}
 
 	const lastChar = entityName[entityName.length - 1].toLowerCase();

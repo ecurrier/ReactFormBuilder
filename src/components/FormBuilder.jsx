@@ -6,6 +6,7 @@ import { useFormState } from "../hooks/useFormState.ts";
 import { populateFieldsFromData } from "../services/dataLoader.ts";
 import { executeSaveDraft, executeValidateAndSubmit, populateFormLookup, reloadFormData } from "../services/saveOrchestrator.ts";
 import LoadingIndicator from "./LoadingIndicator.tsx";
+import { buildEntityMetadataMap, resolveEntityDisplayName, setEntityMetadataCache } from "../utilities/entityMetadata";
 
 const FormBuilder = ({ config, recordData, urlParams }) => {
 	const orderedSteps = useMemo(() => {
@@ -34,6 +35,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 	const [showSaveOverlay, setShowSaveOverlay] = useState(false);
 	const [isBannerSticky, setIsBannerSticky] = useState(false);
 	const bannerSentinelRef = useRef(null);
+	const entityMetadata = useMemo(() => buildEntityMetadataMap(config), [config]);
 
 	// Get primary entity and record ID from URL params
 	const primaryEntity = config?.Form?.PrimaryApplicationTable?.TableLogicalName;
@@ -49,6 +51,10 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 			formState.initializeFormData(fieldData);
 		}
 	}, [recordData, primaryEntity, formState.initializeFormData]);
+
+	useEffect(() => {
+		setEntityMetadataCache(entityMetadata);
+	}, [entityMetadata]);
 
 	useEffect(() => {
 		setActiveStepIndex(0);
@@ -265,6 +271,8 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 
 		return { icon: "⏳", text: `${group.saved}/${group.total} saved` };
 	};
+
+	const getEntityLabel = (entityName) => resolveEntityDisplayName(entityName, entityMetadata);
 
 	const formatScopeLabel = (scope) => {
 		if (scope === "primary") return "Primary";
@@ -485,7 +493,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 										<li key={`${group.scope}-${group.entityName}`} style={{ marginBottom: "10px" }}>
 											<div>
 												<span style={{ marginRight: "6px" }}>{status.icon}</span>
-												{formatScopeLabel(group.scope)}: {group.entityName} — {status.text}
+												{formatScopeLabel(group.scope)}: {getEntityLabel(group.entityName)} — {status.text}
 											</div>
 											{group.errors?.length > 0 && (
 												<ul style={{ marginTop: "6px", paddingLeft: "18px" }}>

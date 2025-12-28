@@ -6,6 +6,7 @@ import DropdownMenu, { DropdownMenuItem } from "./DropdownMenu";
 import { ActionType, DataType } from "../constants/enums.js";
 import { retrieveRecord } from "../hooks/api/Api";
 import { buildFetchXmlForRecord } from "../utilities/FetchXmlBuilder";
+import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
 
 interface FieldAction {
 	Id: string;
@@ -168,7 +169,7 @@ const resolveRecordId = (row: Record<string, any> | null | undefined, entityName
 	}
 
 	if (entityName) {
-		const primaryKey = `${entityName}id`;
+		const primaryKey = resolvePrimaryIdAttribute(entityName);
 		const primaryValue = row[primaryKey];
 		if (typeof primaryValue === "string") {
 			return primaryValue;
@@ -419,7 +420,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			try {
 				// Get all field logical names from ChildFormSteps
 				const fieldNames = new Set<string>();
-				const primaryKey = `${config.ChildEntityLogicalName}id`;
+				const primaryKey = resolvePrimaryIdAttribute(config.ChildEntityLogicalName);
 				fieldNames.add(primaryKey); // Add primary key
 
 				config.ChildFormSteps?.forEach((step) => {

@@ -1,7 +1,7 @@
 import { useReducer, useCallback, useMemo } from "react";
 import type { FormState, FormStateAction, FieldMetadata, EntityChanges, PendingChildRecord, RelatedRecordInfo } from "../types/FormState";
 import type { Entity } from "../types/Entity";
-import { serializeForApi, getEntitySetName } from "../utilities";
+import { serializeForApi, resolveEntitySetName, resolvePrimaryIdAttribute } from "../utilities";
 
 /**
  * Initial form state.
@@ -21,7 +21,7 @@ const resolveRecordId = (entityName: string, record: Entity): string | null => {
 		return record.id;
 	}
 
-	const entityKey = `${entityName}id`;
+	const entityKey = resolvePrimaryIdAttribute(entityName);
 	const entityValue = record?.[entityKey];
 	if (typeof entityValue === "string") {
 		return entityValue;
@@ -483,7 +483,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		changedByEntity.forEach((value, entityName) => {
 			changes.push({
 				entityName,
-				entitySetName: getEntitySetName(entityName),
+				entitySetName: resolveEntitySetName(entityName),
 				recordId: entityName === state.primaryEntityName ? (state.recordId ?? undefined) : undefined,
 				data: value.data,
 				metadata: value.metadata,

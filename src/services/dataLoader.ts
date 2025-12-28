@@ -3,6 +3,7 @@ import type { Entity } from "../types/Entity";
 import type { ReactFormConfiguration } from "../types/config";
 import { ActionType } from "../constants/enums";
 import { buildFetchXmlForRecord, buildFetchXmlForChildRecords } from "../utilities/FetchXmlBuilder";
+import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "../utilities/entityMetadata";
 
 /**
  * Load record data and traverse form lookup to get version configuration.
@@ -18,13 +19,14 @@ export async function loadRecordWithForm(recordLogicalName: string, recordId: st
 		// For now, we'll assume it follows the pattern eyfrcc_form
 		// In future, this should come from Form Configuration Identifiers
 		const formFieldName = "eyfrcc_form";
+		const primaryIdAttribute = resolvePrimaryIdAttribute(recordLogicalName);
 
 		const fetchXml = `
             <fetch top="1">
                 <entity name="${recordLogicalName}">
                     <attribute name="${formFieldName}" />
                     <filter>
-                        <condition attribute="${recordLogicalName}id" operator="eq" value="${recordId}" />
+                        <condition attribute="${primaryIdAttribute}" operator="eq" value="${recordId}" />
                     </filter>
                     <link-entity name="eyfrcc_form" from="eyfrcc_formid" to="${formFieldName}" alias="form">
                         <attribute name="eyfrcc_publishedversionid" />
@@ -67,7 +69,7 @@ export async function loadRecordData(recordLogicalName: string, recordId: string
 		const fieldNames = new Set<string>();
 
 		// Add primary key field
-		fieldNames.add(`${recordLogicalName}id`);
+		fieldNames.add(resolvePrimaryIdAttribute(recordLogicalName));
 
 		// Traverse all steps and actions to find FieldInput actions
 		config.Form?.Steps?.forEach((step) => {
@@ -134,7 +136,7 @@ export async function loadChildRecords(parentRecordId: string, config: ReactForm
 			const columns = action.Properties.ChildViewSteps?.[0]?.Actions?.map((a: any) => a.Properties.LogicalName).filter(Boolean) || [];
 
 			// Add primary key
-			columns.push(`${childEntityName}id`);
+			columns.push(resolvePrimaryIdAttribute(childEntityName));
 
 			const fetchXml = buildFetchXmlForChildRecords(childEntityName, referencingAttribute, parentRecordId, columns);
 
@@ -233,7 +235,7 @@ export async function expandLookupValue(
 	try {
 		// This is a simplified implementation
 		// In production, you'd want to determine the primary name field dynamically
-		const primaryNameField = `${targetEntityName}name`; // Common pattern
+		const primaryNameField = resolvePrimaryNameAttribute(targetEntityName);
 
 		const fetchXml = buildFetchXmlForRecord(targetEntityName, lookupValue.id, [primaryNameField]);
 

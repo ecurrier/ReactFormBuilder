@@ -5,6 +5,7 @@ import TableEntryAction from "./TableEntryAction.tsx";
 import { ActionType } from "../constants/enums.js";
 import { retrieveMultipleRecords } from "../hooks/api/Api.ts";
 import { buildFetchXmlForChildRecords } from "../utilities/FetchXmlBuilder.ts";
+import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
 
 const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formState, urlParams }) => {
 	// Memoize sorted actions to prevent infinite loops
@@ -38,7 +39,7 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 					}
 
 					const columns = config.ChildViewSteps?.[0]?.Actions?.map((a) => a.Properties.LogicalName).filter(Boolean) || [];
-					const primaryKey = `${config.ChildEntityLogicalName}id`;
+					const primaryKey = resolvePrimaryIdAttribute(config.ChildEntityLogicalName);
 					if (!columns.includes(primaryKey)) {
 						columns.push(primaryKey);
 					}

@@ -11,6 +11,7 @@ export type {
 	ReactApplicationTableConfiguration,
 	ReactForm,
 	ReactFormSettings,
+	ReactTableMetadataEntry,
 } from "./Form";
 
 export type { ReactFormStep } from "./Step";

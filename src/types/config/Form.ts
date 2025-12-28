@@ -11,6 +11,8 @@ export interface ReactFormConfiguration {
 	FundingOpportunity: ReactFundingOpportunityConfiguration;
 	/** Form definition */
 	Form: ReactForm;
+	/** Optional table metadata keyed by entity logical name */
+	TableMetadata?: Record<string, ReactTableMetadataEntry>;
 }
 
 /**
@@ -81,6 +83,8 @@ export interface ReactForm {
 	Settings: ReactFormSettings;
 	/** Ordered list of form steps */
 	Steps: ReactFormStep[];
+	/** Table metadata for entities referenced in the form */
+	TableMetadata?: Record<string, ReactTableMetadataEntry>;
 }
 
 /**
@@ -95,6 +99,26 @@ export interface ReactFormSettings {
 	RequireFormForApplicant: boolean;
 	/** Estimated completion time */
 	EstimatedCompletionTime?: string;
+}
+
+/**
+ * Table metadata for a Dataverse entity.
+ */
+export interface ReactTableMetadataEntry {
+	/** Entity logical name */
+	EntityLogicalName: string;
+	/** Entity schema name */
+	EntitySchemaName?: string;
+	/** Entity set name (collection name) */
+	EntitySetName?: string;
+	/** Entity display name */
+	EntityDisplayName?: string;
+	/** Entity description */
+	EntityDescription?: string;
+	/** Primary ID attribute */
+	PrimaryIdAttribute?: string;
+	/** Primary name attribute */
+	PrimaryNameAttribute?: string;
 }
 
 /**
