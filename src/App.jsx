@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import formConfig from "./data/formConfigv4.json";
+import formConfig from "./data/formConfigv5.json";
 import FormBuilder from "./components/FormBuilder.jsx";
 import { retrieveFormInstance, retrieveFormVersion } from "./queries/version";
 
