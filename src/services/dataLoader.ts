@@ -83,8 +83,8 @@ export async function loadRecordData(recordLogicalName: string, recordId: string
 				}
 
 				// Check child actions (for nested structures)
-				if (action.ChildActions) {
-					action.ChildActions.forEach((childAction) => {
+				if (action.Properties.ChildActions) {
+					action.Properties.ChildActions.forEach((childAction) => {
 						if (childAction.Type === ActionType.FieldInput && childAction.Properties.LogicalName) {
 							fieldNames.add(childAction.Properties.LogicalName);
 						}

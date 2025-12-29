@@ -91,6 +91,8 @@ export const handlers = [
 					eyfrcc_primaryrecordid: "c9750587-d85d-4ab6-acc2-b03ee184bb42",
 					eyfrcc_primaryrecordlogicalname: "eyfrcc_childapplicationtest",
 					eyfrcc_forminstanceid: "a58a34f7-7fdf-f011-8544-6045bdd311df",
+					eyfrcc_secondaryrecords:
+						'[\r\n    {\r\n        "LogicalName": "eyfrcc_standardform424",\r\n        "Id": "bb7ef80c-d9e4-f011-8544-7ced8d21d821"\r\n    },\r\n    {\r\n        "LogicalName": "eyfrcc_standardform425",\r\n        "Id": "5a906480-dbe4-f011-8544-7ced8d21d821"\r\n    }\r\n]',
 					"Version.eyfrcc_regardingid@OData.Community.Display.V1.AttributeName": "eyfrcc_regardingid",
 					"Version.eyfrcc_regardingid@OData.Community.Display.V1.FormattedValue": "Dev & Testing: React Forms - Application Portal Form",
 					"Version.eyfrcc_regardingid@Microsoft.Dynamics.CRM.lookuplogicalname": "eyfrcc_form",
@@ -192,14 +194,77 @@ export const handlers = [
 	http.get("*/_api/eyfrcc_childapplicationtests*", async () => {
 		await delay(1500);
 		return HttpResponse.json({
+			"@odata.context":
+				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_childapplicationtests(eyfrcc_addresstest123_street1,eyfrcc_fullydisbursed,eyfrcc_applicationnumber,eyfrcc_addresstest123_city,eyfrcc_purpose,eyfrcc_childapplicationtestid,eyfrcc_addresstest123_state,eyfrcc_addresstest123_zip,eyfrcc_documentpath,_eyfrcc_applicationprojectid_value,eyfrcc_applicationprojectid,eyfrcc_areasimpacted,eyfrcc_addresstest123_street2,eyfrcc_totalapprovedindirectcostrate,eyfrcc_budgetstatus,eyfrcc_approvedcostshareormatch,eyfrcc_riskindicator2,eyfrcc_testformfield,eyfrcc_applicationprojectid())",
+			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
+			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
+			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
 			value: [
 				{
-					"@odata.etag": 'W/"41733522"',
+					"@odata.etag": 'W/"51511309"',
 					eyfrcc_childapplicationtestid: "c9750587-d85d-4ab6-acc2-b03ee184bb42",
+					eyfrcc_areasimpacted: "Areas Impacted",
 					eyfrcc_applicationnumber: "APP-000001209",
 					"eyfrcc_fullydisbursed@OData.Community.Display.V1.FormattedValue": "No",
 					eyfrcc_fullydisbursed: false,
+					eyfrcc_addresstest123_street1: "525 W Monroe St.",
+					eyfrcc_purpose: "This is purpose content",
+					"_eyfrcc_applicationprojectid_value@OData.Community.Display.V1.FormattedValue": "Evan Test Proj 123",
+					"_eyfrcc_applicationprojectid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "eyfrcc_applicationprojectid",
+					"_eyfrcc_applicationprojectid_value@Microsoft.Dynamics.CRM.lookuplogicalname": "eyfrcc_project",
+					_eyfrcc_applicationprojectid_value: "027ed7f0-545b-f011-bec1-7ced8d21d821",
+					eyfrcc_addresstest123_state: "IL",
 					eyfrcc_documentpath: "Child Application Template/APP-000001209",
+					eyfrcc_addresstest123_zip: "60606",
+					eyfrcc_addresstest123_city: "Chicago",
+					eyfrcc_addresstest123_street2: "Ste 500",
+				},
+			],
+		});
+	}),
+	http.get("*/_api/eyfrcc_standardform424s*", async () => {
+		await delay(1500);
+		return HttpResponse.json({
+			"@odata.context": "https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_standardform424s(eyfrcc_standardform424id,eyfrcc_attestation)",
+			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
+			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
+			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
+			"@generated_alias_eyfrcc_application_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_application_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
+			"@generated_alias_eyfrcc_application_2.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_application_3.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_application_4.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
+			"@generated_alias_eyfrcc_application_5.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_secondaryreport_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
+			"@generated_alias_eyfrcc_secondaryreport_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
+			"@generated_alias_eyfrcc_recordpermission_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_standardform424id",
+			value: [
+				{
+					"@odata.etag": 'W/"51511838"',
+					"eyfrcc_attestation@OData.Community.Display.V1.FormattedValue": "Yes",
+					eyfrcc_attestation: true,
+					eyfrcc_standardform424id: "bb7ef80c-d9e4-f011-8544-7ced8d21d821",
+				},
+			],
+		});
+	}),
+	http.get("*/_api/eyfrcc_standardform425s*", async () => {
+		await delay(1500);
+		return HttpResponse.json({
+			"@odata.context":
+				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_standardform425s(eyfrcc_standardform425id,eyfrcc_documentpath,eyfrcc_recordnumber)",
+			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
+			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
+			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
+			"@generated_alias_eyfrcc_application_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_application_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_recordpermission_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_standardform425id",
+			value: [
+				{
+					"@odata.etag": 'W/"51512377"',
+					eyfrcc_recordnumber: "SRPT-00001063",
+					eyfrcc_documentpath: "Standard Form 425/SRPT-00001063",
+					eyfrcc_standardform425id: "5a906480-dbe4-f011-8544-7ced8d21d821",
 				},
 			],
 		});
