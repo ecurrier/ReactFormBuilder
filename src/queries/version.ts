@@ -1,5 +1,6 @@
 import { FormInstance } from "@types/session";
-import { retrieveMultipleRecords } from "@api";
+import { createRecord, retrieveMultipleRecords } from "@api";
+import type { EntityReference } from "../types/Entity";
 
 export const retrieveFormInstance = async (recordId: string, recordLogicalName: string, versionId?: string): Promise<FormInstance> => {
 	const fetchXml = `
@@ -103,4 +104,44 @@ export const retrieveUserFormSessions = async (formInstanceId: string): Promise<
 	}));
 
 	return userFormSessions;
+};
+
+export const createFormInstance = async ({
+	versionId,
+	primaryRecordId,
+	primaryRecordLogicalName,
+	secondaryRecords,
+}: {
+	versionId: string;
+	primaryRecordId: string;
+	primaryRecordLogicalName: string;
+	secondaryRecords: Array<{ LogicalName: string; Id: string }>;
+}): Promise<string | null> => {
+	const versionLookup: EntityReference = { id: versionId, logicalName: "eyfrcc_version" };
+
+	return await createRecord("eyfrcc_forminstance", {
+		eyfrcc_versionid: versionLookup,
+		eyfrcc_primaryrecordid: primaryRecordId,
+		eyfrcc_primaryrecordlogicalname: primaryRecordLogicalName,
+		eyfrcc_secondaryrecords: JSON.stringify(secondaryRecords ?? []),
+	});
+};
+
+export const createUserFormSession = async ({
+	formInstanceId,
+	contactId,
+	lastActive,
+}: {
+	formInstanceId: string;
+	contactId: string;
+	lastActive: Date;
+}): Promise<string | null> => {
+	const formInstanceLookup: EntityReference = { id: formInstanceId, logicalName: "eyfrcc_forminstance" };
+	const contactLookup: EntityReference = { id: contactId, logicalName: "contact" };
+
+	return await createRecord("eyfrcc_userformsession", {
+		eyfrcc_forminstanceid: formInstanceLookup,
+		eyfrcc_contactid: contactLookup,
+		eyfrcc_lastactive: lastActive,
+	});
 };

@@ -75,6 +75,10 @@ export interface FormState {
 	recordId: string | null;
 	/** Primary entity name for this form */
 	primaryEntityName: string;
+	/** Form instance ID for tracking form instance metadata */
+	formInstanceId: string | null;
+	/** User form session ID for tracking current user session */
+	userFormSessionId: string | null;
 	/** Related record IDs for secondary step entities */
 	relatedRecords: Record<string, RelatedRecordInfo>;
 	/** Map of child entity names to record maps */
@@ -90,6 +94,8 @@ export type FormStateAction =
 	| { type: "REGISTER_FIELD"; path: string; metadata: FieldMetadata; initialValue?: any }
 	| { type: "UPDATE_FIELD"; path: string; value: any }
 	| { type: "SET_RECORD_ID"; recordId: string | null }
+	| { type: "SET_FORM_INSTANCE_ID"; formInstanceId: string | null }
+	| { type: "SET_USER_FORM_SESSION_ID"; userFormSessionId: string | null }
 	| { type: "RESET_DIRTY"; paths?: string[] }
 	| { type: "RESET_FORM" }
 	| { type: "INITIALIZE_FORM_DATA"; fieldData: Map<string, any> }
