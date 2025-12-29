@@ -116,7 +116,7 @@ export const validateFile = async (file: File) => {
 		return `ERROR: You are attempting to upload a file larger than ${maxFileSize}mb`;
 	}
 
-	if (!/^[\\w,\\s-()]+\\.[A-Za-z0-9]{3,4}$/i.test(file.name)) {
+	if (!/^[\w,\s()\-]+\.[A-Za-z0-9]{3,4}$/i.test(file.name)) {
 		return "ERROR: You are attempting to upload an invalid filename.";
 	}
 

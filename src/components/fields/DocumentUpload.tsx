@@ -85,17 +85,12 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ action, entityName, rec
 	const resolvedEntityName = entityName ?? formState?.primaryEntityName;
 	const resolvedRecordId = recordId ?? formState?.recordId;
 
-	const refreshUploadsState = useCallback(
-		(updatedFiles: Array<{ name: string; fullName: string }>, updatedPending: Array<{ id: string; name: string }>) => {
-			setFiles(updatedFiles);
-			setPendingFiles(updatedPending);
-			formState?.setDocumentUploadState?.(uploadKey, {
-				files: updatedFiles,
-				pendingFiles: updatedPending.map((file) => ({ name: file.name })),
-			});
-		},
-		[formState, uploadKey]
-	);
+	const syncUploadState = useCallback(() => {
+		formState?.setDocumentUploadState?.(uploadKey, {
+			files,
+			pendingFiles: pendingFiles.map((file) => ({ name: file.name })),
+		});
+	}, [files, formState, pendingFiles, uploadKey]);
 
 	const loadFiles = useCallback(async () => {
 		if (!documentContext || !resolvedRecordId || !resolvedEntityName) {
@@ -106,16 +101,13 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ action, entityName, rec
 		setErrorMessage(null);
 		try {
 			const response = await listDocuments(folderName, documentContext, resolvedRecordId, resolvedEntityName);
-			refreshUploadsState(
-				response.map((file) => ({ name: file.name, fullName: file.fullName })),
-				pendingFiles
-			);
+			setFiles(response.map((file) => ({ name: file.name, fullName: file.fullName })));
 		} catch (error) {
 			setErrorMessage(error instanceof Error ? error.message : String(error));
 		} finally {
 			setIsBusy(false);
 		}
-	}, [documentContext, folderName, pendingFiles, refreshUploadsState, resolvedEntityName, resolvedRecordId]);
+	}, [documentContext, folderName, resolvedEntityName, resolvedRecordId]);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -148,8 +140,17 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ action, entityName, rec
 		const pending = formState?.getPendingDocumentUploads?.(resolvedEntityName, resolvedRecordId) ?? [];
 		const matchingPending = pending.filter((upload: any) => upload.actionId === actionId);
 		const pendingList = matchingPending.map((upload: any) => ({ id: upload.id, name: upload.file.name }));
-		refreshUploadsState(files, pendingList);
-	}, [actionId, files, formState, refreshUploadsState, resolvedEntityName, resolvedRecordId]);
+		setPendingFiles((prev) => {
+			if (prev.length === pendingList.length && prev.every((file, index) => file.id === pendingList[index]?.id)) {
+				return prev;
+			}
+			return pendingList;
+		});
+	}, [actionId, formState, resolvedEntityName, resolvedRecordId]);
+
+	useEffect(() => {
+		syncUploadState();
+	}, [syncUploadState]);
 
 	const handleDownload = async (fullName: string) => {
 		if (!resolvedRecordId || !resolvedEntityName) {
@@ -205,11 +206,10 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ action, entityName, rec
 				validationType,
 			});
 
-			const updatedPending = [...pendingFiles, { id: uploadId, name: file.name }];
-			refreshUploadsState(files, updatedPending);
+			setPendingFiles((prev) => [...prev, { id: uploadId, name: file.name }]);
 			setStatusMessage("File queued for upload once the record is saved.");
 		},
-		[actionId, files, folderName, formState, pendingFiles, refreshUploadsState, resolvedEntityName, resolvedRecordId, validationType]
+		[actionId, folderName, formState, resolvedEntityName, resolvedRecordId, validationType]
 	);
 
 	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
