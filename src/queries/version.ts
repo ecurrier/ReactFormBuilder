@@ -23,7 +23,7 @@ export const retrieveFormInstance = async (recordId: string, recordLogicalName: 
             </entity>
         </fetch>`;
 
-	const rawResponse = await retrieveMultipleRecords("eyfrcc_forminstances", fetchXml);
+	const rawResponse = await retrieveMultipleRecords("eyfrcc_forminstance", fetchXml);
 	if (!rawResponse || rawResponse.results.length === 0) {
 		return null;
 	}
@@ -89,7 +89,7 @@ export const retrieveUserFormSessions = async (formInstanceId: string): Promise<
 			</entity>
 		</fetch>`;
 
-	const rawResponse = await retrieveMultipleRecords("eyfrcc_userformsessions", fetchXml);
+	const rawResponse = await retrieveMultipleRecords("eyfrcc_userformsession", fetchXml);
 	if (!rawResponse || rawResponse.results.length === 0) {
 		return [];
 	}
@@ -120,7 +120,7 @@ export const createFormInstance = async ({
 	const versionLookup: EntityReference = { id: versionId, logicalName: "eyfrcc_version" };
 
 	return await createRecord("eyfrcc_forminstance", {
-		eyfrcc_versionid: versionLookup,
+		eyfrcc_VersionId: versionLookup,
 		eyfrcc_primaryrecordid: primaryRecordId,
 		eyfrcc_primaryrecordlogicalname: primaryRecordLogicalName,
 		eyfrcc_secondaryrecords: JSON.stringify(secondaryRecords ?? []),
@@ -140,8 +140,8 @@ export const createUserFormSession = async ({
 	const contactLookup: EntityReference = { id: contactId, logicalName: "contact" };
 
 	return await createRecord("eyfrcc_userformsession", {
-		eyfrcc_forminstanceid: formInstanceLookup,
-		eyfrcc_contactid: contactLookup,
+		eyfrcc_FormInstanceId: formInstanceLookup,
+		eyfrcc_ContactId: contactLookup,
 		eyfrcc_lastactive: lastActive,
 	});
 };

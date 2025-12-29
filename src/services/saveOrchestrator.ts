@@ -500,6 +500,22 @@ const saveChildRecord = async ({
 			logicalName: parentEntityName,
 		};
 
+		/* TO-DO
+		childData = 
+			{
+				"id": "temp-ae584013-2d6f-43cf-a3f4-043e7d7a25f7",
+				"_isNew": true,
+				"eyfrcc_emailaddress": "evan.currier@ey.com",
+				"eyfrcc_firstname": "Evan",
+				"eyfrcc_childapplication_eyfrcc_childapplicationtest": {
+					"id": "c9750587-d85d-4ab6-acc2-b03ee184bb42",
+					"logicalName": "eyfrcc_childapplicationtest"
+				}
+			}
+
+			Need to change id property (change to eyfrcc_subrecipientid using entityMetadata to get primaryidattribute field name)
+			Need to remove isNew property
+		*/
 		const childId = await createRecord(pending.entityName, childData);
 
 		if (!childId) {
