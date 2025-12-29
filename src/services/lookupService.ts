@@ -59,11 +59,7 @@ const mapLookupResults = (target: LookupTargetConfig, rows: Record<string, any>[
 		.filter(Boolean) as LookupSearchResult[];
 };
 
-export const searchLookupQuick = async (
-	target: LookupTargetConfig,
-	query: string,
-	top: number = 8
-): Promise<LookupSearchResult[]> => {
+export const searchLookupQuick = async (target: LookupTargetConfig, query: string, top: number = 8): Promise<LookupSearchResult[]> => {
 	const trimmed = query?.trim();
 	const columns = buildLookupColumns(target);
 	const primaryColumn = getPrimaryColumn(target);

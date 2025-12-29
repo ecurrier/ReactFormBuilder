@@ -7,6 +7,7 @@ import { ActionType, DataType } from "../constants/enums.js";
 import { retrieveRecord } from "../hooks/api/Api";
 import { buildFetchXmlForRecord } from "../utilities/FetchXmlBuilder";
 import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
+import { isTempId, generateTempId } from "../utilities/Common";
 
 interface FieldAction {
 	Id: string;
@@ -53,28 +54,6 @@ export interface TableEntryActionProps {
 	onDelete?: (recordId: string) => Promise<void>;
 	className?: string;
 }
-
-const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * Check if an ID is a temporary UUID (starts with a specific pattern or doesn't match GUID format)
- */
-const isTempId = (id?: string | null): boolean => {
-	if (!id || typeof id !== "string") {
-		return false;
-	}
-
-	// Temp IDs are UUIDs but we can distinguish them by checking if they start with our pattern
-	// or by checking if they exist in pending records
-	return id.startsWith("temp-") || !guidPattern.test(id);
-};
-
-/**
- * Generate a UUID v4 for temporary record IDs
- */
-const generateTempId = (): string => {
-	return `temp-${crypto.randomUUID()}`;
-};
 
 const getFormattedValue = (row: Record<string, any>, logicalName: string): string | undefined => {
 	const formattedKey = `${logicalName}@OData.Community.Display.V1.FormattedValue`;
@@ -355,9 +334,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					return (
 						<div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
 							{badge}
-							<div
-								className={`dropdown ${actionMenuOpen === rowId ? "open" : ""}`}
-								style={{ position: "relative", display: "inline-block" }}>
+							<div className={`dropdown ${actionMenuOpen === rowId ? "open" : ""}`} style={{ position: "relative", display: "inline-block" }}>
 								<button
 									type="button"
 									className="btn btn-default dropdown-toggle"

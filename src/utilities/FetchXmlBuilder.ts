@@ -53,12 +53,7 @@ export const buildFetchXmlForEntity = (
  * // Retrieves contacts with id, fullname, emailaddress1, createdon ordered by fullname
  * ```
  */
-export const buildFetchXmlForLookup = (
-	entityName: string,
-	primaryNameAttribute: string,
-	additionalColumns: string[] = [],
-	orderBy?: string
-): string => {
+export const buildFetchXmlForLookup = (entityName: string, primaryNameAttribute: string, additionalColumns: string[] = [], orderBy?: string): string => {
 	const columns = [primaryNameAttribute, "createdon", ...additionalColumns];
 	const attributeElements = columns.map((col) => `<attribute name="${col}" />`).join("");
 	const orderByAttr = orderBy || primaryNameAttribute;
@@ -91,12 +86,7 @@ export const buildFetchXmlForLookup = (
  * );
  * ```
  */
-export const buildFetchXmlForChildRecords = (
-	childEntityName: string,
-	referencingAttribute: string,
-	parentId: string,
-	columns: string[]
-): string => {
+export const buildFetchXmlForChildRecords = (childEntityName: string, referencingAttribute: string, parentId: string, columns: string[]): string => {
 	const attributeElements = columns.map((col) => `<attribute name="${col}" />`).join("");
 	const normalizedParentId = sanitizeGuid(parentId);
 

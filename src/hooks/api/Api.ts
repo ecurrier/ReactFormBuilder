@@ -220,7 +220,7 @@ const injectFilterTag = (fetchXml: string, filter: FilterOption): string => {
 		const conditionElement = xmlDoc.createElement("condition");
 		conditionElement.setAttribute("attribute", condition.field);
 		conditionElement.setAttribute("operator", condition.operator);
-		
+
 		// Handle boolean values - Dataverse accepts "true"/"false" or 1/0
 		let valueStr: string;
 		if (typeof condition.value === "boolean") {
@@ -228,7 +228,7 @@ const injectFilterTag = (fetchXml: string, filter: FilterOption): string => {
 		} else {
 			valueStr = String(condition.value);
 		}
-		
+
 		conditionElement.setAttribute("value", valueStr);
 		filterElement.appendChild(conditionElement);
 	});

@@ -1,11 +1,5 @@
 import type { ReactFormStep } from "./Step";
-import type {
-	FieldInputProperties,
-	FileUploadProperties,
-	TableEntryProperties,
-	PlainTextProperties,
-	QuickViewProperties,
-} from "./Properties";
+import type { FieldInputProperties, FileUploadProperties, TableEntryProperties, PlainTextProperties, QuickViewProperties } from "./Properties";
 
 /**
  * Action configuration with polymorphic properties.

@@ -18,12 +18,6 @@ export type { ReactFormStep } from "./Step";
 
 export type { ReactActionConfiguration, ActionProperties } from "./Action";
 
-export type {
-	FieldInputProperties,
-	FileUploadProperties,
-	TableEntryProperties,
-	PlainTextProperties,
-	QuickViewProperties,
-} from "./Properties";
+export type { FieldInputProperties, FileUploadProperties, TableEntryProperties, PlainTextProperties, QuickViewProperties } from "./Properties";
 
 export type { ReactConditionConfiguration, ReactConditionExpression } from "./Condition";

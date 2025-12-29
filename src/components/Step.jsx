@@ -44,12 +44,7 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 						columns.push(primaryKey);
 					}
 
-					const fetchXml = buildFetchXmlForChildRecords(
-						config.ChildEntityLogicalName,
-						config.ReferencingAttribute,
-						resolvedParentRecordId,
-						columns
-					);
+					const fetchXml = buildFetchXmlForChildRecords(config.ChildEntityLogicalName, config.ReferencingAttribute, resolvedParentRecordId, columns);
 
 					try {
 						const options = {};
@@ -85,11 +80,37 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 	// Stable callbacks for TableEntry actions
 	const handleTableEntrySave = useCallback(async (data, recordId) => {
 		// TODO: Implement API call
+		/*
+			data = {
+				"id": "2487281d-0de5-f011-8544-7ced8d21d821",
+				"@odata.etag": "W/\"51513192\"",
+				"eyfrcc_name": "React Project",
+				"eyfrcc_projectid": "2487281d-0de5-f011-8544-7ced8d21d821",
+				"_isNew": false,
+				"eyfrcc_description": "Description",
+				"eyfrcc_proposedstartdate": "01/01/2026",
+				"eyfrcc_proposedenddate": "02/01/2026",
+				"eyfrcc_projectcongressionaldistrict": "Idk",
+				"eyfrcc_childapplication_eyfrcc_childapplicationtest": "c9750587-d85d-4ab6-acc2-b03ee184bb42"
+			}
+				^^ this is real data from a table entry
+
+			why is eyfrcc_name here? this wasnt a field i updated. Need to ensure im only tracking dirty fields
+			need to remove the navigation property to child application test
+			need to remove isNew property, odata.etag, and id property if it's a new record
+
+			Then need to save the record. if record save is successful, refresh the table data
+
+		*/
 		console.log("Save table entry:", data, recordId);
 	}, []);
 
 	const handleTableEntryDelete = useCallback(async (recordId) => {
 		// TODO: Implement
+		// This also needs to accept the recordLogicalName as well.
+		// Also this needs a confirmation modal before proceeding with delete
+		// delete call should be implemented in Api.ts
+		// after successful delete, refresh the table data
 		console.log("Delete table entry:", recordId);
 	}, []);
 

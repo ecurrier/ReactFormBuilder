@@ -383,18 +383,15 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	/**
 	 * Tracks a related record ID for a secondary step entity.
 	 */
-	const setRelatedRecord = useCallback(
-		(entityName: string, recordId: string, referencingAttribute?: string, referencingNavigationProperty?: string) => {
-			const record: RelatedRecordInfo = {
-				recordId,
-				referencingAttribute,
-				referencingNavigationProperty,
-			};
+	const setRelatedRecord = useCallback((entityName: string, recordId: string, referencingAttribute?: string, referencingNavigationProperty?: string) => {
+		const record: RelatedRecordInfo = {
+			recordId,
+			referencingAttribute,
+			referencingNavigationProperty,
+		};
 
-			dispatch({ type: "SET_RELATED_RECORD", entityName, record });
-		},
-		[]
-	);
+		dispatch({ type: "SET_RELATED_RECORD", entityName, record });
+	}, []);
 
 	/**
 	 * Retrieves related record info for a secondary step entity.

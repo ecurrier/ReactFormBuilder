@@ -14,15 +14,7 @@ const formatLabel = (value) => {
 		.replace(/\b\w/g, (match) => match.toUpperCase());
 };
 
-const LookupAdvancedSearchModal = ({
-	isOpen,
-	onClose,
-	onSelect,
-	targets,
-	selectedTarget,
-	onTargetChange,
-	searchPlaceholder,
-}) => {
+const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selectedTarget, onTargetChange, searchPlaceholder }) => {
 	const [query, setQuery] = useState("");
 
 	useEffect(() => {

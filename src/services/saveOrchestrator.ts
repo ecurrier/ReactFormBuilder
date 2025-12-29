@@ -6,6 +6,9 @@ import { validateField } from "./validation/validators";
 import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "../types/config";
 import { createFormInstance, createUserFormSession } from "../queries/version";
 import { resolveRequestorId } from "../utilities/session";
+import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "../utilities/entityMetadata";
+import { sanitizeGuid } from "../utilities/Serialization";
+import { isTempId } from "../utilities/Common";
 
 export interface SaveContext {
 	formState: any;
@@ -450,6 +453,7 @@ const saveChildRecord = async ({
 	parentId,
 	formState,
 	config,
+	entityMetadataMap,
 	onProgress,
 }: {
 	pending: PendingChildRecord;
@@ -457,6 +461,7 @@ const saveChildRecord = async ({
 	parentId: string;
 	formState: any;
 	config: ReactFormConfiguration;
+	entityMetadataMap: Map<string, TableMetadataEntry>;
 	onProgress: SaveContext["onProgress"];
 }) => {
 	const progressId = buildProgressId("child", pending.entityName, pending.id);
@@ -470,8 +475,18 @@ const saveChildRecord = async ({
 	let didReportFailure = false;
 
 	try {
-	const defaults = buildDefaultOnCreateData(pending.entityName, config);
+		const defaults = buildDefaultOnCreateData(pending.entityName, config);
 		const childData = mergeDefaultOnCreateData({ ...pending.data }, defaults);
+
+		const primaryIdAttribute = resolvePrimaryIdAttribute(pending.entityName, entityMetadataMap);
+		if (pending.id) {
+			if (isTempId(pending.id) && childData[primaryIdAttribute] === undefined) {
+				const sanitizedId = sanitizeGuid(pending.id);
+				childData[primaryIdAttribute] = sanitizedId;
+			}
+
+			delete childData.id;
+		}
 
 		delete childData.id;
 		delete childData._isNew;
@@ -504,22 +519,6 @@ const saveChildRecord = async ({
 			logicalName: parentEntityName,
 		};
 
-		/* TO-DO
-		childData = 
-			{
-				"id": "temp-ae584013-2d6f-43cf-a3f4-043e7d7a25f7",
-				"_isNew": true,
-				"eyfrcc_emailaddress": "evan.currier@ey.com",
-				"eyfrcc_firstname": "Evan",
-				"eyfrcc_childapplication_eyfrcc_childapplicationtest": {
-					"id": "c9750587-d85d-4ab6-acc2-b03ee184bb42",
-					"logicalName": "eyfrcc_childapplicationtest"
-				}
-			}
-
-			Need to change id property (change to eyfrcc_subrecipientid using entityMetadata to get primaryidattribute field name)
-			Need to remove isNew property
-		*/
 		const childId = await createRecord(pending.entityName, childData);
 
 		if (!childId) {
@@ -561,6 +560,7 @@ const saveChildRecord = async ({
 export async function executeSaveDraft(context: SaveContext): Promise<SaveResult> {
 	const { formState, config, onProgress } = context;
 	const errors: SaveError[] = [];
+	const entityMetadataMap = buildEntityMetadataMap(config);
 
 	/*
 		TO-DO: Somewhere in here, I need to create the FormInstance record if its not already created.
@@ -688,6 +688,7 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 							parentId,
 							formState,
 							config,
+							entityMetadataMap,
 							onProgress,
 						})
 					)
