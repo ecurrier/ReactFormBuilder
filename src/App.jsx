@@ -12,14 +12,15 @@ const App = () => {
 	const [recordDataByEntity, setRecordDataByEntity] = useState({});
 	const [urlParams, setUrlParams] = useState(null);
 	const [formSessionInfo, setFormSessionInfo] = useState({ formInstanceId: null, userFormSessionId: null });
-	const [isLoading, setIsLoading] = useState(true);
+	const [isFormConfigurationLoading, setIsFormConfigurationLoading] = useState(true);
+	const [isRecordDataLoading, setIsRecordDataLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState("");
 	const [isDebugData, setIsDebugData] = useState(false);
 	const env = import.meta.env ?? {};
 	const isDebugMode = env.VITE_USE_DEBUG_CONFIG === "true" || env.DEV;
 
 	const loadConfig = useCallback(async () => {
-		setIsLoading(true);
+		setIsFormConfigurationLoading(true);
 		setErrorMessage("");
 		setRecordDataByEntity({});
 		setFormSessionInfo({ formInstanceId: null, userFormSessionId: null });
@@ -49,6 +50,7 @@ const App = () => {
 					const version = await retrieveFormVersion(versionId);
 					const formConfiguration = JSON.parse(version.FormContent);
 					setConfig(formConfiguration);
+					setIsFormConfigurationLoading(false);
 					setRecordData(null); // No record data for new records
 					setIsDebugData(false);
 					return;
@@ -56,12 +58,14 @@ const App = () => {
 
 				const formConfiguration = JSON.parse(formInstance.Version.FormContent);
 				setConfig(formConfiguration);
+				setIsFormConfigurationLoading(false);
 				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
 				setUrlParams((prev) => ({
 					...prev,
 					versionId: prev?.versionId || formInstance.Version?.Id,
 				}));
 
+				setIsRecordDataLoading(true);
 				const primaryDataPromise = loadRecordData(recordLogicalName, recordId, formConfiguration);
 				const secondaryRecords = Array.isArray(formInstance.SecondaryRecords) ? formInstance.SecondaryRecords : [];
 				const secondaryPromises = secondaryRecords.map((record) =>
@@ -86,6 +90,7 @@ const App = () => {
 
 				setRecordData(primaryData);
 				setRecordDataByEntity(secondaryDataMap);
+				setIsRecordDataLoading(false);
 
 				setIsDebugData(false);
 
@@ -111,6 +116,8 @@ const App = () => {
 				setConfig(formConfiguration);
 				setRecordData(null); // No record data for new records
 				setRecordDataByEntity({});
+				setIsFormConfigurationLoading(false);
+				setIsRecordDataLoading(false);
 				setIsDebugData(false);
 			} else {
 				throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
@@ -130,8 +137,10 @@ const App = () => {
 			});
 			setRecordData(null);
 			setRecordDataByEntity({});
+			setIsFormConfigurationLoading(false);
+			setIsRecordDataLoading(false);
 		} finally {
-			setIsLoading(false);
+			setIsFormConfigurationLoading(false);
 		}
 	}, [isDebugMode]);
 
@@ -139,40 +148,24 @@ const App = () => {
 		loadConfig();
 	}, [loadConfig]);
 
+	const isLoading = isFormConfigurationLoading || isRecordDataLoading;
+	const loadingMessage = isFormConfigurationLoading ? "Loading form configuration..." : isRecordDataLoading ? "Loading record data..." : "";
+
 	return (
-		<div className="app-shell">
-			<main className="site-main">
-				<div className="app">
-					{isLoading || !config ? (
-						<LoadingIndicator visible={isLoading} variant="full-screen" message="Loading form..." />
-					) : (
-						<>
-							{errorMessage ? (
-								<div className="form-alert" role="alert">
-									<div>
-										<strong>Connection issue</strong>
-										<p>{errorMessage}</p>
-									</div>
-									{!isDebugMode ? (
-										<button type="button" className="retry-button" onClick={loadConfig}>
-											Try again
-										</button>
-									) : null}
-								</div>
-							) : null}
-							{isDebugData ? <span className="debug-badge">Debug data</span> : null}
-							<FormBuilder
-								config={config}
-								recordData={recordData}
-								recordDataByEntity={recordDataByEntity}
-								formSessionInfo={formSessionInfo}
-								urlParams={urlParams}
-							/>
-						</>
-					)}
-				</div>
-			</main>
-		</div>
+		<main className="page-content">
+			{config ? (
+				<>
+					<FormBuilder
+						config={config}
+						recordData={recordData}
+						recordDataByEntity={recordDataByEntity}
+						formSessionInfo={formSessionInfo}
+						urlParams={urlParams}
+					/>
+				</>
+			) : null}
+			<LoadingIndicator visible={isLoading} variant="full-screen" message={loadingMessage} />
+		</main>
 	);
 };
 
