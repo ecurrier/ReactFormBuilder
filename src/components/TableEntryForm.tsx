@@ -106,15 +106,17 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
+		const { id, _isNew, _isPending, ...cleanedFormData } = formData ?? {};
+
 		// Add parent record reference
 		const referencingKey = config.ReferencingNavigationProperty || config.ReferencingAttribute;
 		const dataToSave =
 			referencingKey && parentRecordId
 				? {
-						...formData,
+						...cleanedFormData,
 						[referencingKey]: parentRecordId,
 					}
-				: { ...formData };
+				: { ...cleanedFormData };
 
 		onSave(dataToSave);
 	};

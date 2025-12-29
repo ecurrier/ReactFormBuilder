@@ -470,8 +470,12 @@ const saveChildRecord = async ({
 	let didReportFailure = false;
 
 	try {
-		const defaults = buildDefaultOnCreateData(pending.entityName, config);
+	const defaults = buildDefaultOnCreateData(pending.entityName, config);
 		const childData = mergeDefaultOnCreateData({ ...pending.data }, defaults);
+
+		delete childData.id;
+		delete childData._isNew;
+		delete childData._isPending;
 
 		if (pending.referencingAttribute) {
 			delete childData[pending.referencingAttribute];
