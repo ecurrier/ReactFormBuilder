@@ -5,6 +5,8 @@ import type { SaveError, SaveProgressEvent, SaveResult } from "../types/SaveOrch
 import { validateField } from "./validation/validators";
 import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "../types/config";
 import type { ExtendedWindow } from "../types";
+import { fetchDocumentContext, uploadDocument } from "./documentUploadService";
+import { DocumentValidationType } from "../constants/enums";
 
 export interface SaveContext {
 	formState: any;
@@ -97,6 +99,48 @@ const resolveDefaultLookupValue = (identifier: string, config: ReactFormConfigur
 		}
 		default:
 			return null;
+	}
+};
+
+const flushPendingDocumentUploads = async ({
+	entityName,
+	recordId,
+	resolvedRecordId,
+	formState,
+	config,
+}: {
+	entityName: string;
+	recordId?: string | null;
+	resolvedRecordId?: string | null;
+	formState: any;
+	config: ReactFormConfiguration;
+}): Promise<string | null> => {
+	const pendingUploads = formState.getPendingDocumentUploads?.(entityName, recordId) || [];
+	if (!pendingUploads.length) {
+		return;
+	}
+
+	const targetRecordId = resolvedRecordId ?? recordId;
+	if (!targetRecordId) {
+		return;
+	}
+
+	const documentContext = await fetchDocumentContext(entityName, targetRecordId, config);
+	if (!documentContext) {
+		return;
+	}
+
+	for (const upload of pendingUploads) {
+		await uploadDocument(
+			{
+				folderName: upload.folderName,
+				file: upload.file,
+				documentContext,
+			},
+			targetRecordId,
+			entityName
+		);
+		formState.removePendingDocumentUpload?.(upload.id);
 	}
 };
 
@@ -247,7 +291,7 @@ const saveSecondaryRecord = async ({
 	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
 	config: ReactFormConfiguration;
 	onProgress: SaveContext["onProgress"];
-}) => {
+}): Promise<string> => {
 	const progressId = buildProgressId("secondary", change.entityName);
 	reportProgress(onProgress, { id: progressId, scope: "secondary", entityName: change.entityName, status: "saving" });
 	let didReportFailure = false;
@@ -284,7 +328,14 @@ const saveSecondaryRecord = async ({
 			recordIdsByEntity.set(change.entityName, existingRecordId);
 			formState.setRelatedRecord?.(change.entityName, existingRecordId, referenceInfo?.referencingAttribute, navigationProperty);
 			reportProgress(onProgress, { id: progressId, scope: "secondary", entityName: change.entityName, status: "saved" });
-			return;
+			await flushPendingDocumentUploads({
+				entityName: change.entityName,
+				recordId: existingRecordId,
+				resolvedRecordId: existingRecordId,
+				formState,
+				config,
+			});
+			return existingRecordId;
 		}
 
 		const childId = await createRecord(change.entityName, dataToSave);
@@ -295,6 +346,14 @@ const saveSecondaryRecord = async ({
 		recordIdsByEntity.set(change.entityName, childId);
 		formState.setRelatedRecord?.(change.entityName, childId, referenceInfo?.referencingAttribute, navigationProperty);
 		reportProgress(onProgress, { id: progressId, scope: "secondary", entityName: change.entityName, status: "saved" });
+		await flushPendingDocumentUploads({
+			entityName: change.entityName,
+			recordId: null,
+			resolvedRecordId: childId,
+			formState,
+			config,
+		});
+		return childId;
 	} catch (error) {
 		if (!didReportFailure) {
 			reportProgress(onProgress, {
@@ -437,12 +496,21 @@ const saveChildRecord = async ({
 		formState.deletePendingChildRecord(key);
 		formState.upsertChildRecord?.(pending.entityName, { id: childId, ...childData });
 
+		await flushPendingDocumentUploads({
+			entityName: pending.entityName,
+			recordId: pending.id,
+			resolvedRecordId: childId,
+			formState,
+			config,
+		});
+
 		reportProgress(onProgress, {
 			id: progressId,
 			scope: "child",
 			entityName: pending.entityName,
 			status: "saved",
 		});
+		return childId;
 	} catch (error) {
 		if (!didReportFailure) {
 			reportProgress(onProgress, {
@@ -476,7 +544,7 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 		const secondaryEntityChanges = entityChanges.filter((change: any) => change.entityName !== primaryEntity);
 		const stepReferenceByEntity = buildStepReferenceMap(config, primaryEntity);
 		
-		if (entityChanges.length === 0 && !formState.hasPendingChildren) {
+		if (entityChanges.length === 0 && !formState.hasPendingChildren && !formState.hasPendingDocuments) {
 			return {
 				success: true,
 				message: "No changes to save",
@@ -485,7 +553,8 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 
 		// Step 2: Save primary record first
 		const primaryChanges = entityChanges.find((change: any) => change.entityName === primaryEntity);
-		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingChildren || secondaryEntityChanges.length > 0);
+		const shouldEnsurePrimaryExists =
+			!formState.recordId && (formState.hasPendingChildren || formState.hasPendingDocuments || secondaryEntityChanges.length > 0);
 		const primaryRecordId = await savePrimaryRecord({
 			formState,
 			primaryEntity,
@@ -494,6 +563,23 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 			config,
 			onProgress,
 		});
+
+		if (primaryRecordId && primaryEntity) {
+			await flushPendingDocumentUploads({
+				entityName: primaryEntity,
+				recordId: null,
+				resolvedRecordId: primaryRecordId,
+				formState,
+				config,
+			});
+			await flushPendingDocumentUploads({
+				entityName: primaryEntity,
+				recordId: primaryRecordId,
+				resolvedRecordId: primaryRecordId,
+				formState,
+				config,
+			});
+		}
 
 		const recordIdsByEntity = new Map<string, string>();
 		if (primaryRecordId && primaryEntity) {
@@ -655,6 +741,36 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 				}
 			}
 		}
+
+		// Step 1b: Document upload validations
+		config.Form?.Steps?.forEach((step: any) => {
+			step.Actions?.forEach((action: any) => {
+				if (action.Type !== 203300001) {
+					return;
+				}
+
+				const entityName = step.EntityLogicalName || formState.primaryEntityName;
+				const validationType = action.Properties?.ValidationType ?? action.Properties?.validationType;
+				if (!validationType || validationType === DocumentValidationType.NoValidation) {
+					return;
+				}
+
+				const uploadKeyPrefix = `${action.Id ?? action.Name}:${entityName ?? "unknown"}:`;
+				const matchingUpload = Object.entries(formState.documentUploads || {}).find(([key]) => key.startsWith(uploadKeyPrefix));
+				const uploadState = matchingUpload?.[1];
+				const totalCount = (uploadState?.files?.length || 0) + (uploadState?.pendingFiles?.length || 0);
+
+				if (totalCount === 0) {
+					validationErrors.push({
+						phase: "validation",
+						message:
+							action.Properties?.ValidationMessage ??
+							`You must attach one or more required documents for this category: ${action.Properties?.FolderName ?? action.Name ?? "Documents"}`,
+						entityName,
+					});
+				}
+			});
+		});
 
 		// Step 2: If validation fails, return errors
 		if (validationErrors.length > 0) {

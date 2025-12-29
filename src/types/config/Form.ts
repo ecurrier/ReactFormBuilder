@@ -117,6 +117,8 @@ export interface ReactTableMetadataEntry {
 	PrimaryIdAttribute?: string;
 	/** Primary name attribute */
 	PrimaryNameAttribute?: string;
+	/** Configuration identifier metadata for special fields */
+	ConfigurationIdentifierMetadata?: ReactConfigurationIdentifierMetadata[];
 	DefaultOnCreateActions?: ReactDefaultOnCreateAction[];
 }
 

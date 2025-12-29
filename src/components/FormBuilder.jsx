@@ -616,6 +616,7 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 										recordId={primaryRecordId}
 										formState={formState}
 										urlParams={urlParams}
+										formConfig={config}
 									/>
 								);
 							})}

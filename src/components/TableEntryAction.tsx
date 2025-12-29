@@ -7,6 +7,7 @@ import { ActionType, DataType } from "../constants/enums.js";
 import { retrieveRecord } from "../hooks/api/Api";
 import { buildFetchXmlForRecord } from "../utilities/FetchXmlBuilder";
 import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
+import { getDocumentIdentifierFields } from "../utilities/documentUpload";
 
 interface FieldAction {
 	Id: string;
@@ -47,6 +48,7 @@ export interface TableEntryActionProps {
 	parentRecordId?: string;
 	parentEntityName?: string;
 	formState?: any;
+	formConfig?: any;
 	fetchData: (sort?: TableSortState, pagination?: PaginationOptions) => Promise<TableDataResponse<any>>;
 	shouldLoadData?: boolean;
 	onSave?: (data: any, recordId?: string) => Promise<void>;
@@ -197,6 +199,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	parentRecordId,
 	parentEntityName,
 	formState,
+	formConfig,
 	fetchData,
 	shouldLoadData = true,
 	onSave,
@@ -431,6 +434,14 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					});
 				});
 
+				const identifierFields = formConfig ? getDocumentIdentifierFields(formConfig, config.ChildEntityLogicalName) : {};
+				if (identifierFields.documentPathField) {
+					fieldNames.add(identifierFields.documentPathField);
+				}
+				if (identifierFields.applicationNumberField) {
+					fieldNames.add(identifierFields.applicationNumberField);
+				}
+
 				const columns = Array.from(fieldNames);
 				const fetchXml = buildFetchXmlForRecord(config.ChildEntityLogicalName, recordId, columns);
 
@@ -550,6 +561,8 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 						config={config}
 						initialData={editingRecord}
 						parentRecordId={parentRecordId}
+						formState={formState}
+						formConfig={formConfig}
 						onSave={handleFormSave}
 						onCancel={handleFormCancel}
 					/>

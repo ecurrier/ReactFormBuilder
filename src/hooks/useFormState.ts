@@ -1,5 +1,14 @@
 import { useReducer, useCallback, useMemo } from "react";
-import type { FormState, FormStateAction, FieldMetadata, EntityChanges, PendingChildRecord, RelatedRecordInfo } from "../types/FormState";
+import type {
+	FormState,
+	FormStateAction,
+	FieldMetadata,
+	EntityChanges,
+	PendingChildRecord,
+	PendingDocumentUpload,
+	DocumentUploadState,
+	RelatedRecordInfo,
+} from "../types/FormState";
 import type { Entity } from "../types/Entity";
 import { serializeForApi, resolveEntitySetName, resolvePrimaryIdAttribute } from "../utilities";
 
@@ -14,6 +23,8 @@ const initialFormState: FormState = {
 	relatedRecords: {},
 	childRecords: {},
 	pendingChildRecords: {},
+	pendingDocumentUploads: [],
+	documentUploads: {},
 };
 
 const resolveRecordId = (entityName: string, record: Entity): string | null => {
@@ -262,6 +273,61 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
 			}
 		}
 
+		case "ADD_PENDING_DOCUMENT_UPLOAD": {
+			return {
+				...state,
+				pendingDocumentUploads: [...state.pendingDocumentUploads, action.upload],
+			};
+		}
+
+		case "REMOVE_PENDING_DOCUMENT_UPLOAD": {
+			return {
+				...state,
+				pendingDocumentUploads: state.pendingDocumentUploads.filter((upload) => upload.id !== action.id),
+			};
+		}
+
+		case "CLEAR_PENDING_DOCUMENT_UPLOADS": {
+			const { entityName, recordId } = action;
+			if (!entityName) {
+				return {
+					...state,
+					pendingDocumentUploads: [],
+				};
+			}
+			return {
+				...state,
+				pendingDocumentUploads: state.pendingDocumentUploads.filter((upload) => {
+					if (upload.entityName !== entityName) {
+						return true;
+					}
+					if (recordId === undefined) {
+						return false;
+					}
+					return upload.recordId !== recordId;
+				}),
+			};
+		}
+
+		case "SET_DOCUMENT_UPLOAD_STATE": {
+			return {
+				...state,
+				documentUploads: {
+					...state.documentUploads,
+					[action.key]: action.state,
+				},
+			};
+		}
+
+		case "CLEAR_DOCUMENT_UPLOAD_STATE": {
+			const updatedUploads = { ...state.documentUploads };
+			delete updatedUploads[action.key];
+			return {
+				...state,
+				documentUploads: updatedUploads,
+			};
+		}
+
 		default:
 			return state;
 	}
@@ -454,6 +520,48 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		dispatch({ type: "CLEAR_PENDING_CHILDREN", entityName });
 	}, []);
 
+	const addPendingDocumentUpload = useCallback((upload: PendingDocumentUpload) => {
+		dispatch({ type: "ADD_PENDING_DOCUMENT_UPLOAD", upload });
+	}, []);
+
+	const removePendingDocumentUpload = useCallback((id: string) => {
+		dispatch({ type: "REMOVE_PENDING_DOCUMENT_UPLOAD", id });
+	}, []);
+
+	const clearPendingDocumentUploads = useCallback((entityName?: string, recordId?: string | null) => {
+		dispatch({ type: "CLEAR_PENDING_DOCUMENT_UPLOADS", entityName, recordId });
+	}, []);
+
+	const getPendingDocumentUploads = useCallback(
+		(entityName?: string, recordId?: string | null) => {
+			if (!entityName) {
+				return state.pendingDocumentUploads;
+			}
+
+			return state.pendingDocumentUploads.filter((upload) => {
+				if (upload.entityName !== entityName) {
+					return false;
+				}
+				if (recordId === undefined) {
+					return true;
+				}
+				return upload.recordId === recordId;
+			});
+		},
+		[state.pendingDocumentUploads]
+	);
+
+	const setDocumentUploadState = useCallback((key: string, uploadState: DocumentUploadState) => {
+		dispatch({ type: "SET_DOCUMENT_UPLOAD_STATE", key, state: uploadState });
+	}, []);
+
+	const getDocumentUploadState = useCallback(
+		(key: string) => {
+			return state.documentUploads[key];
+		},
+		[state.documentUploads]
+	);
+
 	/**
 	 * Gets all dirty field values grouped by entity.
 	 * Returns an array of EntityChanges objects ready for API submission.
@@ -560,6 +668,10 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		return Object.keys(state.pendingChildRecords).length > 0;
 	}, [state.pendingChildRecords]);
 
+	const hasPendingDocuments = useMemo(() => {
+		return state.pendingDocumentUploads.length > 0;
+	}, [state.pendingDocumentUploads.length]);
+
 	return {
 		// State
 		recordId: state.recordId,
@@ -567,8 +679,11 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		relatedRecords: state.relatedRecords,
 		childRecords: state.childRecords,
 		pendingChildRecords: state.pendingChildRecords,
+		pendingDocumentUploads: state.pendingDocumentUploads,
+		documentUploads: state.documentUploads,
 		hasChanges,
 		hasPendingChildren,
+		hasPendingDocuments,
 		dirtyFields,
 
 		// Actions
@@ -592,6 +707,14 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		deletePendingChildRecord,
 		getPendingChildRecords,
 		clearPendingChildRecords,
+
+		// Pending document upload operations
+		addPendingDocumentUpload,
+		removePendingDocumentUpload,
+		clearPendingDocumentUploads,
+		getPendingDocumentUploads,
+		setDocumentUploadState,
+		getDocumentUploadState,
 
 		// Getters
 		getFieldValue,

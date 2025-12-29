@@ -62,6 +62,28 @@ export interface PendingChildRecord {
 	isNew: boolean;
 }
 
+export interface PendingDocumentUpload {
+	/** Unique upload id */
+	id: string;
+	/** Entity logical name */
+	entityName: string;
+	/** Record id or temporary id */
+	recordId?: string | null;
+	/** Action id for the document upload control */
+	actionId?: string;
+	/** Folder name */
+	folderName: string;
+	/** File to upload */
+	file: File;
+	/** Validation type */
+	validationType?: number;
+}
+
+export interface DocumentUploadState {
+	files: Array<{ name: string; fullName: string }>;
+	pendingFiles: Array<{ name: string }>;
+}
+
 /**
  * Complete form state structure.
  * Tracks all field values, dirty states, and metadata for serialization.
@@ -81,6 +103,10 @@ export interface FormState {
 	childRecords: Record<string, Record<string, Entity>>;
 	/** Map of pending child records keyed by entityName_tempId */
 	pendingChildRecords: Record<string, PendingChildRecord>;
+	/** Pending document uploads awaiting record creation */
+	pendingDocumentUploads: PendingDocumentUpload[];
+	/** Document upload state keyed by action/entity/record */
+	documentUploads: Record<string, DocumentUploadState>;
 }
 
 /**
@@ -101,7 +127,12 @@ export type FormStateAction =
 	| { type: "ADD_PENDING_CHILD"; record: PendingChildRecord }
 	| { type: "UPDATE_PENDING_CHILD"; key: string; data: Partial<Entity> }
 	| { type: "DELETE_PENDING_CHILD"; key: string }
-	| { type: "CLEAR_PENDING_CHILDREN"; entityName?: string };
+	| { type: "CLEAR_PENDING_CHILDREN"; entityName?: string }
+	| { type: "ADD_PENDING_DOCUMENT_UPLOAD"; upload: PendingDocumentUpload }
+	| { type: "REMOVE_PENDING_DOCUMENT_UPLOAD"; id: string }
+	| { type: "CLEAR_PENDING_DOCUMENT_UPLOADS"; entityName?: string; recordId?: string | null }
+	| { type: "SET_DOCUMENT_UPLOAD_STATE"; key: string; state: DocumentUploadState }
+	| { type: "CLEAR_DOCUMENT_UPLOAD_STATE"; key: string };
 
 /**
  * Represents changes grouped by entity for API submission.

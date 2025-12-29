@@ -4,6 +4,7 @@ import type { ReactFormConfiguration } from "../types/config";
 import { ActionType } from "../constants/enums";
 import { buildFetchXmlForRecord, buildFetchXmlForChildRecords } from "../utilities/FetchXmlBuilder";
 import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "../utilities/entityMetadata";
+import { getDocumentIdentifierFields } from "../utilities/documentUpload";
 
 /**
  * Load record data and traverse form lookup to get version configuration.
@@ -88,6 +89,15 @@ export async function loadRecordData(recordLogicalName: string, recordId: string
 				}
 			});
 		});
+
+		// Add document identifier fields if configured
+		const identifierFields = getDocumentIdentifierFields(config, recordLogicalName);
+		if (identifierFields.documentPathField) {
+			fieldNames.add(identifierFields.documentPathField);
+		}
+		if (identifierFields.applicationNumberField) {
+			fieldNames.add(identifierFields.applicationNumberField);
+		}
 
 		const columns = Array.from(fieldNames);
 		const fetchXml = buildFetchXmlForRecord(recordLogicalName, recordId, columns);

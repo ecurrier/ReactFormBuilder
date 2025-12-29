@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import FieldInput from "./fields/FieldInput.jsx";
+import DocumentUpload from "./fields/DocumentUpload";
 import { ActionType } from "../constants/enums.js";
 
 interface FieldAction {
@@ -39,11 +40,13 @@ interface TableEntryFormProps {
 	config: TableEntryActionConfig;
 	initialData: any | null;
 	parentRecordId?: string;
+	formState?: any;
+	formConfig?: any;
 	onSave: (data: any) => void;
 	onCancel: () => void;
 }
 
-export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialData, parentRecordId, onSave, onCancel }) => {
+export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialData, parentRecordId, formState, formConfig, onSave, onCancel }) => {
 	const [formData, setFormData] = useState<any>(initialData || {});
 	const metadataRef = React.useRef<Record<string, any>>({});
 	const getFieldKey = React.useCallback((path: string) => {
@@ -95,7 +98,7 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 		const actions: Array<{ action: FieldAction; entityName?: string }> = [];
 		(config.ChildFormSteps || []).forEach((step) => {
 			(step.Actions || []).forEach((action) => {
-				if (action.Type === ActionType.FieldInput) {
+				if (action.Type === ActionType.FieldInput || action.Type === ActionType.FileUpload) {
 					actions.push({ action, entityName: step.EntityLogicalName });
 				}
 			});
@@ -136,9 +139,27 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 		<form onSubmit={handleSubmit} className="table-entry-form">
 			<p className="control-label block text-right mb-4 required-legend">Required</p>
 			<div className="form-fields">
-				{allFieldActions.map(({ action, entityName }) => (
-					<FieldInput key={action.Id ?? action.Name} action={action} formState={localFormState} entityName={entityName} />
-				))}
+				{allFieldActions.map(({ action, entityName }) => {
+					if (action.Type === ActionType.FileUpload) {
+						if (!formConfig) {
+							return null;
+						}
+						return (
+							<DocumentUpload
+								key={action.Id ?? action.Name}
+								action={action}
+								entityName={entityName}
+								recordId={initialData?.id}
+								formState={formState}
+								formConfig={formConfig}
+							/>
+						);
+					}
+
+					return (
+						<FieldInput key={action.Id ?? action.Name} action={action} formState={localFormState} entityName={entityName} />
+					);
+				})}
 			</div>
 
 			<div className="table-entry-form-actions">

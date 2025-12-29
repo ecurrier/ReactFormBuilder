@@ -82,6 +82,10 @@ export interface FileUploadProperties {
 	FolderName?: string;
 	/** Description/instructions */
 	Description?: string;
+	/** Validation type (NoValidation, OneFileOnly, AtLeastOneFile) */
+	ValidationType?: number;
+	/** Legacy validation type casing */
+	validationType?: number;
 	/** Validation error message */
 	ValidationMessage?: string;
 }

@@ -1,13 +1,14 @@
 import React, { useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import FieldInput from "./fields/FieldInput.jsx";
+import DocumentUpload from "./fields/DocumentUpload";
 import TableEntryAction from "./TableEntryAction.tsx";
 import { ActionType } from "../constants/enums.js";
 import { retrieveMultipleRecords } from "../hooks/api/Api.ts";
 import { buildFetchXmlForChildRecords } from "../utilities/FetchXmlBuilder.ts";
 import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
 
-const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formState, urlParams }) => {
+const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formState, urlParams, formConfig }) => {
 	// Memoize sorted actions to prevent infinite loops
 	const actions = useMemo(() => {
 		return Array.isArray(step.Actions) ? [...step.Actions].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0)) : [];
@@ -16,6 +17,17 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 	const primaryEntityName = formState?.primaryEntityName;
 	const primaryRecordId = recordId || formState?.recordId;
 	const getRelatedRecord = formState?.getRelatedRecord;
+
+	const resolveStepRecordId = useCallback(
+		(entityLogicalName) => {
+			if (!entityLogicalName || entityLogicalName === primaryEntityName) {
+				return primaryRecordId;
+			}
+
+			return getRelatedRecord?.(entityLogicalName)?.recordId;
+		},
+		[getRelatedRecord, primaryEntityName, primaryRecordId]
+	);
 
 	// Memoize fetchData functions for each TableEntry action to prevent recreation on every render
 	const tableEntryFetchFunctions = useMemo(() => {
@@ -108,6 +120,7 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 			<div className="multi-step-form-main-content">
 				<div className="actions">
 					{actions.map((action) => {
+						const resolvedRecordId = resolveStepRecordId(step.EntityLogicalName);
 						if (action.Type === ActionType.FieldInput) {
 							return <FieldInput key={action.Id ?? action.Name} action={action} formState={formState} entityName={step.EntityLogicalName} />;
 						}
@@ -128,8 +141,21 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 									}
 									parentEntityName={step.EntityLogicalName}
 									formState={formState}
+									formConfig={formConfig}
 									onSave={handleTableEntrySave}
 									onDelete={handleTableEntryDelete}
+								/>
+							);
+						}
+						if (action.Type === ActionType.FileUpload) {
+							return (
+								<DocumentUpload
+									key={action.Id ?? action.Name}
+									action={action}
+									entityName={step.EntityLogicalName}
+									recordId={resolvedRecordId}
+									formState={formState}
+									formConfig={formConfig}
 								/>
 							);
 						}
@@ -156,6 +182,7 @@ Step.propTypes = {
 	recordId: PropTypes.string,
 	formState: PropTypes.object.isRequired,
 	urlParams: PropTypes.object,
+	formConfig: PropTypes.object.isRequired,
 };
 
 Step.defaultProps = {
