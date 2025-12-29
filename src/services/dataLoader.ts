@@ -73,14 +73,18 @@ export async function loadRecordData(recordLogicalName: string, recordId: string
 
 		// Traverse all steps and actions to find FieldInput actions
 		config.Form?.Steps?.forEach((step) => {
+			if (step.EntityLogicalName !== recordLogicalName) {
+				return;
+			}
+
 			step.Actions?.forEach((action) => {
 				if (action.Type === ActionType.FieldInput && action.Properties.LogicalName) {
 					fieldNames.add(action.Properties.LogicalName);
 				}
 
 				// Check child actions (for nested structures)
-				if (action.ChildActions) {
-					action.ChildActions.forEach((childAction) => {
+				if (action.Properties.ChildActions) {
+					action.Properties.ChildActions.forEach((childAction) => {
 						if (childAction.Type === ActionType.FieldInput && childAction.Properties.LogicalName) {
 							fieldNames.add(childAction.Properties.LogicalName);
 						}
@@ -88,6 +92,9 @@ export async function loadRecordData(recordLogicalName: string, recordId: string
 				}
 			});
 		});
+
+		const identifierFields = getConfigurationIdentifierFields(config, recordLogicalName);
+		identifierFields.forEach((field) => fieldNames.add(field));
 
 		const columns = Array.from(fieldNames);
 		const fetchXml = buildFetchXmlForRecord(recordLogicalName, recordId, columns);
@@ -98,8 +105,22 @@ export async function loadRecordData(recordLogicalName: string, recordId: string
 			throw new Error(`Record not found: ${recordLogicalName}(${recordId})`);
 		}
 
-		// TODO: Expand lookup values to include primary name for display
-		// This would require additional queries to lookup target entities
+		// TODO: Expand lookup values to include primary name for display - can get from response
+		/*
+			Example response:
+				{
+					"@odata.etag": "W/\"51508860\"",
+					"eyfrcc_childapplicationtestid": "c9750587-d85d-4ab6-acc2-b03ee184bb42",
+					"eyfrcc_applicationnumber": "APP-000001209",
+					"eyfrcc_fullydisbursed@OData.Community.Display.V1.FormattedValue": "No",
+					"eyfrcc_fullydisbursed": false,
+					"_eyfrcc_applicationprojectid_value@OData.Community.Display.V1.FormattedValue": "Evan Test Proj 123",
+					"_eyfrcc_applicationprojectid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "eyfrcc_applicationprojectid",
+					"_eyfrcc_applicationprojectid_value@Microsoft.Dynamics.CRM.lookuplogicalname": "eyfrcc_project",
+					"_eyfrcc_applicationprojectid_value": "027ed7f0-545b-f011-bec1-7ced8d21d821",
+					"eyfrcc_documentpath": "Child Application Template/APP-000001209"
+				}
+		*/
 
 		return result;
 	} catch (error) {
@@ -107,6 +128,29 @@ export async function loadRecordData(recordLogicalName: string, recordId: string
 		throw error;
 	}
 }
+
+const normalizeIdentifierMetadata = (metadata: unknown): Array<{ ConfigurationIdentifier?: string; FieldLogicalName?: string }> => {
+	if (!metadata) {
+		return [];
+	}
+
+	if (Array.isArray(metadata)) {
+		return metadata;
+	}
+
+	return [metadata as { ConfigurationIdentifier?: string; FieldLogicalName?: string }];
+};
+
+export const getConfigurationIdentifierFields = (config: ReactFormConfiguration, entityName?: string): string[] => {
+	if (!config || !entityName) {
+		return [];
+	}
+
+	const tableMetadata = config.Form?.TableMetadata?.[entityName] ?? config.TableMetadata?.[entityName];
+	const identifierMetadata = normalizeIdentifierMetadata(tableMetadata?.ConfigurationIdentifierMetadata);
+
+	return identifierMetadata.map((item) => item.FieldLogicalName).filter((id): id is string => typeof id === "string");
+};
 
 /**
  * Load all child records for TableEntry actions in the form.

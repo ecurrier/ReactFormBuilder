@@ -1,12 +1,17 @@
 import React, { useCallback, useEffect, useState } from "react";
 import formConfig from "./data/formConfigv5.json";
 import FormBuilder from "./components/FormBuilder.jsx";
-import { retrieveFormInstance, retrieveFormVersion } from "./queries/version";
+import { retrieveFormInstance, retrieveFormVersion, retrieveUserFormSessions } from "./queries/version";
+import { loadRecordData } from "./services/dataLoader";
+import { resolveRequestorId } from "./utilities/session";
+import LoadingIndicator from "@components/LoadingIndicator";
 
 const App = () => {
 	const [config, setConfig] = useState(null);
 	const [recordData, setRecordData] = useState(null);
+	const [recordDataByEntity, setRecordDataByEntity] = useState({});
 	const [urlParams, setUrlParams] = useState(null);
+	const [formSessionInfo, setFormSessionInfo] = useState({ formInstanceId: null, userFormSessionId: null });
 	const [isLoading, setIsLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState("");
 	const [isDebugData, setIsDebugData] = useState(false);
@@ -16,6 +21,8 @@ const App = () => {
 	const loadConfig = useCallback(async () => {
 		setIsLoading(true);
 		setErrorMessage("");
+		setRecordDataByEntity({});
+		setFormSessionInfo({ formInstanceId: null, userFormSessionId: null });
 
 		try {
 			// Extract URL parameters
@@ -36,38 +43,74 @@ const App = () => {
 				parentRecordId,
 			});
 
-			// Dual loading path logic
 			if (recordId && recordLogicalName) {
-				// Path 1: Existing record - load record data and form config
+				const formInstance = await retrieveFormInstance(recordId, recordLogicalName, versionId);
+				if (!formInstance && versionId) {
+					const version = await retrieveFormVersion(versionId);
+					const formConfiguration = JSON.parse(version.FormContent);
+					setConfig(formConfiguration);
+					setRecordData(null); // No record data for new records
+					setIsDebugData(false);
+					return;
+				}
 
-				// big to-do: Load form configuration from version
-				// use recordId and recordLogicalName to load record data
-				// execute fetch that will retrieve record along with the active version linked to it
-				// do we retrieve all fields for the record, or just those in the form config?
-
-				// created form instance query to get form instance and version in /queries
-				// need to pass that record id and logicalname to load record with form instance and version
-
-				// once we have the version form content, we can render the form
-
-				// we also need to retrieve the record itself to populate the form fields
-
-				const formInstance = await retrieveFormInstance(recordId, recordLogicalName);
-
-				const formConfiguration = JSON.parse(formInstance.Version.eyfrcc_formcontent);
+				const formConfiguration = JSON.parse(formInstance.Version.FormContent);
 				setConfig(formConfiguration);
-				
-				// TODO: Load record data using dataLoader service
-				// const data = await loadRecordData(recordLogicalName, recordId, formConfiguration);
-				// setRecordData(data);
-				setRecordData(null); // Placeholder until dataLoader is implemented
-				
+				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
+				setUrlParams((prev) => ({
+					...prev,
+					versionId: prev?.versionId || formInstance.Version?.Id,
+				}));
+
+				const primaryDataPromise = loadRecordData(recordLogicalName, recordId, formConfiguration);
+				const secondaryRecords = Array.isArray(formInstance.SecondaryRecords) ? formInstance.SecondaryRecords : [];
+				const secondaryPromises = secondaryRecords.map((record) =>
+					loadRecordData(record.LogicalName, record.Id, formConfiguration).then((data) => ({
+						entityName: record.LogicalName,
+						recordId: record.Id,
+						data,
+					}))
+				);
+
+				const primaryData = await primaryDataPromise;
+				const secondaryResults = await Promise.allSettled(secondaryPromises);
+				const secondaryDataMap = {};
+
+				secondaryResults.forEach((result) => {
+					if (result.status === "fulfilled" && result.value?.data) {
+						secondaryDataMap[result.value.entityName] = result.value.data;
+					} else if (result.status === "rejected") {
+						console.warn("Failed to load secondary record data", result.reason);
+					}
+				});
+
+				setRecordData(primaryData);
+				setRecordDataByEntity(secondaryDataMap);
+
 				setIsDebugData(false);
+
+				retrieveUserFormSessions(formInstance.Id)
+					.then((sessions) => {
+						if (!Array.isArray(sessions) || sessions.length === 0) {
+							return;
+						}
+
+						const requestorId = resolveRequestorId();
+						const matchingSession = requestorId ? sessions.find((session) => session.ContactId === requestorId) : sessions[0];
+
+						if (matchingSession) {
+							setFormSessionInfo((prev) => ({ ...prev, userFormSessionId: matchingSession.Id }));
+						}
+					})
+					.catch((error) => {
+						console.warn("Failed to load user form sessions", error);
+					});
 			} else if (versionId) {
-				const versionRecord = await retrieveFormVersion(versionId);
-				const formConfiguration = JSON.parse(versionRecord.eyfrcc_formcontent);
+				const version = await retrieveFormVersion(versionId);
+				const formConfiguration = JSON.parse(version.FormContent);
 				setConfig(formConfiguration);
 				setRecordData(null); // No record data for new records
+				setRecordDataByEntity({});
 				setIsDebugData(false);
 			} else {
 				throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
@@ -86,6 +129,7 @@ const App = () => {
 				parentRecordId: null,
 			});
 			setRecordData(null);
+			setRecordDataByEntity({});
 		} finally {
 			setIsLoading(false);
 		}
@@ -100,10 +144,7 @@ const App = () => {
 			<main className="site-main">
 				<div className="app">
 					{isLoading || !config ? (
-						<div className="form-loader" role="status">
-							<span className="loader-spinner" aria-hidden="true" />
-							Loading form configuration...
-						</div>
+						<LoadingIndicator visible={isLoading} variant="full-screen" message="Loading form..." />
 					) : (
 						<>
 							{errorMessage ? (
@@ -120,9 +161,11 @@ const App = () => {
 								</div>
 							) : null}
 							{isDebugData ? <span className="debug-badge">Debug data</span> : null}
-							<FormBuilder 
-								config={config} 
+							<FormBuilder
+								config={config}
 								recordData={recordData}
+								recordDataByEntity={recordDataByEntity}
+								formSessionInfo={formSessionInfo}
 								urlParams={urlParams}
 							/>
 						</>
