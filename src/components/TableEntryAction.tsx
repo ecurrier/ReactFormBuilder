@@ -479,6 +479,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		const recordId = editingRecord?.id;
 		const isNew = editingRecord?._isNew || !recordId;
 		const resolvedParentEntityName = parentEntityName || formState?.primaryEntityName;
+		const { id, _isNew, _isPending, ...cleanedFormData } = formData ?? {};
 
 		// Check if this is a pending record (new or unsaved edit)
 		if (isTempId(recordId) || isNew) {
@@ -491,7 +492,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					referencingAttribute: config.ReferencingAttribute,
 					referencingNavigationProperty: config.ReferencingNavigationProperty || config.ReferencingAttribute,
 					parentEntityName: resolvedParentEntityName,
-					data: formData,
+					data: cleanedFormData,
 					isNew,
 				};
 
@@ -500,7 +501,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				if (isNew) {
 					formState.addPendingChildRecord(pendingRecord);
 				} else {
-					formState.updatePendingChildRecord(key, formData);
+					formState.updatePendingChildRecord(key, cleanedFormData);
 				}
 
 				setSidepaneOpen(false);
@@ -512,7 +513,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		} else {
 			// Persisted record - save via API
 			if (onSave) {
-				await onSave(formData, recordId);
+				await onSave(cleanedFormData, recordId);
 				setSidepaneOpen(false);
 				setEditingRecord(null);
 				tableRef.current?.refresh();
