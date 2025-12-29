@@ -279,6 +279,14 @@ export const handlers = [
 
 		return response;
 	}),
+	http.patch("*/_api/eyfrcc_childapplicationtests*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] Child Application Test PATCH request:", { request });
+
+		const response = HttpResponse.json({}, 204);
+		return response;
+	}),
 	http.post("*/_api/eyfrcc_standardform424s*", async ({ request }) => {
 		await delay(500);
 
@@ -317,6 +325,42 @@ export const handlers = [
 		const response = HttpResponse.json({}, 204);
 		response.headers.set("entityid", "f5a5c3f4-6f4e-ec11-b6e6-0022481f8502");
 
+		return response;
+	}),
+	http.post("*/_api/eyfrcc_forminstances*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] Form Instances POST request:", { request });
+
+		const response = HttpResponse.json({}, 204);
+		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8433");
+
+		return response;
+	}),
+	http.patch("*/_api/eyfrcc_forminstances*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] Form Instances PATCH request:", { request });
+
+		const response = HttpResponse.json({}, 204);
+		return response;
+	}),
+	http.post("*/_api/eyfrcc_userformsessions*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] User Form Sessions POST request:", { request });
+
+		const response = HttpResponse.json({}, 204);
+		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8444");
+
+		return response;
+	}),
+	http.patch("*/_api/eyfrcc_userformsessions*", async ({ request }) => {
+		await delay(500);
+
+		console.log("[MSW] User Form Sessions PATCH request:", { request });
+
+		const response = HttpResponse.json({}, 204);
 		return response;
 	}),
 ];

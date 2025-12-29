@@ -4,6 +4,7 @@ import FormBuilder from "./components/FormBuilder.jsx";
 import { retrieveFormInstance, retrieveFormVersion, retrieveUserFormSessions } from "./queries/version";
 import { loadRecordData } from "./services/dataLoader";
 import { resolveRequestorId } from "./utilities/session";
+import LoadingIndicator from "@components/LoadingIndicator";
 
 const App = () => {
 	const [config, setConfig] = useState(null);
@@ -143,10 +144,7 @@ const App = () => {
 			<main className="site-main">
 				<div className="app">
 					{isLoading || !config ? (
-						<div className="form-loader" role="status">
-							<span className="loader-spinner" aria-hidden="true" />
-							Loading form configuration...
-						</div>
+						<LoadingIndicator visible={isLoading} variant="full-screen" message="Loading form..." />
 					) : (
 						<>
 							{errorMessage ? (
