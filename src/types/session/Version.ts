@@ -1,4 +1,5 @@
 export type Version = {
-    eyfrcc_versionid: string;
-    eyfrcc_formcontent: string;
-}
+	Id: string;
+	FormId: string;
+	FormContent: string;
+};

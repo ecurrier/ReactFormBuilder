@@ -201,7 +201,7 @@ const savePrimaryRecord = async ({
 		reportProgress(onProgress, { id: progressId, scope: "primary", entityName: primaryEntity, status: "saving" });
 		let didReportFailure = false;
 
-	try {
+		try {
 			const defaults = buildDefaultOnCreateData(primaryEntity, config);
 			primaryRecordId = await createRecord(primaryEntity, defaults);
 
@@ -257,8 +257,7 @@ const saveSecondaryRecord = async ({
 		const dataToSave = mergeDefaultOnCreateData({ ...change.data }, defaults);
 		const referenceInfo = stepReferenceByEntity.get(change.entityName);
 		const navigationProperty = referenceInfo?.navigationProperty;
-		const existingRecordId =
-			change.recordId || recordIdsByEntity.get(change.entityName) || formState.getRelatedRecord?.(change.entityName)?.recordId;
+		const existingRecordId = change.recordId || recordIdsByEntity.get(change.entityName) || formState.getRelatedRecord?.(change.entityName)?.recordId;
 
 		if (!existingRecordId && navigationProperty && primaryRecordId && dataToSave[navigationProperty] === undefined) {
 			dataToSave[navigationProperty] = {
@@ -461,7 +460,7 @@ const saveChildRecord = async ({
 /**
  * Execute a draft save operation.
  * Saves only dirty fields without validation.
- * 
+ *
  * @param context - Save context containing form state and configuration
  * @returns Save result with success status and any errors
  */
@@ -469,13 +468,29 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 	const { formState, config, onProgress } = context;
 	const errors: SaveError[] = [];
 
+	/*
+		TO-DO: Somewhere in here, I need to create the FormInstance record if its not already created.
+		If creating FormInstance, I need to also create the UserFormSession record for the current user.
+		fields to default on FormInstance:
+			- eyfrcc_versionid: This will be the versionId URL param
+			- eyfrcc_primaryrecordid: If recordId URL param exists, set this to that value. Otherwise, it will be the primary record created.
+			- eyfrcc_primaryrecordlogicalname: If recordLogicalName URL param exists, set this to that value. Otherwise, it will be the primary entity from the form config.
+			- eyfrcc_secondaryrecords: JSON array of all secondary records created in the format [{ LogicalName: string, Id: string }]
+
+		fields to default on UserFormSession:
+			- eyfrcc_forminstanceid: Lookup to the FormInstance record created above
+			- eyfrcc_contactid: Lookup to current contact (requestor)
+			- eyfrcc_organizationid: Ignore... this will be set automatically by Dataverse (Plugin)
+			- eyfrcc_lastactive: Set to current date/time
+	*/
+
 	try {
 		// Step 1: Get all changed data from form state
 		const primaryEntity = config.Form?.PrimaryApplicationTable?.TableLogicalName;
 		const entityChanges = formState.serializeForSubmission();
 		const secondaryEntityChanges = entityChanges.filter((change: any) => change.entityName !== primaryEntity);
 		const stepReferenceByEntity = buildStepReferenceMap(config, primaryEntity);
-		
+
 		if (entityChanges.length === 0 && !formState.hasPendingChildren) {
 			return {
 				success: true,
@@ -618,21 +633,21 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 /**
  * Execute validate and submit operation.
  * Runs all field validations before saving.
- * 
+ *
  * @param context - Save context containing form state and configuration
  * @returns Save result with success status and any errors
  */
 export async function executeValidateAndSubmit(context: SaveContext): Promise<SaveResult> {
 	const { formState, config } = context;
 	const validationErrors: SaveError[] = [];
-	
+
 	try {
 		// Step 1: Run all field validators
 		const allFields = Object.entries(formState.metadata || {});
-		
+
 		for (const [fieldPath, metadata] of allFields) {
 			const fieldValue = formState.getFieldValue(fieldPath);
-			
+
 			// Find field configuration to get validation rules
 			let fieldConfig: any = null;
 			config.Form?.Steps?.forEach((step: any) => {
@@ -645,7 +660,7 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 
 			if (fieldConfig) {
 				const validationResult = validateField(fieldValue, fieldConfig);
-				
+
 				if (validationResult.isValid === false) {
 					validationErrors.push({
 						phase: "validation",
@@ -678,18 +693,13 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 
 /**
  * Populate form lookup field after creating a new parent record.
- * 
+ *
  * @param recordId - Parent record ID
  * @param entityName - Entity logical name
  * @param formId - Form ID to populate
  * @param formFieldName - Lookup field logical name for the form
  */
-export async function populateFormLookup(
-	recordId: string,
-	entityName: string,
-	formId: string,
-	formFieldName: string = "eyfrcc_form"
-): Promise<void> {
+export async function populateFormLookup(recordId: string, entityName: string, formId: string, formFieldName: string = "eyfrcc_form"): Promise<void> {
 	try {
 		const data = {
 			[formFieldName]: {
@@ -697,7 +707,7 @@ export async function populateFormLookup(
 				logicalName: "eyfrcc_form",
 			},
 		};
-		
+
 		await updateRecord(entityName, recordId, data);
 	} catch (error) {
 		// Log but don't fail the save if form lookup population fails
@@ -708,34 +718,31 @@ export async function populateFormLookup(
 /**
  * Reload form data after successful save.
  * Fetches latest data from Dataverse and reinitializes form state.
- * 
+ *
  * @param context - Save context
  * @param recordId - Record ID to reload
  * @returns Reloaded record data
  */
-export async function reloadFormData(
-	context: SaveContext,
-	recordId: string
-): Promise<Entity | null> {
+export async function reloadFormData(context: SaveContext, recordId: string): Promise<Entity | null> {
 	const { config, urlParams } = context;
-	
+
 	try {
 		const entityName = urlParams.recordLogicalName || config.Form?.PrimaryApplicationTable?.TableLogicalName;
-		
+
 		if (!entityName || !recordId) {
 			return null;
 		}
 
 		// Reload parent record data
 		const recordData = await loadRecordData(entityName, recordId, config);
-		
+
 		// Reload child records
 		const childRecordsMap = await loadChildRecords(recordId, config);
 
 		childRecordsMap.forEach((records, childEntityName) => {
 			formState.setChildRecords?.(childEntityName, records);
 		});
-		
+
 		return recordData;
 	} catch (error) {
 		console.error("Failed to reload form data:", error);

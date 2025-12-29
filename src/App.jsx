@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import formConfig from "./data/formConfigv5.json";
 import FormBuilder from "./components/FormBuilder.jsx";
-import { retrieveFormInstance, retrieveFormVersion } from "./queries/version";
+import { retrieveFormInstance, retrieveFormVersion, retrieveUserFormSessions } from "./queries/version";
+import { loadRecordData } from "./services/dataLoader";
 
 const App = () => {
 	const [config, setConfig] = useState(null);
@@ -36,36 +37,40 @@ const App = () => {
 				parentRecordId,
 			});
 
-			// Dual loading path logic
 			if (recordId && recordLogicalName) {
-				// Path 1: Existing record - load record data and form config
+				const formInstance = await retrieveFormInstance(recordId, recordLogicalName, versionId);
+				if (!formInstance && versionId) {
+					const version = await retrieveFormVersion(versionId);
+					const formConfiguration = JSON.parse(version.FormContent);
+					setConfig(formConfiguration);
+					setRecordData(null); // No record data for new records
+					setIsDebugData(false);
+					return;
+				}
 
-				// big to-do: Load form configuration from version
-				// use recordId and recordLogicalName to load record data
-				// execute fetch that will retrieve record along with the active version linked to it
-				// do we retrieve all fields for the record, or just those in the form config?
+				// check secondaryRecords field for any linked records and load them as well
+				if (formInstance.SecondaryRecords && formInstance.SecondaryRecords.length > 0) {
+					// TO-DO: Retrieve each secondary record data - in parallel if possible
+				}
 
-				// created form instance query to get form instance and version in /queries
-				// need to pass that record id and logicalname to load record with form instance and version
+				// retrieve user form session for the current user
+				// TO-DO: not tracking current step info anymore, so this can be loaded asynchronously
+				var userFormSessions = await retrieveUserFormSessions(formInstance.Id);
 
-				// once we have the version form content, we can render the form
-
-				// we also need to retrieve the record itself to populate the form fields
-
-				const formInstance = await retrieveFormInstance(recordId, recordLogicalName);
-
-				const formConfiguration = JSON.parse(formInstance.Version.eyfrcc_formcontent);
+				const formConfiguration = JSON.parse(formInstance.Version.FormContent);
 				setConfig(formConfiguration);
-				
+
 				// TODO: Load record data using dataLoader service
-				// const data = await loadRecordData(recordLogicalName, recordId, formConfiguration);
+				// Load secondary record data within this method as well
+				const data = await loadRecordData(recordLogicalName, recordId, formConfiguration);
+
 				// setRecordData(data);
 				setRecordData(null); // Placeholder until dataLoader is implemented
-				
+
 				setIsDebugData(false);
 			} else if (versionId) {
-				const versionRecord = await retrieveFormVersion(versionId);
-				const formConfiguration = JSON.parse(versionRecord.eyfrcc_formcontent);
+				const version = await retrieveFormVersion(versionId);
+				const formConfiguration = JSON.parse(version.FormContent);
 				setConfig(formConfiguration);
 				setRecordData(null); // No record data for new records
 				setIsDebugData(false);
@@ -120,11 +125,7 @@ const App = () => {
 								</div>
 							) : null}
 							{isDebugData ? <span className="debug-badge">Debug data</span> : null}
-							<FormBuilder 
-								config={config} 
-								recordData={recordData}
-								urlParams={urlParams}
-							/>
+							<FormBuilder config={config} recordData={recordData} urlParams={urlParams} />
 						</>
 					)}
 				</div>

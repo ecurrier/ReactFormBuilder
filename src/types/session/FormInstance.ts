@@ -3,7 +3,6 @@ import { Version } from "./Version";
 
 export interface FormInstance {
     Id: string;
-    FormId: string;
     Version: Version;
     PrimaryRecordId: string;
     PrimaryRecordLogicalName: string;
