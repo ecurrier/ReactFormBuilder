@@ -30,6 +30,23 @@ export const ValidationType = {
 };
 
 /**
+ * Table Validation Type enumeration
+ */
+export const TableValidationType = {
+	AtLeastOneRecord: 643260000,
+	NoValidation: 643260001,
+};
+
+/**
+ * Document Validation Type enumeration
+ */
+export const DocumentValidationType = {
+	NoValidation: 203300000,
+	OneFileOnly: 203300001,
+	AtLeastOneFile: 203300002,
+};
+
+/**
  * Condition Type enumeration
  */
 export const ConditionType = {

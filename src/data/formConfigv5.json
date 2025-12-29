@@ -491,6 +491,7 @@
 						"Properties": {
 							"FolderName": "SupportingDocumentation",
 							"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Please upload any supporting documentation</p></div>",
+							"validationType": 203300000,
 							"ValidationMessage": null
 						}
 					},
@@ -925,6 +926,7 @@
 											"Properties": {
 												"FolderName": "InformationUpload",
 												"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Please upload information</p></div>",
+												"validationType": 203300000,
 												"ValidationMessage": null
 											}
 										}
@@ -1284,6 +1286,7 @@
 						"Properties": {
 							"FolderName": "TaxDocuments",
 							"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Upload supporting tax documentation</p></div>",
+							"validationType": 203300002,
 							"ValidationMessage": "Please upload at least one file"
 						}
 					}
@@ -1331,6 +1334,7 @@
 						"Properties": {
 							"FolderName": "SupportingDocuments",
 							"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Please upload any supporting documentation</p></div>",
+							"validationType": 203300000,
 							"ValidationMessage": null
 						}
 					}
@@ -1347,6 +1351,18 @@
 				"EntityDescription": "This table represents the template \"child\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",
 				"PrimaryIdAttribute": "eyfrcc_childapplicationtestid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [
+					{
+						"ConfigurationIdentifier": "DocumentPath",
+						"FieldLogicalName": "eyfrcc_documentpath",
+						"NavigationPropertyName": null
+					},
+					{
+						"ConfigurationIdentifier": "ApplicationNumber",
+						"FieldLogicalName": "eyfrcc_applicationnumber",
+						"NavigationPropertyName": null
+					}
+				],
 				"DefaultOnCreateActions": [
 					{
 						"ConfigurationIdentifierMetadata": {
@@ -1379,6 +1395,7 @@
 				"EntityDescription": "A subapplicant is a non-Federal entity that is invited to apply for a subaward from a pass-through entity to carry out part of a Federal program. ",
 				"PrimaryIdAttribute": "eyfrcc_subrecipientid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_project": {
@@ -1389,6 +1406,7 @@
 				"EntityDescription": "A planned set of activities or services that the applicant will carry out using the funding, designed to address a specific need or goal in the community.",
 				"PrimaryIdAttribute": "eyfrcc_projectid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_standardform424a": {
@@ -1399,6 +1417,7 @@
 				"EntityDescription": "The Standard Form 424A (SF-424A) is used to budget and request grant funds for non-construction programs. It is part of the broader Standard Form 424 Form Family of government-wide standard data sets.",
 				"PrimaryIdAttribute": "eyfrcc_standardform424aid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_standardform424": {
@@ -1409,6 +1428,7 @@
 				"EntityDescription": "The Standard Form 424 (SF-424) is used in all federal grant applications and collects information including type of submission, applicant information, type of applicant, and proposed project dates. It is part of the broader Standard Forms 424 Form Family of government-wide standard data sets.",
 				"PrimaryIdAttribute": "eyfrcc_standardform424id",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_standardform425": {
@@ -1419,6 +1439,18 @@
 				"EntityDescription": "The Standard Form 425 (SF-425) is used by recipients to submit reports on their grant's financial progress. It is part of the broader Form Family of government-wide standard data sets.",
 				"PrimaryIdAttribute": "eyfrcc_standardform425id",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [
+					{
+						"ConfigurationIdentifier": "DocumentPath",
+						"FieldLogicalName": "eyfrcc_documentpath",
+						"NavigationPropertyName": null
+					},
+					{
+						"ConfigurationIdentifier": "ApplicationNumber",
+						"FieldLogicalName": "eyfrcc_recordnumber",
+						"NavigationPropertyName": null
+					}
+				],
 				"DefaultOnCreateActions": [
 					{
 						"ConfigurationIdentifierMetadata": {
@@ -1451,6 +1483,7 @@
 				"EntityDescription": "An expenditure represents the amount of money paid out or is spent. These are reported by a recipient relating to their award.",
 				"PrimaryIdAttribute": "eyfrcc_expenditureid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_form": {
@@ -1461,6 +1494,7 @@
 				"EntityDescription": "A form represents a user interface that users can use to create data and/or interact with data that is relevant to them. This can be used to create application and report forms, review checklists, and review process flows.",
 				"PrimaryIdAttribute": "eyfrcc_formid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_applicationtype": {
@@ -1471,6 +1505,7 @@
 				"EntityDescription": "A funding opportunity represents the official availability of funding through a program. Each opportunity has an overview of eligibility criteria, required documentation, the application process, and award details. An application form is built in order to allow an external user to apply for funding.",
 				"PrimaryIdAttribute": "eyfrcc_applicationtypeid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
 			"contact": {
@@ -1481,6 +1516,7 @@
 				"EntityDescription": "Person with whom a business unit has a relationship, such as customer, supplier, and colleague.",
 				"PrimaryIdAttribute": "contactid",
 				"PrimaryNameAttribute": "fullname",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_fiscalyear": {
@@ -1491,6 +1527,7 @@
 				"EntityDescription": "A fiscal year is used in accounting and for budget purposes. It is used to help perform financial reporting on important, key dates used throughout the system.",
 				"PrimaryIdAttribute": "eyfrcc_fiscalyearid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_indirectcostratelines": {
@@ -1501,6 +1538,7 @@
 				"EntityDescription": "A table used to capture the indirect cost rates associated with a particular Negotiated Indirect Cost Rate Agreement (NICRA). An indirect cost rate is the ratio between the total indirect expenses and some direct cost base.",
 				"PrimaryIdAttribute": "eyfrcc_indirectcostratelinesid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			}
 		}
