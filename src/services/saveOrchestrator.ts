@@ -4,7 +4,8 @@ import type { Entity, EntityReference } from "../types/Entity";
 import type { SaveError, SaveProgressEvent, SaveResult } from "../types/SaveOrchestrator";
 import { validateField } from "./validation/validators";
 import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "../types/config";
-import type { ExtendedWindow } from "../types";
+import { createFormInstance, createUserFormSession } from "../queries/version";
+import { resolveRequestorId } from "../utilities/session";
 
 export interface SaveContext {
 	formState: any;
@@ -75,15 +76,6 @@ const normalizeConfigurationIdentifierMetadata = (
 	return [metadata];
 };
 
-const resolveRequestorId = (): string | null => {
-	if (typeof window === "undefined") {
-		return null;
-	}
-
-	const extWindow = window as ExtendedWindow;
-	return extWindow.Microsoft?.Dynamic365?.Portal?.User?.contactId ?? null;
-};
-
 const resolveDefaultLookupValue = (identifier: string, config: ReactFormConfiguration): EntityReference | null => {
 	switch (identifier) {
 		case "Form":
@@ -139,6 +131,88 @@ const mergeDefaultOnCreateData = (data: Partial<Entity>, defaults: Partial<Entit
 	});
 
 	return merged;
+};
+
+const buildSecondaryRecordsPayload = (recordIdsByEntity: Map<string, string>, primaryEntity?: string) => {
+	const secondaryRecords: Array<{ LogicalName: string; Id: string }> = [];
+
+	recordIdsByEntity.forEach((recordId, entityName) => {
+		if (entityName === primaryEntity) {
+			return;
+		}
+
+		secondaryRecords.push({ LogicalName: entityName, Id: recordId });
+	});
+
+	return secondaryRecords;
+};
+
+const ensureFormInstanceAndSession = async ({
+	formState,
+	config,
+	urlParams,
+	primaryEntity,
+	primaryRecordId,
+	recordIdsByEntity,
+}: {
+	formState: any;
+	config: ReactFormConfiguration;
+	urlParams: any;
+	primaryEntity?: string;
+	primaryRecordId: string | null;
+	recordIdsByEntity: Map<string, string>;
+}) => {
+	const resolvedPrimaryRecordId = primaryRecordId || formState.recordId || urlParams?.recordId;
+	const primaryRecordLogicalName = urlParams?.recordLogicalName || primaryEntity;
+	const versionId = urlParams?.versionId;
+
+	if (!resolvedPrimaryRecordId || !primaryRecordLogicalName) {
+		return;
+	}
+
+	const secondaryRecords = buildSecondaryRecordsPayload(recordIdsByEntity, primaryEntity);
+
+	let formInstanceId = formState.formInstanceId;
+
+	if (formInstanceId) {
+		await updateRecord("eyfrcc_forminstance", formInstanceId, {
+			eyfrcc_primaryrecordid: resolvedPrimaryRecordId,
+			eyfrcc_primaryrecordlogicalname: primaryRecordLogicalName,
+			eyfrcc_secondaryrecords: JSON.stringify(secondaryRecords),
+		});
+	} else if (versionId) {
+		formInstanceId = await createFormInstance({
+			versionId,
+			primaryRecordId: resolvedPrimaryRecordId,
+			primaryRecordLogicalName,
+			secondaryRecords,
+		});
+
+		if (!formInstanceId) {
+			throw new Error("Failed to create form instance");
+		}
+
+		formState.setFormInstanceId?.(formInstanceId);
+	}
+
+	if (!formInstanceId || formState.userFormSessionId) {
+		return;
+	}
+
+	const contactId = resolveRequestorId();
+	if (!contactId) {
+		return;
+	}
+
+	const sessionId = await createUserFormSession({
+		formInstanceId,
+		contactId,
+		lastActive: new Date(),
+	});
+
+	if (sessionId) {
+		formState.setUserFormSessionId?.(sessionId);
+	}
 };
 
 const savePrimaryRecord = async ({
@@ -610,7 +684,19 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 			}
 		}
 
-		// Step 5: Reset dirty flags for successfully saved fields
+		// Step 5: Ensure form instance + user session are created/updated
+		if (errors.length === 0) {
+			await ensureFormInstanceAndSession({
+				formState,
+				config,
+				urlParams: context.urlParams,
+				primaryEntity,
+				primaryRecordId,
+				recordIdsByEntity,
+			});
+		}
+
+		// Step 6: Reset dirty flags for successfully saved fields
 		if (errors.length === 0) {
 			formState.resetDirty();
 		}

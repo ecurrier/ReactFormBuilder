@@ -11,6 +11,8 @@ const initialFormState: FormState = {
 	metadata: {},
 	recordId: null,
 	primaryEntityName: "",
+	formInstanceId: null,
+	userFormSessionId: null,
 	relatedRecords: {},
 	childRecords: {},
 	pendingChildRecords: {},
@@ -72,6 +74,20 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
 			return {
 				...state,
 				recordId: action.recordId,
+			};
+		}
+
+		case "SET_FORM_INSTANCE_ID": {
+			return {
+				...state,
+				formInstanceId: action.formInstanceId,
+			};
+		}
+
+		case "SET_USER_FORM_SESSION_ID": {
+			return {
+				...state,
+				userFormSessionId: action.userFormSessionId,
 			};
 		}
 
@@ -329,6 +345,20 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	}, []);
 
 	/**
+	 * Sets the form instance ID.
+	 */
+	const setFormInstanceId = useCallback((formInstanceId: string | null) => {
+		dispatch({ type: "SET_FORM_INSTANCE_ID", formInstanceId });
+	}, []);
+
+	/**
+	 * Sets the user form session ID.
+	 */
+	const setUserFormSessionId = useCallback((userFormSessionId: string | null) => {
+		dispatch({ type: "SET_USER_FORM_SESSION_ID", userFormSessionId });
+	}, []);
+
+	/**
 	 * Resets dirty flags for specified fields or all fields.
 	 */
 	const resetDirty = useCallback((paths?: string[]) => {
@@ -564,6 +594,8 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		// State
 		recordId: state.recordId,
 		primaryEntityName: state.primaryEntityName,
+		formInstanceId: state.formInstanceId,
+		userFormSessionId: state.userFormSessionId,
 		relatedRecords: state.relatedRecords,
 		childRecords: state.childRecords,
 		pendingChildRecords: state.pendingChildRecords,
@@ -575,6 +607,8 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		registerField,
 		updateFieldValue,
 		setRecordId,
+		setFormInstanceId,
+		setUserFormSessionId,
 		resetDirty,
 		resetForm,
 		initializeFormData,

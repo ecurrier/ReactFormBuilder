@@ -7,8 +7,9 @@ import { populateFieldsFromData } from "../services/dataLoader.ts";
 import { executeSaveDraft, executeValidateAndSubmit, populateFormLookup, reloadFormData } from "../services/saveOrchestrator.ts";
 import LoadingIndicator from "./LoadingIndicator.tsx";
 import { buildEntityMetadataMap, resolveEntityDisplayName, setEntityMetadataCache } from "../utilities/entityMetadata";
+import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
 
-const FormBuilder = ({ config, recordData, urlParams }) => {
+const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams }) => {
 	const orderedSteps = useMemo(() => {
 		if (!Array.isArray(config?.Form?.Steps)) {
 			return [];
@@ -51,6 +52,37 @@ const FormBuilder = ({ config, recordData, urlParams }) => {
 			formState.initializeFormData(fieldData);
 		}
 	}, [recordData, primaryEntity, formState.initializeFormData]);
+
+	useEffect(() => {
+		if (!recordDataByEntity) {
+			return;
+		}
+
+		Object.entries(recordDataByEntity).forEach(([entityName, data]) => {
+			if (!data) {
+				return;
+			}
+
+			const fieldData = populateFieldsFromData(data, entityName, config);
+			formState.initializeFormData(fieldData);
+
+			const primaryIdAttribute = resolvePrimaryIdAttribute(entityName);
+			const relatedRecordId = data?.id || data?.[primaryIdAttribute];
+			if (relatedRecordId) {
+				formState.setRelatedRecord(entityName, relatedRecordId);
+			}
+		});
+	}, [recordDataByEntity, config, formState.initializeFormData, formState.setRelatedRecord]);
+
+	useEffect(() => {
+		if (formSessionInfo?.formInstanceId) {
+			formState.setFormInstanceId(formSessionInfo.formInstanceId);
+		}
+
+		if (formSessionInfo?.userFormSessionId) {
+			formState.setUserFormSessionId(formSessionInfo.userFormSessionId);
+		}
+	}, [formSessionInfo, formState.setFormInstanceId, formState.setUserFormSessionId]);
 
 	useEffect(() => {
 		setEntityMetadataCache(entityMetadata);
@@ -640,6 +672,11 @@ FormBuilder.propTypes = {
 		}),
 	}).isRequired,
 	recordData: PropTypes.object,
+	recordDataByEntity: PropTypes.object,
+	formSessionInfo: PropTypes.shape({
+		formInstanceId: PropTypes.string,
+		userFormSessionId: PropTypes.string,
+	}),
 	urlParams: PropTypes.shape({
 		recordId: PropTypes.string,
 		versionId: PropTypes.string,

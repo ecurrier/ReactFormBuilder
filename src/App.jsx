@@ -3,11 +3,15 @@ import formConfig from "./data/formConfigv5.json";
 import FormBuilder from "./components/FormBuilder.jsx";
 import { retrieveFormInstance, retrieveFormVersion, retrieveUserFormSessions } from "./queries/version";
 import { loadRecordData } from "./services/dataLoader";
+import { resolveRequestorId } from "./utilities/session";
+import LoadingIndicator from "@components/LoadingIndicator";
 
 const App = () => {
 	const [config, setConfig] = useState(null);
 	const [recordData, setRecordData] = useState(null);
+	const [recordDataByEntity, setRecordDataByEntity] = useState({});
 	const [urlParams, setUrlParams] = useState(null);
+	const [formSessionInfo, setFormSessionInfo] = useState({ formInstanceId: null, userFormSessionId: null });
 	const [isLoading, setIsLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState("");
 	const [isDebugData, setIsDebugData] = useState(false);
@@ -17,6 +21,8 @@ const App = () => {
 	const loadConfig = useCallback(async () => {
 		setIsLoading(true);
 		setErrorMessage("");
+		setRecordDataByEntity({});
+		setFormSessionInfo({ formInstanceId: null, userFormSessionId: null });
 
 		try {
 			// Extract URL parameters
@@ -48,31 +54,63 @@ const App = () => {
 					return;
 				}
 
-				// check secondaryRecords field for any linked records and load them as well
-				if (formInstance.SecondaryRecords && formInstance.SecondaryRecords.length > 0) {
-					// TO-DO: Retrieve each secondary record data - in parallel if possible
-				}
-
-				// retrieve user form session for the current user
-				// TO-DO: not tracking current step info anymore, so this can be loaded asynchronously
-				var userFormSessions = await retrieveUserFormSessions(formInstance.Id);
-
 				const formConfiguration = JSON.parse(formInstance.Version.FormContent);
 				setConfig(formConfiguration);
+				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
+				setUrlParams((prev) => ({
+					...prev,
+					versionId: prev?.versionId || formInstance.Version?.Id,
+				}));
 
-				// TODO: Load record data using dataLoader service
-				// Load secondary record data within this method as well
-				const data = await loadRecordData(recordLogicalName, recordId, formConfiguration);
+				const primaryDataPromise = loadRecordData(recordLogicalName, recordId, formConfiguration);
+				const secondaryRecords = Array.isArray(formInstance.SecondaryRecords) ? formInstance.SecondaryRecords : [];
+				const secondaryPromises = secondaryRecords.map((record) =>
+					loadRecordData(record.LogicalName, record.Id, formConfiguration).then((data) => ({
+						entityName: record.LogicalName,
+						recordId: record.Id,
+						data,
+					}))
+				);
 
-				// setRecordData(data);
-				setRecordData(null); // Placeholder until dataLoader is implemented
+				const primaryData = await primaryDataPromise;
+				const secondaryResults = await Promise.allSettled(secondaryPromises);
+				const secondaryDataMap = {};
+
+				secondaryResults.forEach((result) => {
+					if (result.status === "fulfilled" && result.value?.data) {
+						secondaryDataMap[result.value.entityName] = result.value.data;
+					} else if (result.status === "rejected") {
+						console.warn("Failed to load secondary record data", result.reason);
+					}
+				});
+
+				setRecordData(primaryData);
+				setRecordDataByEntity(secondaryDataMap);
 
 				setIsDebugData(false);
+
+				retrieveUserFormSessions(formInstance.Id)
+					.then((sessions) => {
+						if (!Array.isArray(sessions) || sessions.length === 0) {
+							return;
+						}
+
+						const requestorId = resolveRequestorId();
+						const matchingSession = requestorId ? sessions.find((session) => session.ContactId === requestorId) : sessions[0];
+
+						if (matchingSession) {
+							setFormSessionInfo((prev) => ({ ...prev, userFormSessionId: matchingSession.Id }));
+						}
+					})
+					.catch((error) => {
+						console.warn("Failed to load user form sessions", error);
+					});
 			} else if (versionId) {
 				const version = await retrieveFormVersion(versionId);
 				const formConfiguration = JSON.parse(version.FormContent);
 				setConfig(formConfiguration);
 				setRecordData(null); // No record data for new records
+				setRecordDataByEntity({});
 				setIsDebugData(false);
 			} else {
 				throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
@@ -91,6 +129,7 @@ const App = () => {
 				parentRecordId: null,
 			});
 			setRecordData(null);
+			setRecordDataByEntity({});
 		} finally {
 			setIsLoading(false);
 		}
@@ -105,10 +144,7 @@ const App = () => {
 			<main className="site-main">
 				<div className="app">
 					{isLoading || !config ? (
-						<div className="form-loader" role="status">
-							<span className="loader-spinner" aria-hidden="true" />
-							Loading form configuration...
-						</div>
+						<LoadingIndicator visible={isLoading} variant="full-screen" message="Loading form..." />
 					) : (
 						<>
 							{errorMessage ? (
@@ -125,7 +161,13 @@ const App = () => {
 								</div>
 							) : null}
 							{isDebugData ? <span className="debug-badge">Debug data</span> : null}
-							<FormBuilder config={config} recordData={recordData} urlParams={urlParams} />
+							<FormBuilder
+								config={config}
+								recordData={recordData}
+								recordDataByEntity={recordDataByEntity}
+								formSessionInfo={formSessionInfo}
+								urlParams={urlParams}
+							/>
 						</>
 					)}
 				</div>
