@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import LookupAdvancedSearchModal from "./LookupAdvancedSearchModal";
-import { searchLookupQuick } from "../../services/lookupService";
+import { searchLookupQuick } from "../../../services/lookupService";
 
 const formatLabel = (value) => {
 	if (!value) {
@@ -14,7 +14,7 @@ const formatLabel = (value) => {
 		.replace(/\b\w/g, (match) => match.toUpperCase());
 };
 
-const LookupControl = ({ inputId, label, placeholder, value, onChange, targets, isReadOnly, isRequired }) => {
+export const LookupControl = ({ inputId, label, placeholder, value, onChange, targets, isReadOnly, isRequired }) => {
 	const [searchText, setSearchText] = useState("");
 	const [results, setResults] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);

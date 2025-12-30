@@ -139,21 +139,21 @@ export const handlers = [
 		await delay(500);
 		return HttpResponse.json({
 			"@odata.context":
-				"https://eyga-fedcore2.crm.dynamics.com/api/data/v9.2/$metadata#eyfrcc_forminstances(eyfrcc_forminstanceid,eyfrcc_primaryrecordid,eyfrcc_primaryrecordlogicalname,_eyfrcc_versionid_value,eyfrcc_VersionId,eyfrcc_relatedrecords,eyfrcc_VersionId())",
+				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_projects(eyfrcc_projectid,eyfrcc_name,eyfrcc_description,eyfrcc_proposedstartdate,eyfrcc_proposedenddate,eyfrcc_projectcongressionaldistrict)",
+			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
+			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
+			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
 			value: [
 				{
-					"@odata.etag": 'W/"51348017"',
-					eyfrcc_name: "Evan's Test Project",
-					eyfrcc_projectid: "b1a5c3f4-6f4e-ec11-b6e6-0022481f8475",
-					createdon: "2024-05-01T15:52:12Z",
-					eyfrcc_description: "This is a test project created by Evan.",
-				},
-				{
-					"@odata.etag": 'W/"51348017"',
-					eyfrcc_name: "Cheryl's Test Project",
-					eyfrcc_projectid: "b1a5c3f4-6f4e-ec11-b6e6-0022481f8476",
-					createdon: "2024-05-02T10:30:00Z",
-					eyfrcc_description: "This is a test project created by Cheryl.",
+					"@odata.etag": 'W/"51518713"',
+					"eyfrcc_proposedstartdate@OData.Community.Display.V1.FormattedValue": "12/29/2025",
+					eyfrcc_proposedstartdate: "2025-12-30T00:00:00Z",
+					eyfrcc_projectcongressionaldistrict: "Idk",
+					eyfrcc_name: "React Project",
+					"eyfrcc_proposedenddate@OData.Community.Display.V1.FormattedValue": "1/9/2026",
+					eyfrcc_proposedenddate: "2026-01-10T00:00:00Z",
+					eyfrcc_projectid: "2487281d-0de5-f011-8544-7ced8d21d821",
+					eyfrcc_description: "Description",
 				},
 			],
 		});
