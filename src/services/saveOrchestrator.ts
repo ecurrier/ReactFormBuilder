@@ -4,7 +4,7 @@ import type { Entity, EntityReference } from "../types/Entity";
 import type { SaveError, SaveProgressEvent, SaveResult } from "../types/SaveOrchestrator";
 import { validateField } from "./validation/validators";
 import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "../types/config";
-import { createFormInstance, createUserFormSession } from "../queries/version";
+import { createFormInstance, createUserFormSession } from "@services/formInstanceManagement";
 import { resolveRequestorId } from "../utilities/session";
 import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "../utilities/entityMetadata";
 import { sanitizeGuid } from "../utilities/Serialization";
