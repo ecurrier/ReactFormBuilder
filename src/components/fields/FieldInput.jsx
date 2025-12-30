@@ -42,7 +42,14 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 		required: properties.IsRequired,
 		className: "form-control",
 		value: value ?? "",
-		onChange: (e) => onChange(e.target.value),
+		onChange: (eventOrValue) => {
+			if (typeof eventOrValue === "string" || eventOrValue === null) {
+				onChange(eventOrValue);
+				return;
+			}
+
+			onChange(eventOrValue.target.value);
+		},
 	};
 
 	if (placeholder) {
