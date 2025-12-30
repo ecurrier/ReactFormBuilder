@@ -83,14 +83,7 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 		}
 
 		const primaryKey = resolvePrimaryIdAttribute(entityName);
-		const keysToDrop = new Set([
-			"id",
-			primaryKey,
-			"_isNew",
-			"_isPending",
-			referencingAttribute,
-			referencingNavigationProperty,
-		]);
+		const keysToDrop = new Set(["id", primaryKey, "_isNew", "_isPending", referencingAttribute, referencingNavigationProperty]);
 
 		const entries = Object.entries(data).filter(([key]) => {
 			if (!key) {

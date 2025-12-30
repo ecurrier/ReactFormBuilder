@@ -26,7 +26,6 @@ const App = () => {
 		setFormSessionInfo({ formInstanceId: null, userFormSessionId: null });
 
 		try {
-			// Extract URL parameters
 			const searchParams = new URLSearchParams(window.location.search);
 			const recordId = searchParams.get("recordId");
 			const versionId = searchParams.get("versionId");
@@ -44,27 +43,61 @@ const App = () => {
 				parentRecordId,
 			});
 
+			// SCENARIO 1: New record (no recordId)
+			if (!recordId && versionId) {
+				const version = await retrieveFormVersion(versionId);
+				const formConfiguration = JSON.parse(version.FormContent);
+				setConfig(formConfiguration);
+				setRecordData(null);
+				setRecordDataByEntity({});
+				setIsFormConfigurationLoading(false);
+				setIsRecordDataLoading(false);
+				setIsDebugData(false);
+				return;
+			}
+
+			// SCENARIO 2 & 3: Existing record
 			if (recordId && recordLogicalName) {
-				const formInstance = await retrieveFormInstance(recordId, recordLogicalName, versionId);
-				if (!formInstance && versionId) {
-					const version = await retrieveFormVersion(versionId);
-					const formConfiguration = JSON.parse(version.FormContent);
-					setConfig(formConfiguration);
-					setIsFormConfigurationLoading(false);
-					setRecordData(null); // No record data for new records
-					setIsDebugData(false);
-					return;
+				let formInstance;
+
+				// Determine which version to use
+				if (versionId) {
+					// CASE A: User explicitly wants a specific version
+					formInstance = await retrieveFormInstance(recordId, recordLogicalName, versionId);
+					if (!formInstance) {
+						// this should be a hard error case for now... this means that the user is trying
+						// to access a specific version of a record that doesnt exist
+						// we should provide a message and not attempt to load any data
+						// in the future we can prompt them to start a new form for the latest version instead.
+						// if no, then do nothing except a message
+						// if yes, then create a new form instance for the latest version and use that
+						return;
+					}
+				} else {
+					// CASE B: No versionId - get/create formInstance for latest active version
+
+					// This will either return existing formInstance for latest version
+					// or create a new one (copying secondary records from old version if it exists)
+					formInstance = await retrieveOrCreateFormInstanceForLatestVersion(recordId, recordLogicalName);
+					// if this is null, then this should be a hard error case... unable to load or create form instance
+					// this means that we were unable to generate or find a form instance for the latest version
+					// which indicates a deeper issue (no active versions?) Which means we should not proceed
+					// we should prompt the user to start a new form for the latest version instead.
+					// if no, then do nothing except a message
+					// if yes, then create a new form instance for the latest version and use that
 				}
 
+				// At this point, formInstance is guaranteed to exist
 				const formConfiguration = JSON.parse(formInstance.Version.FormContent);
 				setConfig(formConfiguration);
 				setIsFormConfigurationLoading(false);
 				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
 				setUrlParams((prev) => ({
 					...prev,
-					versionId: prev?.versionId || formInstance.Version?.Id,
+					versionId: formInstance.Version.Id,
 				}));
 
+				// Load primary + secondary data
 				setIsRecordDataLoading(true);
 				const primaryDataPromise = loadRecordData(recordLogicalName, recordId, formConfiguration);
 				const secondaryRecords = Array.isArray(formInstance.SecondaryRecords) ? formInstance.SecondaryRecords : [];
@@ -91,9 +124,9 @@ const App = () => {
 				setRecordData(primaryData);
 				setRecordDataByEntity(secondaryDataMap);
 				setIsRecordDataLoading(false);
-
 				setIsDebugData(false);
 
+				// Load user form sessions
 				retrieveUserFormSessions(formInstance.Id)
 					.then((sessions) => {
 						if (!Array.isArray(sessions) || sessions.length === 0) {
@@ -110,18 +143,11 @@ const App = () => {
 					.catch((error) => {
 						console.warn("Failed to load user form sessions", error);
 					});
-			} else if (versionId) {
-				const version = await retrieveFormVersion(versionId);
-				const formConfiguration = JSON.parse(version.FormContent);
-				setConfig(formConfiguration);
-				setRecordData(null); // No record data for new records
-				setRecordDataByEntity({});
-				setIsFormConfigurationLoading(false);
-				setIsRecordDataLoading(false);
-				setIsDebugData(false);
-			} else {
-				throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
+
+				return;
 			}
+
+			throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
 		} catch (error) {
 			console.error("Failed to load form configuration", error);
 			setErrorMessage(`Unable to load the form configuration: ${error.message}. Showing debug data instead.`);
@@ -139,8 +165,6 @@ const App = () => {
 			setRecordDataByEntity({});
 			setIsFormConfigurationLoading(false);
 			setIsRecordDataLoading(false);
-		} finally {
-			setIsFormConfigurationLoading(false);
 		}
 	}, [isDebugMode]);
 
