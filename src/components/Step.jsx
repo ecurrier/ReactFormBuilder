@@ -77,17 +77,27 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 	}, [actions, getRelatedRecord, primaryEntityName, primaryRecordId, step.EntityLogicalName]);
 
 	// Stable callbacks for TableEntry actions
-	const sanitizeTableEntryData = useCallback((data) => {
+	const sanitizeTableEntryData = useCallback((entityName, data, referencingAttribute, referencingNavigationProperty) => {
 		if (!data || typeof data !== "object") {
 			return {};
 		}
+
+		const primaryKey = resolvePrimaryIdAttribute(entityName);
+		const keysToDrop = new Set([
+			"id",
+			primaryKey,
+			"_isNew",
+			"_isPending",
+			referencingAttribute,
+			referencingNavigationProperty,
+		]);
 
 		const entries = Object.entries(data).filter(([key]) => {
 			if (!key) {
 				return false;
 			}
 
-			if (["id", "_isNew", "_isPending"].includes(key)) {
+			if (keysToDrop.has(key)) {
 				return false;
 			}
 
@@ -102,8 +112,8 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 	}, []);
 
 	const handleTableEntrySave = useCallback(
-		async (entityName, data, rowRecordId) => {
-			const cleanedData = sanitizeTableEntryData(data);
+		async (entityName, data, rowRecordId, referencingAttribute, referencingNavigationProperty) => {
+			const cleanedData = sanitizeTableEntryData(entityName, data, referencingAttribute, referencingNavigationProperty);
 
 			if (rowRecordId) {
 				await updateRecord(entityName, rowRecordId, cleanedData);

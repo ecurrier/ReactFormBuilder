@@ -50,7 +50,13 @@ export interface TableEntryActionProps {
 	formState?: any;
 	fetchData: (sort?: TableSortState, pagination?: PaginationOptions) => Promise<TableDataResponse<any>>;
 	shouldLoadData?: boolean;
-	onSave?: (entityName: string, data: any, recordId?: string) => Promise<void>;
+	onSave?: (
+		entityName: string,
+		data: any,
+		recordId?: string,
+		referencingAttribute?: string,
+		referencingNavigationProperty?: string | null
+	) => Promise<void>;
 	onDelete?: (entityName: string, recordId: string) => Promise<void>;
 	className?: string;
 }
@@ -490,7 +496,13 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		} else {
 			// Persisted record - save via API
 			if (onSave) {
-				await onSave(config.ChildEntityLogicalName, cleanedFormData, recordId);
+				await onSave(
+					config.ChildEntityLogicalName,
+					cleanedFormData,
+					recordId,
+					config.ReferencingAttribute,
+					config.ReferencingNavigationProperty
+				);
 				setSidepaneOpen(false);
 				setEditingRecord(null);
 				tableRef.current?.refresh();
