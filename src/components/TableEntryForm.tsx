@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import FieldInput from "./fields/FieldInput.jsx";
+import StepActions from "./StepActions.jsx";
 import { ActionType } from "../constants/enums.js";
 
 interface FieldAction {
@@ -90,17 +90,16 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 		[config.ChildEntityLogicalName, getFieldValue, registerField, updateFieldValue]
 	);
 
-	// Collect all field actions from all steps
-	const allFieldActions = React.useMemo(() => {
-		const actions: Array<{ action: FieldAction; entityName?: string }> = [];
+	// Collect all actions from all steps
+	const actionItems = React.useMemo(() => {
+		const items: Array<{ action: FieldAction; entityName?: string }> = [];
 		(config.ChildFormSteps || []).forEach((step) => {
 			(step.Actions || []).forEach((action) => {
-				if (action.Type === ActionType.FieldInput) {
-					actions.push({ action, entityName: step.EntityLogicalName });
-				}
+				items.push({ action, entityName: step.EntityLogicalName });
 			});
 		});
-		return actions.sort((a, b) => (a.action.Order ?? 0) - (b.action.Order ?? 0));
+
+		return items.sort((a, b) => (a.action.Order ?? 0) - (b.action.Order ?? 0));
 	}, [config.ChildFormSteps]);
 
 	const handleSubmit = (e: React.FormEvent) => {
@@ -121,7 +120,9 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 		onSave(dataToSave);
 	};
 
-	if (allFieldActions.length === 0) {
+	const hasFieldInputs = actionItems.some((item) => item.action?.Type === ActionType.FieldInput);
+
+	if (!hasFieldInputs) {
 		return (
 			<div className="table-entry-form">
 				<p>No fields are configured for this form.</p>
@@ -138,9 +139,7 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 		<form onSubmit={handleSubmit} className="table-entry-form">
 			<p className="control-label block text-right mb-4 required-legend">Required</p>
 			<div className="form-fields">
-				{allFieldActions.map(({ action, entityName }) => (
-					<FieldInput key={action.Id ?? action.Name} action={action} formState={localFormState} entityName={entityName} />
-				))}
+				<StepActions actionItems={actionItems} formState={localFormState} />
 			</div>
 
 			<div className="table-entry-form-actions">

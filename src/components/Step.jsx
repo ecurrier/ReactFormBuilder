@@ -1,9 +1,8 @@
 import React, { useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
-import FieldInput from "./fields/FieldInput.jsx";
-import TableEntryAction from "./TableEntryAction.tsx";
+import StepActions from "./StepActions.jsx";
 import { ActionType } from "../constants/enums.js";
-import { retrieveMultipleRecords } from "../hooks/api/Api.ts";
+import { createRecord, deleteRecord, retrieveMultipleRecords, updateRecord } from "../hooks/api/Api.ts";
 import { buildFetchXmlForChildRecords } from "../utilities/FetchXmlBuilder.ts";
 import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
 
@@ -78,40 +77,48 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 	}, [actions, getRelatedRecord, primaryEntityName, primaryRecordId, step.EntityLogicalName]);
 
 	// Stable callbacks for TableEntry actions
-	const handleTableEntrySave = useCallback(async (data, recordId) => {
-		// TODO: Implement API call
-		/*
-			data = {
-				"id": "2487281d-0de5-f011-8544-7ced8d21d821",
-				"@odata.etag": "W/\"51513192\"",
-				"eyfrcc_name": "React Project",
-				"eyfrcc_projectid": "2487281d-0de5-f011-8544-7ced8d21d821",
-				"_isNew": false,
-				"eyfrcc_description": "Description",
-				"eyfrcc_proposedstartdate": "01/01/2026",
-				"eyfrcc_proposedenddate": "02/01/2026",
-				"eyfrcc_projectcongressionaldistrict": "Idk",
-				"eyfrcc_childapplication_eyfrcc_childapplicationtest": "c9750587-d85d-4ab6-acc2-b03ee184bb42"
+	const sanitizeTableEntryData = useCallback((entityName, data, referencingAttribute, referencingNavigationProperty) => {
+		if (!data || typeof data !== "object") {
+			return {};
+		}
+
+		const primaryKey = resolvePrimaryIdAttribute(entityName);
+		const keysToDrop = new Set(["id", primaryKey, "_isNew", "_isPending", referencingAttribute, referencingNavigationProperty]);
+
+		const entries = Object.entries(data).filter(([key]) => {
+			if (!key) {
+				return false;
 			}
-				^^ this is real data from a table entry
 
-			why is eyfrcc_name here? this wasnt a field i updated. Need to ensure im only tracking dirty fields
-			need to remove the navigation property to child application test
-			need to remove isNew property, odata.etag, and id property if it's a new record
+			if (keysToDrop.has(key)) {
+				return false;
+			}
 
-			Then need to save the record. if record save is successful, refresh the table data
+			if (key.startsWith("_") || key.startsWith("@") || key.includes("@")) {
+				return false;
+			}
 
-		*/
-		console.log("Save table entry:", data, recordId);
+			return true;
+		});
+
+		return Object.fromEntries(entries);
 	}, []);
 
-	const handleTableEntryDelete = useCallback(async (recordId) => {
-		// TODO: Implement
-		// This also needs to accept the recordLogicalName as well.
-		// Also this needs a confirmation modal before proceeding with delete
-		// delete call should be implemented in Api.ts
-		// after successful delete, refresh the table data
-		console.log("Delete table entry:", recordId);
+	const handleTableEntrySave = useCallback(
+		async (entityName, data, rowRecordId, referencingAttribute, referencingNavigationProperty) => {
+			const cleanedData = sanitizeTableEntryData(entityName, data, referencingAttribute, referencingNavigationProperty);
+
+			if (rowRecordId) {
+				await updateRecord(entityName, rowRecordId, cleanedData);
+			} else {
+				await createRecord(entityName, cleanedData);
+			}
+		},
+		[sanitizeTableEntryData]
+	);
+
+	const handleTableEntryDelete = useCallback(async (entityName, rowRecordId) => {
+		await deleteRecord(entityName, rowRecordId);
 	}, []);
 
 	if (actions.length === 0) {
@@ -121,6 +128,24 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 	const stepIdentifier = step.Id ?? step.Name ?? "step";
 	const entityName = step.EntityLogicalName ?? "Not specified";
 
+	const actionItems = actions.map((action) => ({
+		action,
+		entityName: step.EntityLogicalName,
+	}));
+
+	const tableEntryOptions = {
+		fetchFunctions: tableEntryFetchFunctions,
+		fallbackFetch: async () => ({ results: [], totalRecordCount: 0 }),
+		shouldLoadData: hasBeenVisited,
+		parentRecordId:
+			step.EntityLogicalName && primaryEntityName && step.EntityLogicalName !== primaryEntityName
+				? getRelatedRecord?.(step.EntityLogicalName)?.recordId
+				: primaryRecordId,
+		parentEntityName: step.EntityLogicalName,
+		onSave: handleTableEntrySave,
+		onDelete: handleTableEntryDelete,
+	};
+
 	return (
 		<div className="step" style={{ display: isActive ? "block" : "none" }}>
 			<h2 className="form-subheading">{step.Name ?? entityName}</h2>
@@ -128,34 +153,7 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 			<p className="control-label block text-right mb-4 required-legend">Required</p>
 			<div className="multi-step-form-main-content">
 				<div className="actions">
-					{actions.map((action) => {
-						if (action.Type === ActionType.FieldInput) {
-							return <FieldInput key={action.Id ?? action.Name} action={action} formState={formState} entityName={step.EntityLogicalName} />;
-						}
-
-						if (action.Type === ActionType.TableEntry) {
-							const fetchFunc = tableEntryFetchFunctions.get(action.Id ?? action.Name);
-
-							return (
-								<TableEntryAction
-									key={action.Id ?? action.Name}
-									config={action.Properties}
-									fetchData={fetchFunc}
-									shouldLoadData={hasBeenVisited}
-									parentRecordId={
-										step.EntityLogicalName && primaryEntityName && step.EntityLogicalName !== primaryEntityName
-											? getRelatedRecord?.(step.EntityLogicalName)?.recordId
-											: primaryRecordId
-									}
-									parentEntityName={step.EntityLogicalName}
-									formState={formState}
-									onSave={handleTableEntrySave}
-									onDelete={handleTableEntryDelete}
-								/>
-							);
-						}
-						return null;
-					})}
+					<StepActions actionItems={actionItems} formState={formState} tableEntryOptions={tableEntryOptions} />
 				</div>
 			</div>
 		</div>
