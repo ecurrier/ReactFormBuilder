@@ -100,7 +100,7 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 		case DataType.Currency:
 			return (
 				<>
-					<input {...commonProps} type="number" step="any" />
+					<input {...commonProps} type="number" step="any" min={properties.MinValue} max={properties.MaxValue} />
 					<span className="ui"></span>
 				</>
 			);
@@ -219,6 +219,21 @@ const FieldInput = ({ action, formState, entityName: stepEntityName }) => {
 	// Handle field value change
 	const handleChange = (newValue) => {
 		if (formState) {
+			switch (properties.DataType) {
+				case DataType.Decimal:
+				case DataType.Currency:
+					// TO-DO: Handle precision
+					const parsedValue = parseFloat(newValue);
+					newValue = isNaN(parsedValue) ? null : parsedValue;
+					break;
+				case DataType.WholeNumber:
+					const intValue = parseInt(newValue, 10);
+					newValue = isNaN(intValue) ? null : intValue;
+					break;
+				default:
+					break;
+			}
+
 			formState.updateFieldValue(fieldPath, newValue);
 		}
 	};
