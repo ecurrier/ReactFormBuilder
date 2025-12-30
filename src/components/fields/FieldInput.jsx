@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { DataType, ActionType } from "../../constants/enums.js";
-import LookupControl from "./LookupControl.jsx";
+import { SingleLineTextInput, NumberInput, CurrencyInput, ChoiceInput, YesNoInput, MultiLineTextInput, LookupControl, DateTimeInput } from "@components/fields";
 
 const formatDescription = (description) => {
 	if (!description) {
@@ -51,66 +51,25 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 
 	switch (properties.DataType) {
 		case DataType.MultiLineText:
-			return (
-				<>
-					<textarea {...commonProps} rows={4} maxLength={properties.MaxLength} />
-					<span className="ui"></span>
-				</>
-			);
+			return <MultiLineTextInput commonProps={commonProps} maxLength={properties.MaxLength} />;
 		case DataType.YesNo:
-			// Radio buttons for Yes/No
 			return (
-				<fieldset required={properties.IsRequired} role="radiogroup">
-					<div className="radio-inline">
-						<label>
-							<input
-								type="radio"
-								name={commonProps.name}
-								id={`${inputId}-yes`}
-								value="yes"
-								checked={value === true || value === "yes"}
-								onChange={(e) => onChange(true)}
-								required={properties.IsRequired}
-								disabled={properties.IsReadOnly}
-							/>
-							Yes
-							<span className="ui"></span>
-						</label>
-					</div>
-					<div className="radio-inline">
-						<label>
-							<input
-								type="radio"
-								name={commonProps.name}
-								id={`${inputId}-no`}
-								value="no"
-								checked={value === false || value === "no"}
-								onChange={(e) => onChange(false)}
-								required={properties.IsRequired}
-								disabled={properties.IsReadOnly}
-							/>
-							No
-							<span className="ui"></span>
-						</label>
-					</div>
-				</fieldset>
+				<YesNoInput
+					inputId={inputId}
+					name={commonProps.name}
+					value={value}
+					isRequired={properties.IsRequired}
+					isReadOnly={properties.IsReadOnly}
+					onChange={onChange}
+				/>
 			);
 		case DataType.WholeNumber:
 		case DataType.Decimal:
+			return <NumberInput commonProps={commonProps} minValue={properties.MinValue} maxValue={properties.MaxValue} />;
 		case DataType.Currency:
-			return (
-				<>
-					<input {...commonProps} type="number" step="any" min={properties.MinValue} max={properties.MaxValue} />
-					<span className="ui"></span>
-				</>
-			);
+			return <CurrencyInput commonProps={commonProps} minValue={properties.MinValue} maxValue={properties.MaxValue} />;
 		case DataType.SingleLineText:
-			return (
-				<>
-					<input {...commonProps} type="text" maxLength={properties.MaxLength} />
-					<span className="ui"></span>
-				</>
-			);
+			return <SingleLineTextInput commonProps={commonProps} maxLength={properties.MaxLength} />;
 		case DataType.Lookup:
 			return (
 				<>
@@ -128,49 +87,21 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 				</>
 			);
 		case DataType.Choice: {
-			const choices = Array.isArray(properties.Choices) ? properties.Choices : [];
-			if (choices.length === 0) {
-				return (
-					<div className="choice-placeholder" role="note">
-						No options are configured for this field yet.
-					</div>
-				);
-			}
-
-			const multiSelect = Boolean(properties.CanSelectMultiple);
-			const selectProps = {
-				...commonProps,
-				value: multiSelect ? (Array.isArray(value) ? value : []) : (value ?? ""),
-				multiple: multiSelect,
-			};
-
-			if (properties.IsReadOnly) {
-				selectProps.disabled = true;
-			}
-
-			if (multiSelect && choices.length > 3) {
-				selectProps.size = Math.min(choices.length, 6);
-			}
-
 			return (
-				<>
-					<select {...selectProps}>
-						{!multiSelect ? (
-							<option value="" disabled hidden>
-								Select an option...
-							</option>
-						) : null}
-						{choices.map((choice) => (
-							<option key={choice.Value ?? choice.Label} value={choice.Value ?? choice.Label}>
-								{choice.Label ?? choice.Value ?? "Option"}
-							</option>
-						))}
-					</select>
-					<span className="ui"></span>
-				</>
+				<ChoiceInput
+					commonProps={commonProps}
+					choices={properties.Choices || []}
+					value={value}
+					canSelectMultiple={properties.CanSelectMultiple}
+					isReadOnly={properties.IsReadOnly}
+				/>
 			);
 		}
+		case DataType.DateTime: {
+			return <DateTimeInput commonProps={commonProps} dateTimeFormat={properties.DateTimeFormat} dateTimeBehavior={properties.DateTimeBehavior} />;
+		}
 		default:
+			// This should be a hard error case, present an error alert in place of an input
 			return (
 				<>
 					<input {...commonProps} type="text" />

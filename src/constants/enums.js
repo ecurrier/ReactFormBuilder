@@ -18,7 +18,13 @@ export const DataType = {
 	Decimal: 643260004,
 	Choice: 643260006,
 	YesNo: 643260007,
+	DateTime: 643260008,
 	Lookup: 643260009,
+};
+
+export const DateTimeFormat = {
+	DateOnly: 0,
+	DateAndTime: 1,
 };
 
 /**
