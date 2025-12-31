@@ -4,7 +4,10 @@ import PropTypes from "prop-types";
 export const CurrencyInput = ({ commonProps, minValue, maxValue }) => {
 	return (
 		<>
-			<input {...commonProps} type="number" step="any" min={minValue} max={maxValue} />
+			<div className="input-group input-group-md">
+				<span className="input-group-addon input-md">$</span>
+				<input {...commonProps} type="number" step="any" min={minValue} max={maxValue} />
+			</div>
 		</>
 	);
 };
