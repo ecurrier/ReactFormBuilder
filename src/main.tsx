@@ -6,6 +6,11 @@ import "@/styles.css";
 async function enableMocking() {
 	// @ts-ignore
 	if (import.meta.env && import.meta.env.DEV) {
+		/* Import Bootstrap in dev to simulate Power Pages environment
+			This project doesn't use Bootstrap, but Power Pages does and it includes it automatically
+			so this helps catch any conflicts early
+		*/
+		await import("bootstrap/dist/js/bootstrap.bundle.min.js" as any);
 		const { worker } = await import("@mocks/browser");
 		await worker.start({
 			onUnhandledRequest: "bypass",

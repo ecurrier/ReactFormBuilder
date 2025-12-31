@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 
 export interface DropdownMenuItem {
 	label: string;
@@ -8,72 +8,62 @@ export interface DropdownMenuItem {
 }
 
 interface DropdownMenuProps {
-	isOpen: boolean;
-	onClose: () => void;
-	items: DropdownMenuItem[];
-	align?: "left" | "right";
-	position?: "below" | "side";
+	actions: DropdownMenuItem[];
 }
 
-export const DropdownMenu: React.FC<DropdownMenuProps> = ({ isOpen, onClose, items, align = "right", position = "below" }) => {
-	const menuRef = useRef<HTMLDivElement>(null);
+export const DropdownMenu: React.FC<DropdownMenuProps> = ({ actions }) => {
+	const dropdownRef = useRef<HTMLDivElement>(null);
+	const [isOpen, setIsOpen] = useState(false);
 
 	useEffect(() => {
-		if (!isOpen) return;
-
 		const handleClickOutside = (event: MouseEvent) => {
-			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-				onClose();
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+				setIsOpen(false);
 			}
 		};
 
-		const handleEscape = (event: KeyboardEvent) => {
-			if (event.key === "Escape") {
-				onClose();
-			}
-		};
-
-		document.addEventListener("mousedown", handleClickOutside);
-		document.addEventListener("keydown", handleEscape);
+		if (isOpen) {
+			document.addEventListener("mousedown", handleClickOutside);
+		}
 
 		return () => {
 			document.removeEventListener("mousedown", handleClickOutside);
-			document.removeEventListener("keydown", handleEscape);
 		};
-	}, [isOpen, onClose]);
+	}, [isOpen]);
 
-	if (!isOpen) return null;
-	const positionStyles: React.CSSProperties =
-		position === "side"
-			? {
-					top: 0,
-					left: align === "right" ? "100%" : "auto",
-					right: align === "left" ? "100%" : "auto",
-					marginLeft: align === "right" ? "0.5rem" : "0",
-					marginRight: align === "left" ? "0.5rem" : "0",
-				}
-			: {};
+	const handleToggle = () => {
+		setIsOpen((prev) => !prev);
+	};
+
+	const handleActionClick = (action: DropdownMenuItem) => {
+		if (!action.disabled) {
+			action.onClick();
+			setIsOpen(false);
+		}
+	};
 
 	return (
-		<ul ref={menuRef} className={`dropdown-menu ${align === "right" ? "dropdown-menu-right" : "dropdown-menu-left"}`} style={positionStyles}>
-			{items.map((item, index) => (
-				<li key={index} className={item.disabled ? "disabled" : ""}>
-					<button
-						type="button"
-						onClick={(e) => {
-							e.stopPropagation();
-							if (!item.disabled) {
-								item.onClick();
-								onClose();
-							}
-						}}
-						disabled={item.disabled}
-						style={item.variant === "danger" ? { color: "var(--text-color-danger)" } : undefined}>
-						{item.label}
-					</button>
-				</li>
-			))}
-		</ul>
+		<div className="dropdown action" ref={dropdownRef}>
+			<button className="btn btn-default btn-xs aria-exp" onClick={handleToggle} aria-expanded={isOpen} aria-label="action menu">
+				<span className="glyphicon glyphicon-menu-down"></span>
+			</button>
+			<ul className={`dropdown-menu${isOpen ? " show" : ""}`} role="menu">
+				{actions.map((action, index) => (
+					<li key={index} className={action.disabled ? "disabled" : ""}>
+						<button
+							type="button"
+							onClick={(e) => {
+								e.stopPropagation();
+								handleActionClick(action);
+							}}
+							disabled={action.disabled}
+							style={action.variant === "danger" ? { color: "var(--text-color-danger)" } : undefined}>
+							{action.label}
+						</button>
+					</li>
+				))}
+			</ul>
+		</div>
 	);
 };
 

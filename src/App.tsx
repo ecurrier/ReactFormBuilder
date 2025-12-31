@@ -101,12 +101,12 @@ const App = () => {
 				let version = await resolveFormVersion(versionId);
 				if (!version) {
 					throw new Error(`Form version with ID ${versionId} not found`);
-							const useLatestVersion = await showConfirmation(
-								"Form Version Not Found",
-								`The specified form version (ID: ${versionId}) could not be found. Would you like to use the latest version instead?`,
-								"Use Latest",
-								"Cancel"
-							);
+					const useLatestVersion = await showConfirmation(
+						"Form Version Not Found",
+						`The specified form version (ID: ${versionId}) could not be found. Would you like to use the latest version instead?`,
+						"Use Latest",
+						"Cancel"
+					);
 
 					if (useLatestVersion) {
 						version = await resolveFormVersionFromExistingVersion(versionId);
