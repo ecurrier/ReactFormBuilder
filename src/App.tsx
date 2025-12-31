@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
-import formConfig from "./data/formConfigv5.json";
-import FormBuilder from "./components/FormBuilder.jsx";
-import { loadRecordData } from "./services/dataLoader";
-import { resolveRequestorId } from "./utilities/session";
-import LoadingIndicator from "@components/LoadingIndicator";
-import { ConfirmationModal } from "@components/ConfirmationModal";
+import formConfig from "@/data/formConfigv5.json";
+import FormBuilder from "@components/form/FormBuilder";
+import { ConfirmationModal } from "@components/common/ConfirmationModal";
+import LoadingIndicator from "@components/common/LoadingIndicator";
+import { loadRecordData } from "@services/dataLoader";
 import {
 	resolveFormVersion,
 	resolveFormVersionFromExistingVersion,
@@ -13,6 +12,17 @@ import {
 	retrieveUserFormSessions,
 	createUserFormSession,
 } from "@services/formInstanceManagement";
+import { resolveRequestorId } from "@utilities/session";
+
+interface ConfirmationModalState {
+	isOpen: boolean;
+	title: string;
+	message: string;
+	confirmText?: string;
+	cancelText?: string;
+	onConfirm: () => void;
+	onCancel: () => void;
+}
 
 const App = () => {
 	const [config, setConfig] = useState(null);
@@ -24,16 +34,27 @@ const App = () => {
 	const [isRecordDataLoading, setIsRecordDataLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState("");
 	const [isDebugData, setIsDebugData] = useState(false);
+	const [modalState, setModalState] = useState<ConfirmationModalState>({
+		isOpen: false,
+		title: "",
+		message: "",
+		confirmText: "Yes",
+		cancelText: "No",
+		onConfirm: () => {},
+		onCancel: () => {},
+	});
 
 	const env = import.meta.env ?? {};
 	const isDebugMode = env.VITE_USE_DEBUG_CONFIG === "true" || env.DEV;
 
-	const showConfirmation = (title, message) => {
+	const showConfirmation = (title: string, message: string, confirmText = "Yes", cancelText = "No") => {
 		return new Promise((resolve) => {
 			setModalState({
 				isOpen: true,
 				title,
 				message,
+				confirmText,
+				cancelText,
 				onConfirm: () => {
 					setModalState((prev) => ({ ...prev, isOpen: false }));
 					resolve(true);
@@ -82,7 +103,9 @@ const App = () => {
 					throw new Error(`Form version with ID ${versionId} not found`);
 					const useLatestVersion = await showConfirmation(
 						"Form Version Not Found",
-						`The specified form version (ID: ${versionId}) could not be found. Would you like to use the latest version instead?`
+						`The specified form version (ID: ${versionId}) could not be found. Would you like to use the latest version instead?`,
+						"Use Latest",
+						"Cancel"
 					);
 
 					if (useLatestVersion) {
@@ -118,7 +141,9 @@ const App = () => {
 					if (!formInstance) {
 						const useLatestVersion = await showConfirmation(
 							"Form Instance Not Found",
-							`A form instance for the specified record and version could not be found. Would you like to start a new form for the latest version instead?`
+							`A form instance for the specified record and version could not be found. Would you like to start a new form for the latest version instead?`,
+							"Use Latest",
+							"Cancel"
 						);
 
 						if (useLatestVersion) {
@@ -256,6 +281,15 @@ const App = () => {
 				</>
 			) : null}
 			<LoadingIndicator visible={isLoading} variant="full-screen" message={loadingMessage} />
+			<ConfirmationModal
+				isOpen={modalState.isOpen}
+				title={modalState.title}
+				message={modalState.message}
+				confirmText={modalState.confirmText}
+				cancelText={modalState.cancelText}
+				onConfirm={modalState.onConfirm}
+				onCancel={modalState.onCancel}
+			/>
 		</main>
 	);
 };

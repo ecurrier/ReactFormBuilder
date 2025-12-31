@@ -1,13 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import Step from "./Step.jsx";
-import { ActionType } from "../constants/enums.js";
-import { useFormState } from "../hooks/useFormState.ts";
-import { populateFieldsFromData } from "../services/dataLoader.ts";
-import { executeSaveDraft, executeValidateAndSubmit, populateFormLookup, reloadFormData } from "../services/saveOrchestrator.ts";
-import LoadingIndicator from "./LoadingIndicator.tsx";
-import { buildEntityMetadataMap, resolveEntityDisplayName, setEntityMetadataCache } from "../utilities/entityMetadata";
-import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
+import Step from "@components/form/Step";
+import { ActionType } from "@constants/enums";
+import { useFormState } from "@hooks/useFormState";
+import { populateFieldsFromData } from "@services/dataLoader";
+import { executeSaveDraft, executeValidateAndSubmit, populateFormLookup, reloadFormData } from "@services/saveOrchestrator";
+import LoadingIndicator from "@components/common/LoadingIndicator";
+import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/entityMetadata";
 
 const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams }) => {
 	const orderedSteps = useMemo(() => {

@@ -1,14 +1,14 @@
-import { createRecord, updateRecord } from "../hooks/api";
-import type { PendingChildRecord } from "../types/FormState";
-import type { Entity, EntityReference } from "../types/Entity";
-import type { SaveError, SaveProgressEvent, SaveResult } from "../types/SaveOrchestrator";
-import { validateField } from "./validation/validators";
-import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "../types/config";
+import { createRecord, updateRecord } from "@api";
+import type { Entity, EntityReference } from "@types/Entity";
+import type { PendingChildRecord } from "@types/FormState";
+import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "@types/config";
+import type { SaveError, SaveProgressEvent, SaveResult } from "@types/SaveOrchestrator";
+import { validateField } from "@services/validation/validators";
 import { createFormInstance, createUserFormSession } from "@services/formInstanceManagement";
-import { resolveRequestorId } from "../utilities/session";
-import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "../utilities/entityMetadata";
-import { sanitizeGuid } from "../utilities/Serialization";
-import { isTempId } from "../utilities/Common";
+import { isTempId } from "@utilities/Common";
+import { sanitizeGuid } from "@utilities/Serialization";
+import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "@utilities/entityMetadata";
+import { resolveRequestorId } from "@utilities/session";
 
 export interface SaveContext {
 	formState: any;

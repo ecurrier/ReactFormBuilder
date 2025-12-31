@@ -1,13 +1,13 @@
 import React, { useState, useRef } from "react";
-import TableEntry, { TableColumn, TableSortState, PaginationOptions, TableDataResponse } from "./TableEntry";
-import Sidepane from "./Sidepane";
-import TableEntryForm from "./TableEntryForm";
-import DropdownMenu, { DropdownMenuItem } from "./DropdownMenu";
-import { ActionType, DataType } from "../constants/enums.js";
-import { retrieveRecord } from "../hooks/api/Api";
-import { buildFetchXmlForRecord } from "../utilities/FetchXmlBuilder";
-import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
-import { isTempId, generateTempId } from "../utilities/Common";
+import TableEntry, { TableColumn, TableDataResponse, PaginationOptions, TableSortState } from "@components/form/TableEntry";
+import TableEntryForm from "@components/form/TableEntryForm";
+import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu";
+import Sidepane from "@components/common/Sidepane";
+import { ActionType, DataType } from "@constants/enums";
+import { retrieveRecord } from "@api/Api";
+import { buildFetchXmlForRecord } from "@utilities/FetchXmlBuilder";
+import { resolvePrimaryIdAttribute } from "@utilities/entityMetadata";
+import { generateTempId, isTempId } from "@utilities/Common";
 
 interface FieldAction {
 	Id: string;
@@ -301,6 +301,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					const isPending = row._isPending;
 					const menuItems: DropdownMenuItem[] = [];
 
+					// TO-DO: Add this to main stylesheet
 					// Add "Unsaved" badge for pending records
 					const badge = isPending ? (
 						<span
@@ -320,7 +321,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					if (config.EditEnabled) {
 						menuItems.push({
 							label: "Edit",
-							onClick: () => handleEdit(row),
+							onClick: (e) => handleEdit(row),
 						});
 					}
 
@@ -330,32 +331,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 							onClick: () => handleDelete(row),
 						});
 					}
-
-					return (
-						<div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-							{badge}
-							<div className={`dropdown ${actionMenuOpen === rowId ? "open" : ""}`} style={{ position: "relative", display: "inline-block" }}>
-								<button
-									type="button"
-									className="btn btn-default dropdown-toggle"
-									onClick={(e) => {
-										e.stopPropagation();
-										setActionMenuOpen(actionMenuOpen === rowId ? null : rowId || null);
-									}}
-									aria-label="Actions"
-									aria-expanded={actionMenuOpen === rowId}>
-									...
-								</button>
-								<DropdownMenu
-									isOpen={actionMenuOpen === row.id}
-									onClose={() => setActionMenuOpen(null)}
-									items={menuItems}
-									align="right"
-									position="side"
-								/>
-							</div>
-						</div>
-					);
+					return <DropdownMenu actions={menuItems} />;
 				},
 			});
 		}
@@ -435,6 +411,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			return;
 		}
 
+		// TO-DO: Replace with confirmation modal
 		if (confirm(`Are you sure you want to delete this record?`)) {
 			// Check if this is a pending record
 			if (isTempId(recordId)) {

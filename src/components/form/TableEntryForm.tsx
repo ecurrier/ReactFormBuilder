@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import StepActions from "./StepActions.jsx";
-import { ActionType } from "../constants/enums.js";
+import StepActions from "@components/form/StepActions";
+import { ActionType } from "@constants/enums";
 
 interface FieldAction {
 	Id: string;

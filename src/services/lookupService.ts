@@ -1,6 +1,6 @@
-import { retrieveMultipleRecords } from "../hooks/api/Api";
-import { buildFetchXmlForLookup, buildFetchXmlWithFilter } from "../utilities/FetchXmlBuilder";
-import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "../utilities/entityMetadata";
+import { retrieveMultipleRecords } from "@api/Api";
+import { buildFetchXmlForLookup, buildFetchXmlWithFilter } from "@utilities/FetchXmlBuilder";
+import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "@utilities/entityMetadata";
 
 export interface LookupTargetConfig {
 	EntityLogicalName: string;

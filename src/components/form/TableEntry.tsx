@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useImperativeHandle } from "react";
-import LoadingIndicator from "../components/LoadingIndicator";
-import Pagination from "../components/Pagination";
+import LoadingIndicator from "@components/common/LoadingIndicator";
+import Pagination from "@components/common/Pagination";
 
 export interface TableColumn<T = any> {
 	key: string;

@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { DataType, ActionType } from "../../constants/enums.js";
-import { SingleLineTextInput, NumberInput, CurrencyInput, ChoiceInput, YesNoInput, MultiLineTextInput, LookupControl, DateTimeInput } from "@components/fields";
+import { ActionType, DataType } from "@constants/enums";
+import ChoiceInput from "@components/form/fields/ChoiceInput";
+import CurrencyInput from "@components/form/fields/CurrencyInput";
+import DateTimeInput from "@components/form/fields/DateTimeInput";
+import LookupControl from "@components/form/fields/lookup/LookupControl";
+import MultiLineTextInput from "@components/form/fields/MultiLineTextInput";
+import NumberInput from "@components/form/fields/NumberInput";
+import SingleLineTextInput from "@components/form/fields/SingleLineTextInput";
+import YesNoInput from "@components/form/fields/YesNoInput";
 
 const formatDescription = (description) => {
 	if (!description) {

@@ -1,5 +1,5 @@
-import type { ReactFormConfiguration } from "../types/config";
-import { ActionType, DataType } from "../constants/enums";
+import { ActionType, DataType } from "@constants/enums";
+import type { ReactFormConfiguration } from "@types/config";
 
 export interface TableMetadataEntry {
 	EntityLogicalName: string;

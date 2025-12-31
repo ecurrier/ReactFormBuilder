@@ -1,8 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
-import FieldInput from "./fields/FieldInput.jsx";
-import TableEntryAction from "./TableEntryAction.tsx";
-import { ActionType } from "../constants/enums.js";
+import FieldInput from "@components/form/fields/FieldInput";
+import TableEntryAction from "@components/form/TableEntryAction";
+import { ActionType } from "@constants/enums";
 
 const StepActions = ({ actionItems, formState, tableEntryOptions }) => {
 	if (!Array.isArray(actionItems) || actionItems.length === 0) {
