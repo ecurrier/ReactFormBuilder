@@ -1,7 +1,7 @@
 import { useReducer, useCallback, useMemo } from "react";
-import type { FormState, FormStateAction, FieldMetadata, EntityChanges, PendingChildRecord, RelatedRecordInfo } from "../types/FormState";
-import type { Entity } from "../types/Entity";
-import { serializeForApi, resolveEntitySetName, resolvePrimaryIdAttribute } from "../utilities";
+import type { Entity } from "@types/Entity";
+import type { EntityChanges, FieldMetadata, FormState, FormStateAction, PendingChildRecord, RelatedRecordInfo } from "@types/FormState";
+import { resolveEntitySetName, resolvePrimaryIdAttribute, serializeForApi } from "@utilities";
 
 /**
  * Initial form state.

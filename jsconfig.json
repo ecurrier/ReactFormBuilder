@@ -13,6 +13,8 @@
 		"resolveJsonModule": true,
 		"baseUrl": ".",
 		"paths": {
+			"@/*": ["src/*"],
+			"@": ["src"],
 			"@api/*": ["src/hooks/api/*"],
 			"@api": ["src/hooks/api"],
 			"@types/*": ["src/types/*"],

@@ -1,5 +1,5 @@
-import type { Entity, EntityReference } from "../types/Entity";
-import { getEntitySetName } from "./Common";
+import type { Entity, EntityReference } from "@types/Entity";
+import { getEntitySetName } from "@utilities/Common";
 
 export const sanitizeGuid = (value: string): string => {
 	if (!value) {

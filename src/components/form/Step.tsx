@@ -1,10 +1,10 @@
 import React, { useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
-import StepActions from "./StepActions.jsx";
-import { ActionType } from "../constants/enums.js";
-import { createRecord, deleteRecord, retrieveMultipleRecords, updateRecord } from "../hooks/api/Api.ts";
-import { buildFetchXmlForChildRecords } from "../utilities/FetchXmlBuilder.ts";
-import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
+import StepActions from "@components/form/StepActions";
+import { ActionType } from "@constants/enums";
+import { createRecord, deleteRecord, retrieveMultipleRecords, updateRecord } from "@api/Api";
+import { buildFetchXmlForChildRecords } from "@utilities/FetchXmlBuilder";
+import { resolvePrimaryIdAttribute } from "@utilities/entityMetadata";
 
 const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formState, urlParams }) => {
 	// Memoize sorted actions to prevent infinite loops

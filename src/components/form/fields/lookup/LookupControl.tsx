@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import LookupAdvancedSearchModal from "./LookupAdvancedSearchModal";
-import { searchLookupQuick } from "../../../services/lookupService";
+import LookupAdvancedSearchModal from "@components/form/fields/lookup/LookupAdvancedSearchModal";
+import { searchLookupQuick } from "@services/lookupService";
 
 const formatLabel = (value) => {
 	if (!value) {

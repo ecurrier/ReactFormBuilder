@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import TableEntry from "../../TableEntry";
-import { searchLookupAdvanced } from "../../../services/lookupService";
+import TableEntry from "@components/form/TableEntry";
+import { searchLookupAdvanced } from "@services/lookupService";
 
 const formatLabel = (value) => {
 	if (!value) {

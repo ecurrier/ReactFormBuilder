@@ -71,7 +71,7 @@ export const FormInstanceEventType = {
  * @param {number} value - The numeric DataType value
  * @returns {string} - Human-readable name or 'Unknown'
  */
-export const getDataTypeName = (value) => {
+export const getDataTypeName = (value: number) => {
 	const entry = Object.entries(DataType).find(([, val]) => val === value);
 	return entry ? entry[0] : "Unknown";
 };
@@ -81,7 +81,7 @@ export const getDataTypeName = (value) => {
  * @param {number} value - The numeric ActionType value
  * @returns {string} - Human-readable name or 'Unknown'
  */
-export const getActionTypeName = (value) => {
+export const getActionTypeName = (value: number) => {
 	const entry = Object.entries(ActionType).find(([, val]) => val === value);
 	return entry ? entry[0] : "Unknown";
 };

@@ -1,13 +1,13 @@
 import React, { useState, useRef } from "react";
-import TableEntry, { TableColumn, TableSortState, PaginationOptions, TableDataResponse } from "./TableEntry";
-import Sidepane from "./Sidepane";
-import TableEntryForm from "./TableEntryForm";
-import DropdownMenu, { DropdownMenuItem } from "./DropdownMenu";
-import { ActionType, DataType } from "../constants/enums.js";
-import { retrieveRecord } from "../hooks/api/Api";
-import { buildFetchXmlForRecord } from "../utilities/FetchXmlBuilder";
-import { resolvePrimaryIdAttribute } from "../utilities/entityMetadata";
-import { isTempId, generateTempId } from "../utilities/Common";
+import TableEntry, { TableColumn, TableDataResponse, PaginationOptions, TableSortState } from "@components/form/TableEntry";
+import TableEntryForm from "@components/form/TableEntryForm";
+import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu";
+import Sidepane from "@components/common/Sidepane";
+import { ActionType, DataType } from "@constants/enums";
+import { retrieveRecord } from "@api/Api";
+import { buildFetchXmlForRecord } from "@utilities/FetchXmlBuilder";
+import { resolvePrimaryIdAttribute } from "@utilities/entityMetadata";
+import { generateTempId, isTempId } from "@utilities/Common";
 
 interface FieldAction {
 	Id: string;
