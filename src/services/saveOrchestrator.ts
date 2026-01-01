@@ -5,8 +5,7 @@ import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } fro
 import type { SaveError, SaveProgressEvent, SaveResult } from "@types/SaveOrchestrator";
 import { validateField } from "@services/validation/validators";
 import { createFormInstance, createUserFormSession } from "@services/formInstanceManagement";
-import { isTempId } from "@utilities/common";
-import { sanitizeGuid } from "@utilities/serialization";
+import { isTempId, sanitizeGuid } from "@utilities/common";
 import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "@utilities/metadata";
 import { resolveRequestorId } from "@utilities/session";
 

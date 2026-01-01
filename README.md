@@ -23,14 +23,14 @@ This project is a Vite-powered React application that turns a JSON-form configur
 - `src/components/form/FormBuilder.tsx` – orchestrates steps and renders supported actions.
 - `src/components/form/Step.tsx` – handles the layout for an individual step.
 - `src/components/form/fields/FieldInput.tsx` – renders field input actions, including nested child actions.
-- `src/mocks/handlers.ts` – MSW handlers for local API mocks.
+- `src/testing/mocks/handlers.ts` – MSW handlers for local API mocks.
 - `src/styles.css` – minimal styling to make the generated form readable.
 
 ## Local testing
 
 ### Mock API responses with MSW
 
-The app uses Mock Service Worker (MSW) in development to simulate API responses. Update or add handlers in `src/mocks/handlers.ts` to mock responses locally. The service worker is started automatically in `src/main.tsx` whenever you run `npm run dev`.
+The app uses Mock Service Worker (MSW) in development to simulate API responses. Update or add handlers in `src/testing/mocks/handlers.ts` to mock responses locally. The service worker is started automatically in `src/main.tsx` whenever you run `npm run dev`.
 
 ### Debug mode (local config)
 

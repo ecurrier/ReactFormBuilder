@@ -1,13 +1,5 @@
 import type { Entity, EntityReference } from "@types/Entity";
-import { getEntitySetName } from "@utilities/common";
-
-export const sanitizeGuid = (value: string): string => {
-	if (!value) {
-		return value;
-	}
-
-	return value.startsWith("temp-") ? value.slice(5) : value;
-};
+import { getEntitySetName, sanitizeGuid } from "@utilities/common";
 
 /**
  * Serializes entity data for Dataverse Web API submission.
@@ -28,8 +20,8 @@ export const serializeForApi = (data: Partial<Entity>, entityName: string): Reco
 	const serialized: Record<string, any> = {};
 
 	for (const [key, value] of Object.entries(data)) {
-		// Handle null/undefined - explicitly set to null for API
-		if (value === null || value === undefined) {
+		// Handle null/undefined/empty - explicitly set to null for API
+		if (value === null || value === undefined || value === "") {
 			serialized[key] = null;
 			continue;
 		}
@@ -50,13 +42,13 @@ export const serializeForApi = (data: Partial<Entity>, entityName: string): Reco
 			continue;
 		}
 
-		// Handle arrays (for multi-select option sets, etc.)
+		// Handle arrays (for multi-select option sets)
 		if (Array.isArray(value)) {
-			serialized[key] = value;
+			serialized[key] = value.join(",");
 			continue;
 		}
 
-		// Pass through primitive values (string, number, boolean)
+		// Pass through other values (string, number, boolean)
 		serialized[key] = value;
 	}
 
@@ -71,8 +63,7 @@ export const serializeForApi = (data: Partial<Entity>, entityName: string): Reco
  * @returns Deserialized entity
  */
 export const deserializeFromApi = <T extends Entity>(data: T): T => {
-	// TODO: Add date parsing if needed
-	// Dataverse returns dates as strings in ISO format
-	// We could parse them back to Date objects here if desired
+	// TODO: Not needed at the moment... could use down the line if we wanted to enforce
+	// consistent typing/format later on
 	return data;
 };

@@ -11,7 +11,7 @@ async function enableMocking() {
 			so this helps catch any conflicts early
 		*/
 		await import("bootstrap/dist/js/bootstrap.bundle.min.js" as any);
-		const { worker } = await import("@mocks/browser");
+		const { worker } = await import("@testing/mocks/browser");
 		await worker.start({
 			onUnhandledRequest: "bypass",
 		});

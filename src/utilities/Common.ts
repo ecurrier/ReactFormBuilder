@@ -13,6 +13,7 @@ import { getEntityMetadata } from "./metadata";
  * @returns Entity set name for API endpoints
  */
 
+// TO-DO: This is duplicated logic from metadata.ts fallbackEntitySetName - we should consolidate
 export const getEntitySetName = (entityName: string): string => {
 	if (!entityName) {
 		return entityName;
@@ -54,4 +55,12 @@ export const isTempId = (id?: string | null): boolean => {
  */
 export const generateTempId = (): string => {
 	return `temp-${crypto.randomUUID()}`;
+};
+
+export const sanitizeGuid = (value: string): string => {
+	if (!value) {
+		return value;
+	}
+
+	return value.startsWith("temp-") ? value.slice(5) : value;
 };

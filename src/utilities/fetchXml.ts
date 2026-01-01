@@ -1,5 +1,5 @@
-import { sanitizeGuid } from "./serialization";
-import { resolvePrimaryIdAttribute } from "./metadata";
+import { sanitizeGuid } from "@utilities/common";
+import { resolvePrimaryIdAttribute } from "@utilities/metadata";
 
 /**
  * FetchXML Utilities
