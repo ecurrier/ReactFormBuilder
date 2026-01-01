@@ -1,5 +1,5 @@
 import { DOMParser, XMLSerializer } from "xmldom";
-import { getEntitySetName, sanitizeGuid, serializeForApi } from "@utilities";
+import { resolveEntitySetName, sanitizeGuid, serializeForApi } from "@utilities";
 import type { ExtendedWindow } from "@types";
 import type { Entity } from "@types";
 import { ApiError, parseApiError } from "@/services/api";
@@ -49,7 +49,7 @@ export const retrieveRecord = async <T extends Entity>(entityName: string, fetch
 		options = { ...options, top: 1 };
 		const fetchXml = processFetchXml(fetchXmlTemplate, options);
 
-		const url = `${baseUrl}${getEntitySetName(entityName)}?fetchXml=${fetchXml}`;
+		const url = `${baseUrl}${resolveEntitySetName(entityName)}?fetchXml=${fetchXml}`;
 		const response = await fetch(url, {
 			method: "GET",
 			headers: {
@@ -88,7 +88,7 @@ export const retrieveMultipleRecords = async <T extends Entity>(
 ): Promise<ApiResponse<T>> => {
 	try {
 		const fetchXml = processFetchXml(fetchXmlTemplate, options);
-		const url = `${baseUrl}${getEntitySetName(entityName)}?fetchXml=${fetchXml}`;
+		const url = `${baseUrl}${resolveEntitySetName(entityName)}?fetchXml=${fetchXml}`;
 		const response = await fetch(url, {
 			method: "GET",
 			headers: {
@@ -266,7 +266,7 @@ export const createRecord = async <T extends Entity>(entityName: string, data: P
 			headers.__RequestVerificationToken = authorizationToken;
 		}
 
-		const response = await fetch(`${baseUrl}${getEntitySetName(entityName)}`, {
+		const response = await fetch(`${baseUrl}${resolveEntitySetName(entityName)}`, {
 			method: "POST",
 			headers,
 			body: JSON.stringify(apiData),
@@ -304,7 +304,7 @@ export const updateRecord = async <T extends Entity>(entityName: string, id: str
 			headers.__RequestVerificationToken = authorizationToken;
 		}
 
-		const response = await fetch(`${baseUrl}${getEntitySetName(entityName)}(${normalizedId})`, {
+		const response = await fetch(`${baseUrl}${resolveEntitySetName(entityName)}(${normalizedId})`, {
 			method: "PATCH",
 			headers,
 			body: JSON.stringify(apiData),
@@ -328,7 +328,7 @@ export const updateRecord = async <T extends Entity>(entityName: string, id: str
 export const deleteRecord = async (entityName: string, id: string): Promise<void> => {
 	try {
 		const normalizedId = sanitizeGuid(id);
-		const response = await fetch(`${baseUrl}${getEntitySetName(entityName)}(${normalizedId})`, {
+		const response = await fetch(`${baseUrl}${resolveEntitySetName(entityName)}(${normalizedId})`, {
 			method: "DELETE",
 			headers: {
 				Accept: "application/json",
