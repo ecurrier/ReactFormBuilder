@@ -143,15 +143,7 @@ const collectEntityChanges = (formState: any, primaryEntity?: string) => {
 	return { entityChanges, primaryChanges, secondaryEntityChanges };
 };
 
-const buildRecordIdsByEntity = ({
-	formState,
-	primaryEntity,
-	primaryRecordId,
-}: {
-	formState: any;
-	primaryEntity?: string;
-	primaryRecordId: string | null;
-}) => {
+const buildRecordIdsByEntity = ({ formState, primaryEntity, primaryRecordId }: { formState: any; primaryEntity?: string; primaryRecordId: string | null }) => {
 	const recordIdsByEntity = new Map<string, string>();
 
 	if (primaryRecordId && primaryEntity) {
@@ -727,32 +719,16 @@ const saveChildRecord = async ({
 };
 
 /**
- * Execute a draft save operation.
+ * Execute save operation.
  * Saves only dirty fields without validation.
  *
  * @param context - Save context containing form state and configuration
  * @returns Save result with success status and any errors
  */
-export async function executeSaveDraft(context: SaveContext): Promise<SaveResult> {
+export async function executeSave(context: SaveContext): Promise<SaveResult> {
 	const { formState, config, onProgress } = context;
 	const errors: SaveError[] = [];
 	const entityMetadataMap = buildEntityMetadataMap(config);
-
-	/*
-		TO-DO: Somewhere in here, I need to create the FormInstance record if its not already created.
-		If creating FormInstance, I need to also create the UserFormSession record for the current user.
-		fields to default on FormInstance:
-			- eyfrcc_versionid: This will be the versionId URL param
-			- eyfrcc_primaryrecordid: If recordId URL param exists, set this to that value. Otherwise, it will be the primary record created.
-			- eyfrcc_primaryrecordlogicalname: If recordLogicalName URL param exists, set this to that value. Otherwise, it will be the primary entity from the form config.
-			- eyfrcc_secondaryrecords: JSON array of all secondary records created in the format [{ LogicalName: string, Id: string }]
-
-		fields to default on UserFormSession:
-			- eyfrcc_forminstanceid: Lookup to the FormInstance record created above
-			- eyfrcc_contactid: Lookup to current contact (requestor)
-			- eyfrcc_organizationid: Ignore... this will be set automatically by Dataverse (Plugin)
-			- eyfrcc_lastactive: Set to current date/time
-	*/
 
 	try {
 		const primaryEntity = config.Form?.PrimaryApplicationTable?.TableLogicalName;
@@ -880,8 +856,8 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 			};
 		}
 
-		// Step 3: Execute save draft (validation passed)
-		return await executeSaveDraft(context);
+		// Step 3: Execute save (validation passed)
+		return await executeSave(context);
 	} catch (error) {
 		console.error("Validate and submit failed:", error);
 		const message = buildErrorMessage(error);
@@ -889,30 +865,6 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 			success: false,
 			errors: [buildSaveError("validation", message)],
 		};
-	}
-}
-
-/**
- * Populate form lookup field after creating a new parent record.
- *
- * @param recordId - Parent record ID
- * @param entityName - Entity logical name
- * @param formId - Form ID to populate
- * @param formFieldName - Lookup field logical name for the form
- */
-export async function populateFormLookup(recordId: string, entityName: string, formId: string, formFieldName: string = "eyfrcc_form"): Promise<void> {
-	try {
-		const data = {
-			[formFieldName]: {
-				id: formId,
-				logicalName: "eyfrcc_form",
-			},
-		};
-
-		await updateRecord(entityName, recordId, data);
-	} catch (error) {
-		// Log but don't fail the save if form lookup population fails
-		console.warn("Failed to populate form lookup:", error);
 	}
 }
 

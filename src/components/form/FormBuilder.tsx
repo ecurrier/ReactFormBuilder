@@ -4,7 +4,7 @@ import Step from "@components/form/Step";
 import { ActionType } from "@constants/enums";
 import { useFormState } from "@hooks/useFormState";
 import { populateFieldsFromData } from "@services/dataLoader";
-import { executeSaveDraft, executeValidateAndSubmit, populateFormLookup, reloadFormData } from "@services/saveOrchestrator";
+import { executeSave, executeValidateAndSubmit, reloadFormData } from "@services/saveOrchestrator";
 import LoadingIndicator from "@components/common/LoadingIndicator";
 import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
 
@@ -399,7 +399,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	const hasPrevious = activeStepIndex > 0;
 	const hasNext = activeStepIndex < visibleSteps.length - 1;
 	// Save handlers
-	const handleSaveDraft = async () => {
+	const handleSave = async () => {
 		setIsSaving(true);
 		setSaveProgress(buildInitialSaveProgress());
 		setSaveErrors([]);
@@ -407,7 +407,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		setShowSaveOverlay(true);
 
 		try {
-			const result = await executeSaveDraft({
+			const result = await executeSave({
 				formState,
 				config,
 				urlParams,
@@ -417,22 +417,13 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			if (result.success) {
 				setSaveErrors([]);
 
-				// If this was a new record, populate form lookup and reload
-				if (!primaryRecordId && result.recordId) {
-					const formId = config?.Regarding?.id || urlParams?.formId;
-					if (formId) {
-						await populateFormLookup(result.recordId, primaryEntity, formId);
-					}
-
-					// Reload form data
+				// Reload form data after save (plugins or other processes may have modified data)
+				if (result.recordId) {
 					const reloadedData = await reloadFormData({ formState, config, urlParams }, result.recordId);
 					if (reloadedData) {
 						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
 						formState.initializeFormData(fieldData);
 					}
-
-					// Update URL with new record ID (optional - depends on requirements)
-					// window.history.replaceState({}, '', `?recordId=${result.recordId}&versionId=${urlParams.versionId}`);
 				}
 			} else {
 				setSaveErrors(result.errors || []);
@@ -464,14 +455,8 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			if (result.success) {
 				setSaveErrors([]);
 
-				// If this was a new record, populate form lookup and reload
-				if (!primaryRecordId && result.recordId) {
-					const formId = config?.Regarding?.id || urlParams?.formId;
-					if (formId) {
-						await populateFormLookup(result.recordId, primaryEntity, formId);
-					}
-
-					// Reload form data
+				// Reload form data after submission (plugins or other processes may have modified data)
+				if (result.recordId) {
 					const reloadedData = await reloadFormData({ formState, config, urlParams }, result.recordId);
 					if (reloadedData) {
 						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
@@ -566,7 +551,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 							<button
 								type="button"
 								className="btn btn-default"
-								onClick={handleSaveDraft}
+								onClick={handleSave}
 								disabled={isSaving || (!formState.hasChanges && !formState.hasPendingChildren)}>
 								{isSaving ? "Saving..." : "Save Draft"}
 							</button>
