@@ -1,13 +1,13 @@
 import React, { useState, useRef } from "react";
 import TableEntry, { TableColumn, TableDataResponse, PaginationOptions, TableSortState } from "@components/form/TableEntry";
-import TableEntryForm from "@components/form/TableEntryForm";
+import { TableEntryForm, LoadingIndicator, Sidepane } from "@components";
 import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu";
-import Sidepane from "@components/common/Sidepane";
 import { ActionType, DataType } from "@constants/enums";
 import { retrieveRecord } from "@/services/api/Api";
 import { buildFetchXmlForRecord } from "@utilities/fetchXml";
 import { resolvePrimaryIdAttribute } from "@utilities/metadata";
 import { generateTempId, isTempId } from "@utilities/common";
+import { Alert } from "bootstrap";
 
 interface FieldAction {
 	Id: string;
@@ -67,6 +67,23 @@ const getFormattedValue = (row: Record<string, any>, logicalName: string): strin
 	}
 
 	return undefined;
+};
+
+const collectLookupFieldInfo = (steps: FormStep[] | undefined): Record<string, string | undefined> => {
+	const info: Record<string, string | undefined> = {};
+	if (!steps) {
+		return info;
+	}
+
+	steps.forEach((step) => {
+		step.Actions?.forEach((action) => {
+			if (action.Type === ActionType.FieldInput && action.Properties?.LogicalName && action.Properties?.DataType === DataType.Lookup) {
+				info[action.Properties.LogicalName] = action.Properties.Targets?.[0]?.EntityLogicalName;
+			}
+		});
+	});
+
+	return info;
 };
 
 const getLookupLogicalName = (row: Record<string, any>, logicalName: string, fallback?: string): string | undefined => {
@@ -171,6 +188,15 @@ const resolveRecordId = (row: Record<string, any> | null | undefined, entityName
 	return candidate?.[1];
 };
 
+const normalizeLookupFields = (row: Record<string, any>, lookupInfo: Record<string, string | undefined>) => {
+	const normalized = { ...row };
+	Object.keys(lookupInfo).forEach((logicalName) => {
+		normalized[logicalName] = normalizeLookupValue(normalized, logicalName, lookupInfo[logicalName]);
+	});
+
+	return normalized;
+};
+
 export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	config,
 	parentRecordId,
@@ -185,27 +211,19 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	const [sidepaneOpen, setSidepaneOpen] = useState(false);
 	const [editingRecord, setEditingRecord] = useState<any | null>(null);
 	const [isLoadingRecord, setIsLoadingRecord] = useState(false);
+	const [isSavingRecord, setIsSavingRecord] = useState(false);
+	// TO-DO: More robust validation/error handling
 	const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
 	const tableRef = useRef<any>(null);
 	const getPendingChildRecords = formState?.getPendingChildRecords;
 
 	const lookupFieldInfo = React.useMemo(() => {
-		const info: Record<string, string | undefined> = {};
 		const viewStep = config.ChildViewSteps?.[0];
-		if (!viewStep?.Actions) {
-			return info;
-		}
-
-		viewStep.Actions.forEach((action) => {
-			if (action.Type === ActionType.FieldInput && action.Properties?.LogicalName && action.Properties?.DataType === DataType.Lookup) {
-				info[action.Properties.LogicalName] = action.Properties.Targets?.[0]?.EntityLogicalName;
-			}
-		});
-
-		return info;
+		return collectLookupFieldInfo(viewStep ? [viewStep] : []);
 	}, [config.ChildViewSteps]);
 
 	const lookupFieldNames = React.useMemo(() => Object.keys(lookupFieldInfo), [lookupFieldInfo]);
+	const lookupFormFieldInfo = React.useMemo(() => collectLookupFieldInfo(config.ChildFormSteps), [config.ChildFormSteps]);
 
 	// Create stable empty fetch function
 	const emptyFetch = React.useCallback(async () => ({ results: [], totalRecordCount: 0 }), []);
@@ -216,12 +234,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			// Get persisted records from API
 			const apiResponse = await fetchData(sort, pagination);
 			const normalizedResults = apiResponse.results.map((row) => {
-				const updated = { ...row };
-				if (lookupFieldNames.length > 0) {
-					lookupFieldNames.forEach((logicalName) => {
-						updated[logicalName] = normalizeLookupValue(updated, logicalName, lookupFieldInfo[logicalName]);
-					});
-				}
+				const updated = lookupFieldNames.length > 0 ? normalizeLookupFields(row, lookupFieldInfo) : { ...row };
 
 				const resolvedId = resolveRecordId(updated, config.ChildEntityLogicalName);
 				if (resolvedId && updated.id !== resolvedId) {
@@ -367,7 +380,8 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			}
 		} else {
 			// Load from API - fetch full record with all fields
-			setEditingRecord({ id: recordId, ...record, _isNew: false });
+			const normalizedRecord = normalizeLookupFields({ id: recordId, ...record }, lookupFormFieldInfo);
+			setEditingRecord({ ...normalizedRecord, _isNew: false });
 			setSidepaneOpen(true);
 			setIsLoadingRecord(true);
 			try {
@@ -391,7 +405,8 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 
 				if (fullRecord) {
 					const resolvedId = recordId || fullRecord[primaryKey];
-					setEditingRecord({ id: resolvedId, ...fullRecord, _isNew: false });
+					const normalizedFullRecord = normalizeLookupFields({ id: resolvedId, ...fullRecord }, lookupFormFieldInfo);
+					setEditingRecord({ ...normalizedFullRecord, _isNew: false });
 				} else {
 					console.error("Failed to load record:", recordId);
 				}
@@ -467,10 +482,18 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		} else {
 			// Persisted record - save via API
 			if (onSave) {
-				await onSave(config.ChildEntityLogicalName, cleanedFormData, recordId, config.ReferencingAttribute, config.ReferencingNavigationProperty);
-				setSidepaneOpen(false);
-				setEditingRecord(null);
-				tableRef.current?.refresh();
+				setIsSavingRecord(true);
+				try {
+					await onSave(config.ChildEntityLogicalName, cleanedFormData, recordId, config.ReferencingAttribute, config.ReferencingNavigationProperty);
+					setSidepaneOpen(false);
+					setEditingRecord(null);
+					tableRef.current?.refresh();
+				} catch (error) {
+					console.error("Error saving record:", error);
+					// TO-DO: Show error to user
+				} finally {
+					setIsSavingRecord(false);
+				}
 			}
 		}
 	};
@@ -498,17 +521,14 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			/>
 
 			<Sidepane isOpen={sidepaneOpen} onClose={handleFormCancel} title={editingRecord?._isNew ? "Create Record" : "Edit Record"}>
-				{isLoadingRecord ? (
-					<div style={{ padding: "20px", textAlign: "center" }}>Loading record data...</div>
-				) : (
-					<TableEntryForm
-						config={config}
-						initialData={editingRecord}
-						parentRecordId={parentRecordId}
-						onSave={handleFormSave}
-						onCancel={handleFormCancel}
-					/>
-				)}
+				<LoadingIndicator visible={isLoadingRecord || isSavingRecord} variant="contextual" message={isSavingRecord ? "Saving..." : "Loading..."} />
+				<TableEntryForm
+					config={config}
+					initialData={editingRecord}
+					parentRecordId={parentRecordId}
+					onSave={handleFormSave}
+					onCancel={handleFormCancel}
+				/>
 			</Sidepane>
 		</>
 	);

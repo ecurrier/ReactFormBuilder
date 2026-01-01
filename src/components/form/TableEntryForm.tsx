@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import StepActions from "@components/form/StepActions";
 import { ActionType } from "@constants/enums";
 
@@ -50,6 +50,10 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 		const parts = String(path).split(".");
 		return parts[parts.length - 1] || path;
 	}, []);
+
+	useEffect(() => {
+		setFormData(initialData || {});
+	}, [initialData]);
 
 	const registerField = React.useCallback(
 		(path: string, metadata: any, initialValue?: any) => {

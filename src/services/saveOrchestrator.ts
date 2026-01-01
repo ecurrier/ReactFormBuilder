@@ -135,6 +135,31 @@ const mergeDefaultOnCreateData = (data: Partial<Entity>, defaults: Partial<Entit
 	return merged;
 };
 
+const collectEntityChanges = (formState: any, primaryEntity?: string) => {
+	const entityChanges = formState.serializeForSubmission();
+	const primaryChanges = entityChanges.find((change: any) => change.entityName === primaryEntity);
+	const secondaryEntityChanges = entityChanges.filter((change: any) => change.entityName !== primaryEntity);
+
+	return { entityChanges, primaryChanges, secondaryEntityChanges };
+};
+
+const buildRecordIdsByEntity = ({ formState, primaryEntity, primaryRecordId }: { formState: any; primaryEntity?: string; primaryRecordId: string | null }) => {
+	const recordIdsByEntity = new Map<string, string>();
+
+	if (primaryRecordId && primaryEntity) {
+		recordIdsByEntity.set(primaryEntity, primaryRecordId);
+	}
+
+	const relatedRecords = formState.relatedRecords || {};
+	Object.entries(relatedRecords).forEach(([entityName, recordInfo]: any) => {
+		if (recordInfo?.recordId && !recordIdsByEntity.has(entityName)) {
+			recordIdsByEntity.set(entityName, recordInfo.recordId);
+		}
+	});
+
+	return recordIdsByEntity;
+};
+
 const buildSecondaryRecordsPayload = (recordIdsByEntity: Map<string, string>, primaryEntity?: string) => {
 	const secondaryRecords: Array<{ LogicalName: string; Id: string }> = [];
 
@@ -147,6 +172,150 @@ const buildSecondaryRecordsPayload = (recordIdsByEntity: Map<string, string>, pr
 	});
 
 	return secondaryRecords;
+};
+
+const saveSecondaryEntityChanges = async ({
+	secondaryEntityChanges,
+	primaryEntity,
+	primaryRecordId,
+	formState,
+	recordIdsByEntity,
+	stepReferenceByEntity,
+	config,
+	onProgress,
+}: {
+	secondaryEntityChanges: any[];
+	primaryEntity?: string;
+	primaryRecordId: string | null;
+	formState: any;
+	recordIdsByEntity: Map<string, string>;
+	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
+	config: ReactFormConfiguration;
+	onProgress: SaveContext["onProgress"];
+}): Promise<SaveError[]> => {
+	if (secondaryEntityChanges.length === 0) {
+		return [];
+	}
+
+	const errors: SaveError[] = [];
+	const results = await Promise.allSettled(
+		secondaryEntityChanges.map((change: any) =>
+			saveSecondaryRecord({
+				change,
+				primaryEntity,
+				primaryRecordId,
+				formState,
+				recordIdsByEntity,
+				stepReferenceByEntity,
+				config,
+				onProgress,
+			})
+		)
+	);
+
+	results.forEach((result, index) => {
+		if (result.status === "rejected") {
+			const change = secondaryEntityChanges[index];
+			const message = buildErrorMessage(result.reason);
+			console.error(`Failed to save entity ${change.entityName}:`, result.reason);
+			errors.push(buildSaveError("secondary", `Failed to save ${change.entityName}: ${message}`, change.entityName));
+		}
+	});
+
+	return errors;
+};
+
+const groupPendingChildrenByParent = (formState: any, primaryEntity?: string) => {
+	const pendingRecords = Object.values(formState.pendingChildRecords || {}) as PendingChildRecord[];
+	const pendingByParent = new Map<string, PendingChildRecord[]>();
+
+	for (const pending of pendingRecords) {
+		const parentEntityName = pending.parentEntityName || primaryEntity;
+		if (!pendingByParent.has(parentEntityName)) {
+			pendingByParent.set(parentEntityName, []);
+		}
+		pendingByParent.get(parentEntityName)?.push(pending);
+	}
+
+	return pendingByParent;
+};
+
+const savePendingChildRecords = async ({
+	formState,
+	primaryEntity,
+	primaryRecordId,
+	recordIdsByEntity,
+	stepReferenceByEntity,
+	config,
+	entityMetadataMap,
+	onProgress,
+}: {
+	formState: any;
+	primaryEntity?: string;
+	primaryRecordId: string | null;
+	recordIdsByEntity: Map<string, string>;
+	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
+	config: ReactFormConfiguration;
+	entityMetadataMap: Map<string, TableMetadataEntry>;
+	onProgress: SaveContext["onProgress"];
+}): Promise<SaveError[]> => {
+	if (!formState.hasPendingChildren) {
+		return [];
+	}
+
+	const errors: SaveError[] = [];
+	const pendingByParent = groupPendingChildrenByParent(formState, primaryEntity);
+
+	for (const [parentEntityName, records] of pendingByParent) {
+		let parentId: string | null = null;
+
+		try {
+			parentId = await ensureSecondaryParentRecord({
+				parentEntityName,
+				primaryEntity,
+				primaryRecordId,
+				formState,
+				recordIdsByEntity,
+				stepReferenceByEntity,
+				config,
+			});
+		} catch (error) {
+			const message = buildErrorMessage(error);
+			console.error(`Failed to ensure parent record for ${parentEntityName}:`, error);
+			errors.push(buildSaveError("child", `Failed to ensure parent record for ${parentEntityName}: ${message}`, parentEntityName));
+			continue;
+		}
+
+		if (!parentId) {
+			errors.push(buildSaveError("child", `Missing parent record for ${parentEntityName}`, parentEntityName));
+			continue;
+		}
+
+		const childResults = await Promise.allSettled(
+			records.map((pending) =>
+				saveChildRecord({
+					pending,
+					parentEntityName,
+					parentId,
+					formState,
+					config,
+					entityMetadataMap,
+					onProgress,
+				})
+			)
+		);
+
+		childResults.forEach((result, index) => {
+			if (result.status === "rejected") {
+				const pending = records[index];
+				const message = buildErrorMessage(result.reason);
+				console.error(`Failed to save child record:`, result.reason);
+				errors.push(buildSaveError("child", `Failed to save child record: ${message}`, pending.entityName));
+			}
+		});
+	}
+
+	return errors;
 };
 
 const ensureFormInstanceAndSession = async ({
@@ -550,39 +719,21 @@ const saveChildRecord = async ({
 };
 
 /**
- * Execute a draft save operation.
+ * Execute save operation.
  * Saves only dirty fields without validation.
  *
  * @param context - Save context containing form state and configuration
  * @returns Save result with success status and any errors
  */
-export async function executeSaveDraft(context: SaveContext): Promise<SaveResult> {
+export async function executeSave(context: SaveContext): Promise<SaveResult> {
 	const { formState, config, onProgress } = context;
 	const errors: SaveError[] = [];
 	const entityMetadataMap = buildEntityMetadataMap(config);
 
-	/*
-		TO-DO: Somewhere in here, I need to create the FormInstance record if its not already created.
-		If creating FormInstance, I need to also create the UserFormSession record for the current user.
-		fields to default on FormInstance:
-			- eyfrcc_versionid: This will be the versionId URL param
-			- eyfrcc_primaryrecordid: If recordId URL param exists, set this to that value. Otherwise, it will be the primary record created.
-			- eyfrcc_primaryrecordlogicalname: If recordLogicalName URL param exists, set this to that value. Otherwise, it will be the primary entity from the form config.
-			- eyfrcc_secondaryrecords: JSON array of all secondary records created in the format [{ LogicalName: string, Id: string }]
-
-		fields to default on UserFormSession:
-			- eyfrcc_forminstanceid: Lookup to the FormInstance record created above
-			- eyfrcc_contactid: Lookup to current contact (requestor)
-			- eyfrcc_organizationid: Ignore... this will be set automatically by Dataverse (Plugin)
-			- eyfrcc_lastactive: Set to current date/time
-	*/
-
 	try {
-		// Step 1: Get all changed data from form state
 		const primaryEntity = config.Form?.PrimaryApplicationTable?.TableLogicalName;
-		const entityChanges = formState.serializeForSubmission();
-		const secondaryEntityChanges = entityChanges.filter((change: any) => change.entityName !== primaryEntity);
 		const stepReferenceByEntity = buildStepReferenceMap(config, primaryEntity);
+		const { entityChanges, primaryChanges, secondaryEntityChanges } = collectEntityChanges(formState, primaryEntity);
 
 		if (entityChanges.length === 0 && !formState.hasPendingChildren) {
 			return {
@@ -591,8 +742,6 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 			};
 		}
 
-		// Step 2: Save primary record first
-		const primaryChanges = entityChanges.find((change: any) => change.entityName === primaryEntity);
 		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingChildren || secondaryEntityChanges.length > 0);
 		const primaryRecordId = await savePrimaryRecord({
 			formState,
@@ -603,108 +752,31 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 			onProgress,
 		});
 
-		const recordIdsByEntity = new Map<string, string>();
-		if (primaryRecordId && primaryEntity) {
-			recordIdsByEntity.set(primaryEntity, primaryRecordId);
-		}
-		const relatedRecords = formState.relatedRecords || {};
-		Object.entries(relatedRecords).forEach(([entityName, recordInfo]: any) => {
-			if (recordInfo?.recordId && !recordIdsByEntity.has(entityName)) {
-				recordIdsByEntity.set(entityName, recordInfo.recordId);
-			}
+		const recordIdsByEntity = buildRecordIdsByEntity({ formState, primaryEntity, primaryRecordId });
+		const secondaryErrors = await saveSecondaryEntityChanges({
+			secondaryEntityChanges,
+			primaryEntity,
+			primaryRecordId,
+			formState,
+			recordIdsByEntity,
+			stepReferenceByEntity,
+			config,
+			onProgress,
 		});
+		errors.push(...secondaryErrors);
 
-		// Step 3: Save dirty fields from secondary entities
-		if (secondaryEntityChanges.length > 0) {
-			const secondaryResults = await Promise.allSettled(
-				secondaryEntityChanges.map((change: any) =>
-					saveSecondaryRecord({
-						change,
-						primaryEntity,
-						primaryRecordId,
-						formState,
-						recordIdsByEntity,
-						stepReferenceByEntity,
-						config,
-						onProgress,
-					})
-				)
-			);
+		const childErrors = await savePendingChildRecords({
+			formState,
+			primaryEntity,
+			primaryRecordId,
+			recordIdsByEntity,
+			stepReferenceByEntity,
+			config,
+			entityMetadataMap,
+			onProgress,
+		});
+		errors.push(...childErrors);
 
-			secondaryResults.forEach((result, index) => {
-				if (result.status === "rejected") {
-					const change = secondaryEntityChanges[index];
-					const message = buildErrorMessage(result.reason);
-					console.error(`Failed to save entity ${change.entityName}:`, result.reason);
-					errors.push(buildSaveError("secondary", `Failed to save ${change.entityName}: ${message}`, change.entityName));
-				}
-			});
-		}
-
-		// Step 4: Process pending child operations
-		if (formState.hasPendingChildren) {
-			const pendingRecords = Object.values(formState.pendingChildRecords || {}) as PendingChildRecord[];
-			const pendingByParent = new Map<string, PendingChildRecord[]>();
-
-			for (const pending of pendingRecords) {
-				const parentEntityName = pending.parentEntityName || primaryEntity;
-				if (!pendingByParent.has(parentEntityName)) {
-					pendingByParent.set(parentEntityName, []);
-				}
-				pendingByParent.get(parentEntityName)?.push(pending);
-			}
-
-			for (const [parentEntityName, records] of pendingByParent) {
-				let parentId: string | null = null;
-
-				try {
-					parentId = await ensureSecondaryParentRecord({
-						parentEntityName,
-						primaryEntity,
-						primaryRecordId,
-						formState,
-						recordIdsByEntity,
-						stepReferenceByEntity,
-						config,
-					});
-				} catch (error) {
-					const message = buildErrorMessage(error);
-					console.error(`Failed to ensure parent record for ${parentEntityName}:`, error);
-					errors.push(buildSaveError("child", `Failed to ensure parent record for ${parentEntityName}: ${message}`, parentEntityName));
-					continue;
-				}
-
-				if (!parentId) {
-					errors.push(buildSaveError("child", `Missing parent record for ${parentEntityName}`, parentEntityName));
-					continue;
-				}
-
-				const childResults = await Promise.allSettled(
-					records.map((pending) =>
-						saveChildRecord({
-							pending,
-							parentEntityName,
-							parentId,
-							formState,
-							config,
-							entityMetadataMap,
-							onProgress,
-						})
-					)
-				);
-
-				childResults.forEach((result, index) => {
-					if (result.status === "rejected") {
-						const pending = records[index];
-						const message = buildErrorMessage(result.reason);
-						console.error(`Failed to save child record:`, result.reason);
-						errors.push(buildSaveError("child", `Failed to save child record: ${message}`, pending.entityName));
-					}
-				});
-			}
-		}
-
-		// Step 5: Ensure form instance + user session are created/updated
 		if (errors.length === 0) {
 			await ensureFormInstanceAndSession({
 				formState,
@@ -716,7 +788,6 @@ export async function executeSaveDraft(context: SaveContext): Promise<SaveResult
 			});
 		}
 
-		// Step 6: Reset dirty flags for successfully saved fields
 		if (errors.length === 0) {
 			formState.resetDirty();
 		}
@@ -785,8 +856,8 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 			};
 		}
 
-		// Step 3: Execute save draft (validation passed)
-		return await executeSaveDraft(context);
+		// Step 3: Execute save (validation passed)
+		return await executeSave(context);
 	} catch (error) {
 		console.error("Validate and submit failed:", error);
 		const message = buildErrorMessage(error);
@@ -794,30 +865,6 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 			success: false,
 			errors: [buildSaveError("validation", message)],
 		};
-	}
-}
-
-/**
- * Populate form lookup field after creating a new parent record.
- *
- * @param recordId - Parent record ID
- * @param entityName - Entity logical name
- * @param formId - Form ID to populate
- * @param formFieldName - Lookup field logical name for the form
- */
-export async function populateFormLookup(recordId: string, entityName: string, formId: string, formFieldName: string = "eyfrcc_form"): Promise<void> {
-	try {
-		const data = {
-			[formFieldName]: {
-				id: formId,
-				logicalName: "eyfrcc_form",
-			},
-		};
-
-		await updateRecord(entityName, recordId, data);
-	} catch (error) {
-		// Log but don't fail the save if form lookup population fails
-		console.warn("Failed to populate form lookup:", error);
 	}
 }
 

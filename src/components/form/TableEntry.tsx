@@ -26,7 +26,6 @@ export interface TableDataResponse<T> {
 }
 
 export interface TableEntryProps<T> {
-	ref?: React.RefObject<TableEntryRef | null> | null;
 	columns: TableColumn<T>[];
 	fetchData: (sort?: TableSortState, pagination?: PaginationOptions) => Promise<TableDataResponse<T>>;
 	caption?: string;
@@ -47,17 +46,19 @@ export interface TableEntryRef {
 	refresh: () => void;
 }
 
-export const TableEntry = <T extends { id?: string }>({
-	ref,
-	columns,
-	fetchData,
-	caption,
-	className,
-	initialSortState,
-	loadingMessage = "Loading data...",
-	createAction,
-	pagination = { pageSize: 5, controlSize: "md" },
-}: TableEntryProps<T>): React.ReactElement => {
+export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(function TableEntry<T extends { id?: string }>(
+	{
+		columns,
+		fetchData,
+		caption,
+		className,
+		initialSortState,
+		loadingMessage = "Loading data...",
+		createAction,
+		pagination = { pageSize: 5, controlSize: "md" },
+	}: TableEntryProps<T>,
+	ref
+): React.ReactElement {
 	const [data, setData] = useState<T[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [hasLoadedOnce, setHasLoadedOnce] = useState<boolean>(false);
@@ -94,7 +95,7 @@ export const TableEntry = <T extends { id?: string }>({
 		loadData();
 	}, [loadData]);
 
-	useImperativeHandle(ref || null, () => ({
+	useImperativeHandle(ref, () => ({
 		refresh: loadData,
 	}));
 
@@ -207,6 +208,6 @@ export const TableEntry = <T extends { id?: string }>({
 			)}
 		</div>
 	);
-};
+});
 
 export default TableEntry;
