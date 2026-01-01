@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import formConfig from "@/data/formConfigv5.json";
+import formConfig from "@/testing/formConfigs/formConfigv1.json";
 import FormBuilder from "@components/form/FormBuilder";
 import { ConfirmationModal } from "@components/common/ConfirmationModal";
 import LoadingIndicator from "@components/common/LoadingIndicator";
@@ -44,9 +44,6 @@ const App = () => {
 		onCancel: () => {},
 	});
 
-	const env = import.meta.env ?? {};
-	const isDebugMode = env.VITE_USE_DEBUG_CONFIG === "true" || env.DEV;
-
 	const showConfirmation = (title: string, message: string, confirmText = "Yes", cancelText = "No") => {
 		return new Promise((resolve) => {
 			setModalState({
@@ -81,6 +78,7 @@ const App = () => {
 			const parentRecordLogicalName = searchParams.get("parentRecordLogicalName");
 			const parentRecordFieldLogicalName = searchParams.get("parentRecordFieldLogicalName");
 			const parentRecordId = searchParams.get("parentRecordId");
+			const isDebugMode = searchParams.has("debug");
 
 			setUrlParams({
 				recordId,
@@ -90,6 +88,24 @@ const App = () => {
 				parentRecordFieldLogicalName,
 				parentRecordId,
 			});
+
+			if (isDebugMode) {
+				setConfig(formConfig);
+				setIsDebugData(true);
+				setUrlParams({
+					recordId: null,
+					versionId: null,
+					recordLogicalName: null,
+					parentRecordLogicalName: null,
+					parentRecordFieldLogicalName: null,
+					parentRecordId: null,
+				});
+				setRecordData(null);
+				setRecordDataByEntity({});
+				setIsFormConfigurationLoading(false);
+				setIsRecordDataLoading(false);
+				return;
+			}
 
 			// scenario 0: neither recordId nor versionId provided - error/warning
 			if (!recordId && !versionId) {
@@ -237,28 +253,10 @@ const App = () => {
 			throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
 		} catch (error) {
 			console.error("Failed to load form configuration", error);
-			if (isDebugMode) {
-				setErrorMessage(`Unable to load the form configuration: ${error.message}. Showing debug data instead.`);
-				setConfig(formConfig);
-				setIsDebugData(true);
-				setUrlParams({
-					recordId: null,
-					versionId: null,
-					recordLogicalName: null,
-					parentRecordLogicalName: null,
-					parentRecordFieldLogicalName: null,
-					parentRecordId: null,
-				});
-				setRecordData(null);
-				setRecordDataByEntity({});
-				setIsFormConfigurationLoading(false);
-				setIsRecordDataLoading(false);
-			} else {
-				// TO-DO: Handle this better in the UI
-				setErrorMessage(`Unable to load the form configuration: ${error.message}`);
-			}
+			// TO-DO: Handle this better in the UI
+			setErrorMessage(`Unable to load the form configuration: ${error.message}`);
 		}
-	}, [isDebugMode]);
+	}, []);
 
 	useEffect(() => {
 		loadConfig();

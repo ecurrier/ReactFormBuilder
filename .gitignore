@@ -5,6 +5,8 @@ dist
 .vite
 .DS_Store
 .env
+test-results
+.test-results/*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
