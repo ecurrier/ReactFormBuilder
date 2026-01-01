@@ -1,17 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
 import formConfig from "@/testing/formConfigs/formConfigv1.json";
-import FormBuilder from "@components/form/FormBuilder";
-import { ConfirmationModal } from "@components/common/ConfirmationModal";
-import LoadingIndicator from "@components/common/LoadingIndicator";
-import { loadRecordData } from "@services/dataLoader";
+import { FormBuilder, ConfirmationModal, LoadingIndicator, Alert } from "@components";
 import {
+	loadRecordData,
 	resolveFormVersion,
 	resolveFormVersionFromExistingVersion,
 	retrieveOrCreateFormInstanceForLatestVersion,
 	retrieveFormInstance,
 	retrieveUserFormSessions,
 	createUserFormSession,
-} from "@services/formInstanceManagement";
+} from "@services";
 import { resolveRequestorId } from "@utilities/session";
 
 interface ConfirmationModalState {
@@ -220,9 +218,11 @@ const App = () => {
 		if (error instanceof Error) {
 			return error.message;
 		}
+
 		if (typeof error === "string") {
 			return error;
 		}
+
 		return "Unknown error";
 	};
 
@@ -230,15 +230,8 @@ const App = () => {
 		resetStateForNewLoad();
 
 		try {
-			const {
-				recordId,
-				versionId,
-				recordLogicalName,
-				parentRecordLogicalName,
-				parentRecordFieldLogicalName,
-				parentRecordId,
-				isDebugMode,
-			} = parseUrlParams();
+			const { recordId, versionId, recordLogicalName, parentRecordLogicalName, parentRecordFieldLogicalName, parentRecordId, isDebugMode } =
+				parseUrlParams();
 
 			setUrlParams({
 				recordId,
@@ -254,29 +247,29 @@ const App = () => {
 				return;
 			}
 
-			// scenario 0: neither recordId nor versionId provided - error/warning
 			if (!recordId && !versionId) {
 				throw new Error("Either recordId or versionId must be provided in the URL parameters");
 			}
 
-			// SCENARIO 1: New record (no recordId)
+			// New record
 			if (!recordId && versionId) {
 				const formConfiguration = await resolveNewRecordConfig(versionId);
+
 				setConfig(formConfiguration);
 				setRecordData(null);
 				setRecordDataByEntity({});
 				setIsFormConfigurationLoading(false);
 				setIsRecordDataLoading(false);
 				setIsDebugData(false);
+
 				return;
 			}
 
-			// SCENARIO 2 & 3: Existing record
+			// Existing record
 			if (recordId && recordLogicalName) {
 				const formInstance = await getFormInstanceForRecord(recordId, recordLogicalName, versionId);
-
-				// At this point, formInstance is guaranteed to exist
 				const formConfiguration = formInstance.Version.FormContent;
+
 				setConfig(formConfiguration);
 				setIsFormConfigurationLoading(false);
 				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
@@ -285,19 +278,13 @@ const App = () => {
 					versionId: formInstance.Version.Id,
 				}));
 
-				// Load primary + secondary data
-				const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(
-					formInstance,
-					recordId,
-					recordLogicalName,
-					formConfiguration
-				);
+				// Load primary & secondary data
+				const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(formInstance, recordId, recordLogicalName, formConfiguration);
 				setRecordData(primaryData);
 				setRecordDataByEntity(secondaryDataMap);
 				setIsRecordDataLoading(false);
 				setIsDebugData(false);
 
-				// Load user form sessions
 				await ensureUserFormSession(formInstance.Id);
 
 				return;
@@ -306,7 +293,6 @@ const App = () => {
 			throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
 		} catch (error) {
 			console.error("Failed to load form configuration", error);
-			// TO-DO: Handle this better in the UI
 			setErrorMessage(`Unable to load the form configuration: ${toErrorMessage(error)}`);
 			setIsFormConfigurationLoading(false);
 			setIsRecordDataLoading(false);
@@ -332,6 +318,11 @@ const App = () => {
 						urlParams={urlParams}
 					/>
 				</>
+			) : null}
+			{errorMessage ? (
+				<Alert type="danger" dismissible onDismiss={() => setErrorMessage("")}>
+					{errorMessage}
+				</Alert>
 			) : null}
 			<LoadingIndicator visible={isLoading} variant="full-screen" message={loadingMessage} />
 			<ConfirmationModal
