@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import formConfig from "@/testing/formConfigs/formConfigv5.json";
+import formConfig from "@/testing/formConfigs/formConfigv1.json";
 import FormBuilder from "@components/form/FormBuilder";
 import { ConfirmationModal } from "@components/common/ConfirmationModal";
 import LoadingIndicator from "@components/common/LoadingIndicator";
