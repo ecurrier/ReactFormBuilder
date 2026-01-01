@@ -1,17 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
 import formConfig from "@/testing/formConfigs/formConfigv1.json";
-import FormBuilder from "@components/form/FormBuilder";
-import { ConfirmationModal } from "@components/common/ConfirmationModal";
-import LoadingIndicator from "@components/common/LoadingIndicator";
-import { loadRecordData } from "@services/dataLoader";
+import { FormBuilder, ConfirmationModal, LoadingIndicator, Alert } from "@components";
 import {
+	loadRecordData,
 	resolveFormVersion,
 	resolveFormVersionFromExistingVersion,
 	retrieveOrCreateFormInstanceForLatestVersion,
 	retrieveFormInstance,
 	retrieveUserFormSessions,
 	createUserFormSession,
-} from "@services/formInstanceManagement";
+} from "@services";
 import { resolveRequestorId } from "@utilities/session";
 
 interface ConfirmationModalState {
@@ -44,6 +42,34 @@ const App = () => {
 		onCancel: () => {},
 	});
 
+	const parseUrlParams = () => {
+		const searchParams = new URLSearchParams(window.location.search);
+		const recordId = searchParams.get("recordId");
+		const versionId = searchParams.get("versionId");
+		const recordLogicalName = searchParams.get("recordLogicalName");
+		const parentRecordLogicalName = searchParams.get("parentRecordLogicalName");
+		const parentRecordFieldLogicalName = searchParams.get("parentRecordFieldLogicalName");
+		const parentRecordId = searchParams.get("parentRecordId");
+		const isDebugMode = searchParams.has("debug");
+
+		return {
+			recordId,
+			versionId,
+			recordLogicalName,
+			parentRecordLogicalName,
+			parentRecordFieldLogicalName,
+			parentRecordId,
+			isDebugMode,
+		};
+	};
+
+	const resetStateForNewLoad = () => {
+		setIsFormConfigurationLoading(true);
+		setErrorMessage("");
+		setRecordDataByEntity({});
+		setFormSessionInfo({ formInstanceId: null, userFormSessionId: null });
+	};
+
 	const showConfirmation = (title: string, message: string, confirmText = "Yes", cancelText = "No") => {
 		return new Promise((resolve) => {
 			setModalState({
@@ -64,21 +90,148 @@ const App = () => {
 		});
 	};
 
-	const loadConfig = useCallback(async () => {
-		setIsFormConfigurationLoading(true);
-		setErrorMessage("");
+	const handleDebugMode = () => {
+		setConfig(formConfig);
+		setIsDebugData(true);
+		setUrlParams({
+			recordId: null,
+			versionId: null,
+			recordLogicalName: null,
+			parentRecordLogicalName: null,
+			parentRecordFieldLogicalName: null,
+			parentRecordId: null,
+		});
+		setRecordData(null);
 		setRecordDataByEntity({});
-		setFormSessionInfo({ formInstanceId: null, userFormSessionId: null });
+		setIsFormConfigurationLoading(false);
+		setIsRecordDataLoading(false);
+	};
+
+	const resolveNewRecordConfig = async (versionId: string) => {
+		let version = await resolveFormVersion(versionId);
+		if (!version) {
+			const useLatestVersion = await showConfirmation(
+				"Form Version Not Found",
+				`The specified form version (ID: ${versionId}) could not be found. Would you like to use the latest version instead?`,
+				"Use Latest",
+				"Cancel"
+			);
+
+			if (useLatestVersion) {
+				version = await resolveFormVersionFromExistingVersion(versionId);
+				if (!version) {
+					throw new Error("No active form versions found");
+				}
+			} else {
+				throw new Error(`Form version with ID ${versionId} not found`);
+			}
+		}
+
+		return version.FormContent;
+	};
+
+	const getFormInstanceForRecord = async (recordId: string, recordLogicalName: string, versionId?: string) => {
+		if (versionId) {
+			let formInstance = await retrieveFormInstance(recordId, recordLogicalName, versionId);
+			if (!formInstance) {
+				const useLatestVersion = await showConfirmation(
+					"Form Instance Not Found",
+					"A form instance for the specified record and version could not be found. Would you like to start a new form for the latest version instead?",
+					"Use Latest",
+					"Cancel"
+				);
+
+				if (useLatestVersion) {
+					formInstance = await retrieveOrCreateFormInstanceForLatestVersion(recordId, recordLogicalName, versionId);
+					if (!formInstance) {
+						throw new Error("No active form versions found");
+					}
+				} else {
+					throw new Error(`Form version with ID ${versionId} not found`);
+				}
+			}
+
+			return formInstance;
+		}
+
+		const formInstance = await retrieveOrCreateFormInstanceForLatestVersion(recordId, recordLogicalName);
+		if (!formInstance) {
+			throw new Error("No active form versions found");
+		}
+
+		return formInstance;
+	};
+
+	const loadRecordDataForInstance = async (formInstance, recordId: string, recordLogicalName: string, formConfiguration) => {
+		setIsRecordDataLoading(true);
+		const primaryDataPromise = loadRecordData(recordLogicalName, recordId, formConfiguration);
+		const secondaryRecords = Array.isArray(formInstance.SecondaryRecords) ? formInstance.SecondaryRecords : [];
+		const secondaryPromises = secondaryRecords.map((record) =>
+			loadRecordData(record.LogicalName, record.Id, formConfiguration).then((data) => ({
+				entityName: record.LogicalName,
+				recordId: record.Id,
+				data,
+			}))
+		);
+
+		const primaryData = await primaryDataPromise;
+		const secondaryResults = await Promise.allSettled(secondaryPromises);
+		const secondaryDataMap = {};
+
+		secondaryResults.forEach((result) => {
+			if (result.status === "fulfilled" && result.value?.data) {
+				secondaryDataMap[result.value.entityName] = result.value.data;
+			} else if (result.status === "rejected") {
+				console.warn("Failed to load secondary record data", result.reason);
+			}
+		});
+
+		return { primaryData, secondaryDataMap };
+	};
+
+	const ensureUserFormSession = async (formInstanceId: string) => {
+		try {
+			const sessions = await retrieveUserFormSessions(formInstanceId);
+			if (!sessions) {
+				return;
+			}
+
+			const requestorId = resolveRequestorId();
+			const matchingSession = requestorId ? sessions.find((session) => session.ContactId === requestorId) : null;
+			if (matchingSession) {
+				setFormSessionInfo((prev) => ({ ...prev, userFormSessionId: matchingSession.Id }));
+				return;
+			}
+
+			const sessionId = await createUserFormSession({
+				formInstanceId,
+				contactId: requestorId,
+				lastActive: new Date(),
+			});
+			setFormSessionInfo((prev) => ({ ...prev, userFormSessionId: sessionId }));
+		} catch (error) {
+			console.warn("Failed to load user form sessions", error);
+		}
+	};
+
+	const toErrorMessage = (error: unknown) => {
+		if (error instanceof Error) {
+			return error.message;
+		}
+
+		if (typeof error === "string") {
+			return error;
+		}
+
+		return "Unknown error";
+	};
+
+	const loadConfig = useCallback(async () => {
+		resetStateForNewLoad();
 
 		try {
-			const searchParams = new URLSearchParams(window.location.search);
-			const recordId = searchParams.get("recordId");
-			const versionId = searchParams.get("versionId");
-			const recordLogicalName = searchParams.get("recordLogicalName");
-			const parentRecordLogicalName = searchParams.get("parentRecordLogicalName");
-			const parentRecordFieldLogicalName = searchParams.get("parentRecordFieldLogicalName");
-			const parentRecordId = searchParams.get("parentRecordId");
-			const isDebugMode = searchParams.has("debug");
+			const { recordId, versionId, recordLogicalName, parentRecordLogicalName, parentRecordFieldLogicalName, parentRecordId, isDebugMode } =
+				parseUrlParams();
 
 			setUrlParams({
 				recordId,
@@ -90,101 +243,33 @@ const App = () => {
 			});
 
 			if (isDebugMode) {
-				setConfig(formConfig);
-				setIsDebugData(true);
-				setUrlParams({
-					recordId: null,
-					versionId: null,
-					recordLogicalName: null,
-					parentRecordLogicalName: null,
-					parentRecordFieldLogicalName: null,
-					parentRecordId: null,
-				});
-				setRecordData(null);
-				setRecordDataByEntity({});
-				setIsFormConfigurationLoading(false);
-				setIsRecordDataLoading(false);
+				handleDebugMode();
 				return;
 			}
 
-			// scenario 0: neither recordId nor versionId provided - error/warning
 			if (!recordId && !versionId) {
 				throw new Error("Either recordId or versionId must be provided in the URL parameters");
 			}
 
-			// SCENARIO 1: New record (no recordId)
+			// New record
 			if (!recordId && versionId) {
-				let version = await resolveFormVersion(versionId);
-				if (!version) {
-					throw new Error(`Form version with ID ${versionId} not found`);
-					const useLatestVersion = await showConfirmation(
-						"Form Version Not Found",
-						`The specified form version (ID: ${versionId}) could not be found. Would you like to use the latest version instead?`,
-						"Use Latest",
-						"Cancel"
-					);
+				const formConfiguration = await resolveNewRecordConfig(versionId);
 
-					if (useLatestVersion) {
-						version = await resolveFormVersionFromExistingVersion(versionId);
-						if (!version) {
-							throw new Error("No active form versions found");
-						}
-					} else {
-						setErrorMessage(`Form version with ID ${versionId} not found`);
-						setIsFormConfigurationLoading(false);
-						setIsRecordDataLoading(false);
-						return;
-					}
-				}
-
-				setConfig(version.FormContent);
+				setConfig(formConfiguration);
 				setRecordData(null);
 				setRecordDataByEntity({});
 				setIsFormConfigurationLoading(false);
 				setIsRecordDataLoading(false);
 				setIsDebugData(false);
+
 				return;
 			}
 
-			// SCENARIO 2 & 3: Existing record
+			// Existing record
 			if (recordId && recordLogicalName) {
-				let formInstance;
-
-				// Determine which version to use
-				if (versionId) {
-					// CASE A: User explicitly wants a specific version
-					formInstance = await retrieveFormInstance(recordId, recordLogicalName, versionId);
-					if (!formInstance) {
-						const useLatestVersion = await showConfirmation(
-							"Form Instance Not Found",
-							`A form instance for the specified record and version could not be found. Would you like to start a new form for the latest version instead?`,
-							"Use Latest",
-							"Cancel"
-						);
-
-						if (useLatestVersion) {
-							formInstance = await retrieveOrCreateFormInstanceForLatestVersion(recordId, recordLogicalName, versionId);
-							if (!formInstance) {
-								throw new Error("No active form versions found");
-							}
-						} else {
-							setErrorMessage(`Form version with ID ${versionId} not found`);
-							setIsFormConfigurationLoading(false);
-							setIsRecordDataLoading(false);
-						}
-
-						return;
-					}
-				} else {
-					// CASE B: No versionId - get/create formInstance for latest active version
-					formInstance = await retrieveOrCreateFormInstanceForLatestVersion(recordId, recordLogicalName);
-					if (!formInstance) {
-						throw new Error("No active form versions found");
-					}
-				}
-
-				// At this point, formInstance is guaranteed to exist
+				const formInstance = await getFormInstanceForRecord(recordId, recordLogicalName, versionId);
 				const formConfiguration = formInstance.Version.FormContent;
+
 				setConfig(formConfiguration);
 				setIsFormConfigurationLoading(false);
 				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
@@ -193,59 +278,14 @@ const App = () => {
 					versionId: formInstance.Version.Id,
 				}));
 
-				// Load primary + secondary data
-				setIsRecordDataLoading(true);
-				const primaryDataPromise = loadRecordData(recordLogicalName, recordId, formConfiguration);
-				const secondaryRecords = Array.isArray(formInstance.SecondaryRecords) ? formInstance.SecondaryRecords : [];
-				const secondaryPromises = secondaryRecords.map((record) =>
-					loadRecordData(record.LogicalName, record.Id, formConfiguration).then((data) => ({
-						entityName: record.LogicalName,
-						recordId: record.Id,
-						data,
-					}))
-				);
-
-				const primaryData = await primaryDataPromise;
-				const secondaryResults = await Promise.allSettled(secondaryPromises);
-				const secondaryDataMap = {};
-
-				secondaryResults.forEach((result) => {
-					if (result.status === "fulfilled" && result.value?.data) {
-						secondaryDataMap[result.value.entityName] = result.value.data;
-					} else if (result.status === "rejected") {
-						console.warn("Failed to load secondary record data", result.reason);
-					}
-				});
-
+				// Load primary & secondary data
+				const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(formInstance, recordId, recordLogicalName, formConfiguration);
 				setRecordData(primaryData);
 				setRecordDataByEntity(secondaryDataMap);
 				setIsRecordDataLoading(false);
 				setIsDebugData(false);
 
-				// Load user form sessions
-				retrieveUserFormSessions(formInstance.Id)
-					.then(async (sessions) => {
-						if (!sessions) {
-							return;
-						}
-
-						const requestorId = resolveRequestorId();
-
-						const matchingSession = requestorId ? sessions.find((session) => session.ContactId === requestorId) : null;
-						if (matchingSession) {
-							setFormSessionInfo((prev) => ({ ...prev, userFormSessionId: matchingSession.Id }));
-						} else {
-							const sessionId = await createUserFormSession({
-								formInstanceId: formInstance.Id,
-								contactId: requestorId,
-								lastActive: new Date(),
-							});
-							setFormSessionInfo((prev) => ({ ...prev, userFormSessionId: sessionId }));
-						}
-					})
-					.catch((error) => {
-						console.warn("Failed to load user form sessions", error);
-					});
+				await ensureUserFormSession(formInstance.Id);
 
 				return;
 			}
@@ -253,8 +293,9 @@ const App = () => {
 			throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
 		} catch (error) {
 			console.error("Failed to load form configuration", error);
-			// TO-DO: Handle this better in the UI
-			setErrorMessage(`Unable to load the form configuration: ${error.message}`);
+			setErrorMessage(`Unable to load the form configuration: ${toErrorMessage(error)}`);
+			setIsFormConfigurationLoading(false);
+			setIsRecordDataLoading(false);
 		}
 	}, []);
 
@@ -277,6 +318,11 @@ const App = () => {
 						urlParams={urlParams}
 					/>
 				</>
+			) : null}
+			{errorMessage ? (
+				<Alert type="danger" dismissible onDismiss={() => setErrorMessage("")}>
+					{errorMessage}
+				</Alert>
 			) : null}
 			<LoadingIndicator visible={isLoading} variant="full-screen" message={loadingMessage} />
 			<ConfirmationModal
