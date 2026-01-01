@@ -4,10 +4,10 @@ import TableEntryForm from "@components/form/TableEntryForm";
 import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu";
 import Sidepane from "@components/common/Sidepane";
 import { ActionType, DataType } from "@constants/enums";
-import { retrieveRecord } from "@api/Api";
-import { buildFetchXmlForRecord } from "@utilities/FetchXmlBuilder";
-import { resolvePrimaryIdAttribute } from "@utilities/entityMetadata";
-import { generateTempId, isTempId } from "@utilities/Common";
+import { retrieveRecord } from "@/services/api/Api";
+import { buildFetchXmlForRecord } from "@utilities/fetchXml";
+import { resolvePrimaryIdAttribute } from "@utilities/metadata";
+import { generateTempId, isTempId } from "@utilities/common";
 
 interface FieldAction {
 	Id: string;

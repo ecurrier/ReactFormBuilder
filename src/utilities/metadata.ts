@@ -13,14 +13,6 @@ export interface TableMetadataEntry {
 
 let entityMetadataCache = new Map<string, TableMetadataEntry>();
 
-const normalizeEntityName = (entityName?: string): string | undefined => {
-	if (!entityName) {
-		return undefined;
-	}
-
-	return entityName;
-};
-
 const mergeMetadata = (map: Map<string, TableMetadataEntry>, logicalName: string, updates: Partial<TableMetadataEntry>) => {
 	const existing = map.get(logicalName) ?? { EntityLogicalName: logicalName };
 	map.set(logicalName, { ...existing, ...updates, EntityLogicalName: logicalName });
@@ -41,7 +33,7 @@ const addLookupTargets = (map: Map<string, TableMetadataEntry>, config?: ReactFo
 				}
 
 				currentAction.Properties?.Targets?.forEach((target) => {
-					const logicalName = normalizeEntityName(target?.EntityLogicalName);
+					const logicalName = target?.EntityLogicalName;
 					if (!logicalName) {
 						return;
 					}
@@ -68,7 +60,7 @@ export const buildEntityMetadataMap = (config?: ReactFormConfiguration): Map<str
 				return;
 			}
 
-			const logicalName = normalizeEntityName(value?.EntityLogicalName || key);
+			const logicalName = value?.EntityLogicalName || key;
 			if (!logicalName) {
 				return;
 			}

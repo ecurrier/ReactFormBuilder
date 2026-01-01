@@ -1,13 +1,13 @@
-import { createRecord, updateRecord } from "@api";
+import { createRecord, updateRecord } from "@/services/api";
 import type { Entity, EntityReference } from "@types/Entity";
 import type { PendingChildRecord } from "@types/FormState";
 import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "@types/config";
 import type { SaveError, SaveProgressEvent, SaveResult } from "@types/SaveOrchestrator";
 import { validateField } from "@services/validation/validators";
 import { createFormInstance, createUserFormSession } from "@services/formInstanceManagement";
-import { isTempId } from "@utilities/Common";
-import { sanitizeGuid } from "@utilities/Serialization";
-import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "@utilities/entityMetadata";
+import { isTempId } from "@utilities/common";
+import { sanitizeGuid } from "@utilities/serialization";
+import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "@utilities/metadata";
 import { resolveRequestorId } from "@utilities/session";
 
 export interface SaveContext {

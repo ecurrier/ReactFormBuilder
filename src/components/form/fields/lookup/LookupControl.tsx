@@ -1,18 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import LookupAdvancedSearchModal from "@components/form/fields/lookup/LookupAdvancedSearchModal";
-import { searchLookupQuick } from "@services/lookupService";
-
-const formatLabel = (value) => {
-	if (!value) {
-		return "";
-	}
-
-	return value
-		.replace(/_/g, " ")
-		.replace(/([a-z])([A-Z])/g, "$1 $2")
-		.replace(/\b\w/g, (match) => match.toUpperCase());
-};
+import { quickSearchLookup } from "@services/lookupService";
+import { resolveEntityDisplayName } from "@/utilities/metadata";
 
 export const LookupControl = ({ inputId, label, placeholder, value, onChange, targets, isReadOnly, isRequired }) => {
 	const [searchText, setSearchText] = useState("");
@@ -55,11 +45,11 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 			return;
 		}
 
-		const trimmed = searchText.trim();
+		// Debounce search input
 		const timer = setTimeout(async () => {
 			setIsLoading(true);
 			try {
-				const matches = await searchLookupQuick(selectedTarget, trimmed);
+				const matches = await quickSearchLookup(selectedTarget, searchText.trim());
 				setResults(matches);
 			} catch (error) {
 				console.error("Failed to fetch lookup results:", error);
@@ -118,6 +108,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 		if (!result) {
 			return;
 		}
+
 		handleSelectResult(result);
 		setIsAdvancedOpen(false);
 	};
@@ -139,7 +130,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 						disabled={isReadOnly}>
 						{targets.map((target) => (
 							<option key={target.EntityLogicalName} value={target.EntityLogicalName}>
-								{formatLabel(target.EntityLogicalName)}
+								{resolveEntityDisplayName(target.EntityLogicalName)}
 							</option>
 						))}
 					</select>

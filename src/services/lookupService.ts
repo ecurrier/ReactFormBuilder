@@ -1,10 +1,10 @@
-import { retrieveMultipleRecords } from "@api/Api";
-import { buildFetchXmlForLookup, buildFetchXmlWithFilter } from "@utilities/FetchXmlBuilder";
-import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "@utilities/entityMetadata";
+import { retrieveMultipleRecords } from "@/services/api/Api";
+import { buildFetchXmlWithFilter } from "@utilities/fetchXml";
+import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "@utilities/metadata";
 
 export interface LookupTargetConfig {
 	EntityLogicalName: string;
-	Columns: string[];
+	Attributes: string[];
 	NavigationProperty?: string;
 	ReferencingAttribute?: string;
 	EntitySetName?: string;
@@ -16,35 +16,56 @@ export interface LookupSearchResult {
 	id: string;
 	logicalName: string;
 	name: string;
-	columns: Record<string, any>;
+	attributes: Record<string, any>;
 }
 
-const getPrimaryColumn = (target: LookupTargetConfig): string => {
+// TO-DO: If primary name attribute is not defined and there are no attributes, we should probably hard error
+const getPrimaryNameAttribute = (target: LookupTargetConfig): string => {
 	if (target.PrimaryNameAttribute) {
 		return target.PrimaryNameAttribute;
 	}
 
-	if (target.Columns && target.Columns.length > 0) {
-		return target.Columns[0];
+	const primaryNameAttribute = resolvePrimaryNameAttribute(target.EntityLogicalName);
+	if (primaryNameAttribute) {
+		return primaryNameAttribute;
 	}
 
-	return resolvePrimaryNameAttribute(target.EntityLogicalName);
+	if (target.Attributes && target.Attributes.length > 0) {
+		return target.Attributes[0];
+	}
+
+	return "createdon";
 };
 
-const buildLookupColumns = (target: LookupTargetConfig): string[] => {
-	const primaryColumn = getPrimaryColumn(target);
-	const idColumn = target.PrimaryIdAttribute || resolvePrimaryIdAttribute(target.EntityLogicalName);
-	const columnSet = new Set<string>([idColumn, primaryColumn, ...(target.Columns || [])]);
-	return Array.from(columnSet);
+const buildLookupAttributes = (target: LookupTargetConfig): string[] => {
+	const primaryNameAttribute = target.PrimaryNameAttribute || getPrimaryNameAttribute(target);
+	const primaryIdAttribute = target.PrimaryIdAttribute || resolvePrimaryIdAttribute(target.EntityLogicalName);
+	const attributeSet = new Set<string>([primaryIdAttribute, primaryNameAttribute, ...(target.Attributes || [])]);
+
+	return Array.from(attributeSet);
+};
+
+const buildFetchXmlForLookupResults = (entityName: string, primaryNameAttribute: string, additionalAttributes: string[] = [], orderBy?: string): string => {
+	const attributes = [primaryNameAttribute, "createdon", ...additionalAttributes];
+	const attributeElements = attributes.map((attr) => `<attribute name="${attr}" />`).join("");
+	const orderByAttr = orderBy || primaryNameAttribute;
+
+	return `
+		<fetch>
+			<entity name="${entityName}">
+				${attributeElements}
+				<order attribute="${orderByAttr}" descending="false" />
+			</entity>
+		</fetch>`;
 };
 
 const mapLookupResults = (target: LookupTargetConfig, rows: Record<string, any>[]): LookupSearchResult[] => {
-	const idColumn = target.PrimaryIdAttribute || resolvePrimaryIdAttribute(target.EntityLogicalName);
-	const primaryColumn = getPrimaryColumn(target);
+	const primaryIdAttribute = target.PrimaryIdAttribute || resolvePrimaryIdAttribute(target.EntityLogicalName);
+	const primaryNameAttribute = target.PrimaryNameAttribute || getPrimaryNameAttribute(target);
 
 	return rows
 		.map((row) => {
-			const id = row[idColumn];
+			const id = row[primaryIdAttribute];
 			if (!id) {
 				return null;
 			}
@@ -52,22 +73,23 @@ const mapLookupResults = (target: LookupTargetConfig, rows: Record<string, any>[
 			return {
 				id,
 				logicalName: target.EntityLogicalName,
-				name: row[primaryColumn] ?? id,
-				columns: row,
+				name: row[primaryNameAttribute] ?? id,
+				attributes: row,
 			};
 		})
 		.filter(Boolean) as LookupSearchResult[];
 };
 
-export const searchLookupQuick = async (target: LookupTargetConfig, query: string, top: number = 8): Promise<LookupSearchResult[]> => {
-	const trimmed = query?.trim();
-	const columns = buildLookupColumns(target);
-	const primaryColumn = getPrimaryColumn(target);
-	if (!trimmed) {
-		const fetchXml = buildFetchXmlForLookup(
+export const quickSearchLookup = async (target: LookupTargetConfig, query: string, top: number = 4): Promise<LookupSearchResult[]> => {
+	const attributes = buildLookupAttributes(target);
+	const primaryNameAttribute = getPrimaryNameAttribute(target);
+
+	const searchText = query?.trim();
+	if (!searchText) {
+		const fetchXml = buildFetchXmlForLookupResults(
 			target.EntityLogicalName,
-			primaryColumn,
-			columns.filter((column) => column !== primaryColumn)
+			primaryNameAttribute,
+			attributes.filter((attribute) => attribute !== primaryNameAttribute)
 		);
 		const response = await retrieveMultipleRecords(target.EntityLogicalName, fetchXml, {
 			top,
@@ -76,13 +98,13 @@ export const searchLookupQuick = async (target: LookupTargetConfig, query: strin
 		return mapLookupResults(target, response.results || []);
 	}
 
-	const filters = (target.Columns || [getPrimaryColumn(target)]).map((column) => ({
-		attribute: column,
+	const filters = (target.Attributes || [getPrimaryNameAttribute(target)]).map((attribute) => ({
+		attribute,
 		operator: "like",
-		value: `%${trimmed}%`,
+		value: `%${searchText}%`,
 	}));
 
-	const fetchXml = buildFetchXmlWithFilter(target.EntityLogicalName, columns, filters, "or");
+	const fetchXml = buildFetchXmlWithFilter(target.EntityLogicalName, attributes, filters, "or");
 	const response = await retrieveMultipleRecords(target.EntityLogicalName, fetchXml, {
 		top,
 	});
@@ -90,33 +112,33 @@ export const searchLookupQuick = async (target: LookupTargetConfig, query: strin
 	return mapLookupResults(target, response.results || []);
 };
 
-export const searchLookupAdvanced = async (
+export const advancedSearchLookup = async (
 	target: LookupTargetConfig,
 	query: string,
 	pagination: { page: number; pageSize: number },
-	sortColumn?: string
+	sortAttribute?: string
 ): Promise<{ results: LookupSearchResult[]; totalRecordCount?: number }> => {
-	const columns = buildLookupColumns(target);
-	const trimmed = query?.trim();
-	const primaryColumn = getPrimaryColumn(target);
-	let fetchXml = buildFetchXmlForLookup(
+	const attributes = buildLookupAttributes(target);
+	const primaryNameAttribute = getPrimaryNameAttribute(target);
+	let fetchXml = buildFetchXmlForLookupResults(
 		target.EntityLogicalName,
-		primaryColumn,
-		columns.filter((column) => column !== primaryColumn)
+		primaryNameAttribute,
+		attributes.filter((attribute) => attribute !== primaryNameAttribute)
 	);
 
-	if (trimmed) {
-		const filters = (target.Columns || [getPrimaryColumn(target)]).map((column) => ({
-			attribute: column,
+	const searchText = query?.trim();
+	if (searchText) {
+		const filters = (target.Attributes || [getPrimaryNameAttribute(target)]).map((attribute) => ({
+			attribute,
 			operator: "like",
-			value: `%${trimmed}%`,
+			value: `%${searchText}%`,
 		}));
-		fetchXml = buildFetchXmlWithFilter(target.EntityLogicalName, columns, filters, "or");
+		fetchXml = buildFetchXmlWithFilter(target.EntityLogicalName, attributes, filters, "or");
 	}
 
 	const response = await retrieveMultipleRecords(target.EntityLogicalName, fetchXml, {
 		pagination,
-		orderBy: `${sortColumn || primaryColumn} asc`,
+		orderBy: `${sortAttribute || primaryNameAttribute} asc`,
 	});
 
 	return {

@@ -2,7 +2,7 @@ import { DOMParser, XMLSerializer } from "xmldom";
 import { getEntitySetName, sanitizeGuid, serializeForApi } from "@utilities";
 import type { ExtendedWindow } from "@types";
 import type { Entity } from "@types";
-import { ApiError, parseApiError } from "@api";
+import { ApiError, parseApiError } from "@/services/api";
 
 export interface FilterOption {
 	type: "and" | "or";

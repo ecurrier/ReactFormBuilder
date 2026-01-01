@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import TableEntry from "@components/form/TableEntry";
-import { searchLookupAdvanced } from "@services/lookupService";
+import { advancedSearchLookup } from "@services/lookupService";
 
 const formatLabel = (value) => {
 	if (!value) {
@@ -51,7 +51,7 @@ const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selecte
 			return { results: [], totalRecordCount: 0 };
 		}
 
-		const response = await searchLookupAdvanced(selectedTarget, query, pagination, sort?.key);
+		const response = await advancedSearchLookup(selectedTarget, query, pagination, sort?.key);
 		const rows = response.results.map((result) => ({
 			id: result.id,
 			...result.columns,

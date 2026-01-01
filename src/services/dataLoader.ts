@@ -1,9 +1,9 @@
-import { retrieveRecord, retrieveMultipleRecords } from "@api";
+import { retrieveRecord, retrieveMultipleRecords } from "@/services/api";
 import { ActionType } from "@constants/enums";
 import type { Entity } from "@types/Entity";
 import type { ReactFormConfiguration } from "@types/config";
-import { buildFetchXmlForChildRecords, buildFetchXmlForRecord } from "@utilities/FetchXmlBuilder";
-import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "@utilities/entityMetadata";
+import { buildFetchXmlForChildRecords, buildFetchXmlForRecord } from "@utilities/fetchXml";
+import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "@utilities/metadata";
 
 /**
  * Load record data and traverse form lookup to get version configuration.

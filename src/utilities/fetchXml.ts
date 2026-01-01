@@ -1,70 +1,10 @@
-import { sanitizeGuid } from "./Serialization";
-import { resolvePrimaryIdAttribute } from "./entityMetadata";
+import { sanitizeGuid } from "./serialization";
+import { resolvePrimaryIdAttribute } from "./metadata";
 
 /**
- * FetchXML Builder Utilities
- * Provides helper functions for constructing common FetchXML queries.
- * Reduces duplication and provides consistent patterns across the application.
+ * FetchXML Utilities
+ * Provides helper functions for constructing FetchXML queries
  */
-
-/**
- * Builds a basic FetchXML query for an entity with specified columns.
- *
- * @param entityName - Logical name of the entity
- * @param columns - Array of column/attribute names to retrieve
- * @param options - Optional configuration (top, distinct)
- * @returns FetchXML query string
- *
- * @example
- * ```typescript
- * const fetchXml = buildFetchXmlForEntity("account", ["name", "accountnumber", "createdon"]);
- * // Returns: <fetch><entity name="account"><attribute name="name" /><attribute name="accountnumber" />...</entity></fetch>
- * ```
- */
-export const buildFetchXmlForEntity = (
-	entityName: string,
-	columns: string[],
-	options?: {
-		top?: number;
-		distinct?: boolean;
-	}
-): string => {
-	const topAttr = options?.top ? ` top="${options.top}"` : "";
-	const distinctAttr = options?.distinct ? ` distinct="true"` : "";
-
-	const attributeElements = columns.map((col) => `<attribute name="${col}" />`).join("");
-
-	return `<fetch${topAttr}${distinctAttr}><entity name="${entityName}">${attributeElements}</entity></fetch>`;
-};
-
-/**
- * Builds a FetchXML query for retrieving lookup options.
- * Typically used for populating dropdown/autocomplete fields.
- *
- * @param entityName - Logical name of the target entity
- * @param primaryNameAttribute - Primary name attribute (e.g., "name", "fullname")
- * @param additionalColumns - Additional columns to retrieve
- * @param orderBy - Column to order by (defaults to primary name attribute)
- * @returns FetchXML query string
- *
- * @example
- * ```typescript
- * const fetchXml = buildFetchXmlForLookup("contact", "fullname", ["emailaddress1"]);
- * // Retrieves contacts with id, fullname, emailaddress1, createdon ordered by fullname
- * ```
- */
-export const buildFetchXmlForLookup = (entityName: string, primaryNameAttribute: string, additionalColumns: string[] = [], orderBy?: string): string => {
-	const columns = [primaryNameAttribute, "createdon", ...additionalColumns];
-	const attributeElements = columns.map((col) => `<attribute name="${col}" />`).join("");
-	const orderByAttr = orderBy || primaryNameAttribute;
-
-	return `<fetch>
-		<entity name="${entityName}">
-			${attributeElements}
-			<order attribute="${orderByAttr}" descending="false" />
-		</entity>
-	</fetch>`;
-};
 
 /**
  * Builds a FetchXML query for retrieving child records related to a parent.
@@ -90,14 +30,15 @@ export const buildFetchXmlForChildRecords = (childEntityName: string, referencin
 	const attributeElements = columns.map((col) => `<attribute name="${col}" />`).join("");
 	const normalizedParentId = sanitizeGuid(parentId);
 
-	return `<fetch>
-		<entity name="${childEntityName}">
-			${attributeElements}
-			<filter type="and">
-				<condition attribute="${referencingAttribute}" operator="eq" value="${normalizedParentId}" />
-			</filter>
-		</entity>
-	</fetch>`;
+	return `
+		<fetch>
+			<entity name="${childEntityName}">
+				${attributeElements}
+				<filter type="and">
+					<condition attribute="${referencingAttribute}" operator="eq" value="${normalizedParentId}" />
+				</filter>
+			</entity>
+		</fetch>`;
 };
 
 /**
@@ -131,14 +72,15 @@ export const buildFetchXmlWithFilter = (
 	const attributeElements = columns.map((col) => `<attribute name="${col}" />`).join("");
 	const conditionElements = filters.map((f) => `<condition attribute="${f.attribute}" operator="${f.operator}" value="${f.value}" />`).join("");
 
-	return `<fetch>
-		<entity name="${entityName}">
-			${attributeElements}
-			<filter type="${filterType}">
-				${conditionElements}
-			</filter>
-		</entity>
-	</fetch>`;
+	return `
+		<fetch>
+			<entity name="${entityName}">
+				${attributeElements}
+				<filter type="${filterType}">
+					${conditionElements}
+				</filter>
+			</entity>
+		</fetch>`;
 };
 
 /**
@@ -206,12 +148,13 @@ export const buildFetchXmlForRecord = (entityName: string, recordId: string, col
 	const normalizedRecordId = sanitizeGuid(recordId);
 	const primaryIdAttribute = resolvePrimaryIdAttribute(entityName);
 
-	return `<fetch top="1">
-		<entity name="${entityName}">
-			${attributeElements}
-			<filter type="and">
-				<condition attribute="${primaryIdAttribute}" operator="eq" value="${normalizedRecordId}" />
-			</filter>
-		</entity>
-	</fetch>`;
+	return `
+		<fetch top="1">
+			<entity name="${entityName}">
+				${attributeElements}
+				<filter type="and">
+					<condition attribute="${primaryIdAttribute}" operator="eq" value="${normalizedRecordId}" />
+				</filter>
+			</entity>
+		</fetch>`;
 };

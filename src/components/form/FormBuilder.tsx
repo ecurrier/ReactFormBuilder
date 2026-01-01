@@ -6,7 +6,7 @@ import { useFormState } from "@hooks/useFormState";
 import { populateFieldsFromData } from "@services/dataLoader";
 import { executeSaveDraft, executeValidateAndSubmit, populateFormLookup, reloadFormData } from "@services/saveOrchestrator";
 import LoadingIndicator from "@components/common/LoadingIndicator";
-import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/entityMetadata";
+import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
 
 const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams }) => {
 	const orderedSteps = useMemo(() => {

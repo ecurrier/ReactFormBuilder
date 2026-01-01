@@ -1,5 +1,5 @@
 import { FormInstance, Version, UserFormSession } from "@types/session";
-import { createRecord, retrieveMultipleRecords } from "@api";
+import { createRecord, retrieveMultipleRecords } from "@/services/api";
 import type { EntityReference } from "@types/Entity";
 
 export const resolveFormVersion = async (versionId: string): Promise<Version | null> => {

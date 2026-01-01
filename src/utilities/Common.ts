@@ -1,4 +1,4 @@
-import { getEntityMetadata } from "./entityMetadata";
+import { getEntityMetadata } from "./metadata";
 
 /**
  * Converts a Dataverse entity logical name to its entity set name (collection name).

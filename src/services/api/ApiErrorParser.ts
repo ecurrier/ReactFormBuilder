@@ -1,4 +1,4 @@
-import { ApiError, ApiErrorResponse } from "@api";
+import { ApiError, ApiErrorResponse } from "@/services/api";
 
 /**
  * Solution-specific error message overrides
