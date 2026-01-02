@@ -152,7 +152,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 				/>
 				<span className="input-group-btn">
 					<button type="button" className="btn btn-default" onClick={handleOpenAdvanced} disabled={isReadOnly}>
-						Advanced search
+						<span className="glyphicon glyphicon-search" aria-hidden="true"></span>
 					</button>
 				</span>
 				{value?.id && !isReadOnly && (

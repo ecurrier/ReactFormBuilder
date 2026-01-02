@@ -87,6 +87,16 @@
 						"ChildOrder": 0,
 						"Type": 203300000,
 						"Properties": {
+							"LogicalName": null,
+							"Label": "",
+							"DataType": null,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "",
 							"ChildActions": [
 								{
 									"Id": "180e6365-0ce0-f011-8544-7ced8d21d821",
@@ -586,7 +596,7 @@
 												"ValidationValue": null,
 												"ValidationMessage": null,
 												"Description": "The proposed start date for this project.",
-												"DateTimeFormat": "DateOnly",
+												"DateTimeFormat": 0,
 												"DateTimeBehavior": "UserLocal"
 											}
 										},
@@ -608,7 +618,7 @@
 												"ValidationValue": null,
 												"ValidationMessage": null,
 												"Description": "The proposed end date for this project.",
-												"DateTimeFormat": "DateOnly",
+												"DateTimeFormat": 0,
 												"DateTimeBehavior": "UserLocal"
 											}
 										}
@@ -708,7 +718,7 @@
 												"ValidationValue": null,
 												"ValidationMessage": null,
 												"Description": "The proposed start date for this project.",
-												"DateTimeFormat": "DateOnly",
+												"DateTimeFormat": 0,
 												"DateTimeBehavior": "UserLocal"
 											}
 										},
@@ -730,7 +740,7 @@
 												"ValidationValue": null,
 												"ValidationMessage": null,
 												"Description": "The proposed end date for this project.",
-												"DateTimeFormat": "DateOnly",
+												"DateTimeFormat": 0,
 												"DateTimeBehavior": "UserLocal"
 											}
 										},
@@ -795,11 +805,24 @@
 										},
 										{
 											"Id": "9d002d25-92b4-ee11-a569-0022482a96fe",
-											"Name": "View - Field Input - Start Date",
+											"Name": "View - Field Input - Proposed Start Date",
 											"Order": 2,
 											"ChildOrder": 0,
 											"Type": 203300000,
 											"Properties": {
+												"LogicalName": "eyfrcc_proposedstartdate",
+												"SchemaName": "eyfrcc_proposedstartdate",
+												"Label": "Proposed Start Date",
+												"DataType": 643260008,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The proposed start date for this project.",
+												"DateTimeFormat": 0,
+												"DateTimeBehavior": "UserLocal",
 												"ChildActions": [
 													{
 														"Id": "ab002d25-92b4-ee11-a569-0022482a96fe",
@@ -836,11 +859,24 @@
 										},
 										{
 											"Id": "e4385231-92b4-ee11-a569-0022482a96fe",
-											"Name": "View - Field Input - End Date",
+											"Name": "View - Field Input - Proposed End Date",
 											"Order": 3,
 											"ChildOrder": 0,
 											"Type": 203300000,
 											"Properties": {
+												"LogicalName": "eyfrcc_proposedenddate",
+												"SchemaName": "eyfrcc_proposedenddate",
+												"Label": "Proposed End Date",
+												"DataType": 643260008,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": 643260002,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The proposed end date for this project.",
+												"DateTimeFormat": 0,
+												"DateTimeBehavior": "UserLocal",
 												"ChildActions": [
 													{
 														"Id": "e8385231-92b4-ee11-a569-0022482a96fe",
@@ -911,11 +947,26 @@
 									"Actions": [
 										{
 											"Id": "b3e9d171-3ce4-f011-8544-7ced8d21d821",
-											"Name": "Information - Field Input - Agency Use Only",
+											"Name": "Information - Field Input - Federal Forecasted Cash Needs for 1st Quarter",
 											"Order": 1,
 											"ChildOrder": 0,
 											"Type": 203300000,
-											"Properties": {}
+											"Properties": {
+												"LogicalName": "eyfrcc_federalforecastedcashneedsfor1stquarter",
+												"SchemaName": "eyfrcc_federalforecastedcashneedsfor1stquarter",
+												"Label": "Federal Forecasted Cash Needs for 1st Quarter",
+												"DataType": 643260002,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "Enter the forecasted cash needs from federal sources for the first quarter of the first program year. If not applicable, leave blank.",
+												"MinValue": 0.0,
+												"MaxValue": 1000000000.0,
+												"Precision": 2
+											}
 										},
 										{
 											"Id": "e09a2e84-3ce4-f011-8544-7ced8d21d821",
@@ -1351,6 +1402,7 @@
 				"EntityDescription": "This table represents the template \"child\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",
 				"PrimaryIdAttribute": "eyfrcc_childapplicationtestid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": "Name",
 				"ConfigurationIdentifierMetadata": [
 					{
 						"ConfigurationIdentifier": "DocumentPath",
@@ -1395,6 +1447,7 @@
 				"EntityDescription": "A subapplicant is a non-Federal entity that is invited to apply for a subaward from a pass-through entity to carry out part of a Federal program. ",
 				"PrimaryIdAttribute": "eyfrcc_subrecipientid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": "Name",
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
@@ -1406,6 +1459,7 @@
 				"EntityDescription": "A planned set of activities or services that the applicant will carry out using the funding, designed to address a specific need or goal in the community.",
 				"PrimaryIdAttribute": "eyfrcc_projectid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": "Name",
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
@@ -1417,6 +1471,7 @@
 				"EntityDescription": "The Standard Form 424A (SF-424A) is used to budget and request grant funds for non-construction programs. It is part of the broader Standard Form 424 Form Family of government-wide standard data sets.",
 				"PrimaryIdAttribute": "eyfrcc_standardform424aid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": "Name",
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
@@ -1428,6 +1483,7 @@
 				"EntityDescription": "The Standard Form 424 (SF-424) is used in all federal grant applications and collects information including type of submission, applicant information, type of applicant, and proposed project dates. It is part of the broader Standard Forms 424 Form Family of government-wide standard data sets.",
 				"PrimaryIdAttribute": "eyfrcc_standardform424id",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": "Name",
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
@@ -1439,6 +1495,7 @@
 				"EntityDescription": "The Standard Form 425 (SF-425) is used by recipients to submit reports on their grant's financial progress. It is part of the broader Form Family of government-wide standard data sets.",
 				"PrimaryIdAttribute": "eyfrcc_standardform425id",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": "Name",
 				"ConfigurationIdentifierMetadata": [
 					{
 						"ConfigurationIdentifier": "DocumentPath",
@@ -1483,6 +1540,7 @@
 				"EntityDescription": "An expenditure represents the amount of money paid out or is spent. These are reported by a recipient relating to their award.",
 				"PrimaryIdAttribute": "eyfrcc_expenditureid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": "Name",
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
@@ -1494,6 +1552,7 @@
 				"EntityDescription": "A form represents a user interface that users can use to create data and/or interact with data that is relevant to them. This can be used to create application and report forms, review checklists, and review process flows.",
 				"PrimaryIdAttribute": "eyfrcc_formid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
@@ -1505,6 +1564,7 @@
 				"EntityDescription": "A funding opportunity represents the official availability of funding through a program. Each opportunity has an overview of eligibility criteria, required documentation, the application process, and award details. An application form is built in order to allow an external user to apply for funding.",
 				"PrimaryIdAttribute": "eyfrcc_applicationtypeid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
@@ -1516,6 +1576,7 @@
 				"EntityDescription": "Person with whom a business unit has a relationship, such as customer, supplier, and colleague.",
 				"PrimaryIdAttribute": "contactid",
 				"PrimaryNameAttribute": "fullname",
+				"PrimaryNameAttributeDisplayName": null,
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
@@ -1527,6 +1588,7 @@
 				"EntityDescription": "A fiscal year is used in accounting and for budget purposes. It is used to help perform financial reporting on important, key dates used throughout the system.",
 				"PrimaryIdAttribute": "eyfrcc_fiscalyearid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			},
@@ -1538,6 +1600,7 @@
 				"EntityDescription": "A table used to capture the indirect cost rates associated with a particular Negotiated Indirect Cost Rate Agreement (NICRA). An indirect cost rate is the ratio between the total indirect expenses and some direct cost base.",
 				"PrimaryIdAttribute": "eyfrcc_indirectcostratelinesid",
 				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
 				"ConfigurationIdentifierMetadata": [],
 				"DefaultOnCreateActions": []
 			}

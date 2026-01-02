@@ -56,6 +56,7 @@ export interface ReactTableMetadataEntry {
 	EntityDescription?: string;
 	PrimaryIdAttribute?: string;
 	PrimaryNameAttribute?: string;
+	PrimaryNameAttributeDisplayName?: string;
 	DefaultOnCreateActions?: ReactDefaultOnCreateAction[];
 }
 

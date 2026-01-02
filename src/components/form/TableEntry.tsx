@@ -27,6 +27,7 @@ export interface TableDataResponse<T> {
 
 export interface TableEntryProps<T> {
 	columns: TableColumn<T>[];
+	label?: string;
 	fetchData: (sort?: TableSortState, pagination?: PaginationOptions) => Promise<TableDataResponse<T>>;
 	caption?: string;
 	className?: string;
@@ -49,6 +50,7 @@ export interface TableEntryRef {
 export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(function TableEntry<T extends { id?: string }>(
 	{
 		columns,
+		label,
 		fetchData,
 		caption,
 		className,
@@ -122,91 +124,98 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 	};
 
 	return (
-		<div className="contextual-loading-container">
-			<LoadingIndicator visible={loading} variant="contextual" message={loadingMessage} />
-
-			{error && (
-				<div className="error-message" role="alert">
-					<p>{error}</p>
-				</div>
+		<>
+			{label && (
+				<h3 className="info form-subgrid-heading">
+					<label className="h3">{label}</label>
+				</h3>
 			)}
+			<div>
+				<LoadingIndicator visible={loading} variant="contextual" message={loadingMessage} />
 
-			{createAction && (
-				<div className="pull-right toolbar-actions mb-2">
-					<div className="input-group pull-left">
-						<button type="button" className="btn btn-primary" onClick={createAction.onClick}>
-							{createAction.label}
-						</button>
+				{error && (
+					<div className="error-message" role="alert">
+						<p>{error}</p>
 					</div>
-				</div>
-			)}
+				)}
 
-			<table role="grid" className={`table table-fluid table-header-bg table-hover ${className || ""}`.trim()}>
-				{caption && <caption className="sr-only">{caption}</caption>}
-				<thead>
-					<tr>
-						{columns.map((col) => {
-							if (col.sortEnabled) {
-								const isSorted = sortState?.key === col.key;
-								const direction = sortState?.direction;
+				{createAction && (
+					<div className="pull-right toolbar-actions mb-2">
+						<div className="input-group pull-left">
+							<button type="button" className="btn btn-primary" onClick={createAction.onClick}>
+								{createAction.label}
+							</button>
+						</div>
+					</div>
+				)}
+
+				<table role="grid" className={`table table-fluid table-header-bg table-hover ${className || ""}`.trim()}>
+					{caption && <caption className="sr-only">{caption}</caption>}
+					<thead>
+						<tr>
+							{columns.map((col) => {
+								if (col.sortEnabled) {
+									const isSorted = sortState?.key === col.key;
+									const direction = sortState?.direction;
+									return (
+										<th key={col.key} className={`${col.className || ""} sort-enabled`} scope="col">
+											<a
+												href="#"
+												role="button"
+												aria-label={col.label}
+												tabIndex={0}
+												onClick={(e) => {
+													e.preventDefault();
+													handleSort(col.key);
+												}}>
+												{col.label}
+												{isSorted && (
+													<span
+														className={`glyphicon ${direction === "asc" ? "glyphicon-arrow-up" : "glyphicon-arrow-down"}`}
+														aria-hidden="true"></span>
+												)}
+											</a>
+										</th>
+									);
+								}
 								return (
-									<th key={col.key} className={`${col.className || ""} sort-enabled`} scope="col">
-										<a
-											href="#"
-											role="button"
-											aria-label={col.label}
-											tabIndex={0}
-											onClick={(e) => {
-												e.preventDefault();
-												handleSort(col.key);
-											}}>
-											{col.label}
-											{isSorted && (
-												<span
-													className={`glyphicon ${direction === "asc" ? "glyphicon-arrow-up" : "glyphicon-arrow-down"}`}
-													aria-hidden="true"></span>
-											)}
-										</a>
+									<th key={col.key} className={col.className || ""} scope="col">
+										{col.label}
 									</th>
 								);
-							}
-							return (
-								<th key={col.key} className={col.className || ""} scope="col">
-									{col.label}
-								</th>
-							);
-						})}
-					</tr>
-				</thead>
-				<tbody>
-					{data.length > 0 ? (
-						data.map((row, i) => (
-							<tr key={row.id || i}>
-								{columns.map((col) => (
-									<td key={col.key} className={col.className || ""}>
-										{renderCellValue(row, col)}
-									</td>
-								))}
-							</tr>
-						))
-					) : (
-						<tr>
-							<td colSpan={columns.length} className="no-data">
-								{loading ? "" : "No data available"}
-							</td>
+							})}
 						</tr>
-					)}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{data.length > 0 ? (
+							data.map((row, i) => (
+								<tr key={row.id || i}>
+									{columns.map((col) => (
+										<td key={col.key} className={col.className || ""}>
+											{renderCellValue(row, col)}
+										</td>
+									))}
+								</tr>
+							))
+						) : (
+							<tr>
+								<td colSpan={columns.length} className="no-data">
+									{loading ? "" : "No data available"}
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
 
-			{totalPages && totalPages > 0 && (
-				<Pagination
-					info={{ currentPage, pageSize: pagination.pageSize, totalPages: totalPages, totalRecords }}
-					onPageChange={handlePageChange}
-					size={pagination.controlSize}
-				/>
-			)}
-		</div>
+				{totalPages && totalPages > 0 && (
+					<Pagination
+						info={{ currentPage, pageSize: pagination.pageSize, totalPages: totalPages, totalRecords }}
+						onPageChange={handlePageChange}
+						size={pagination.controlSize}
+					/>
+				)}
+			</div>
+		</>
 	);
 });
 
