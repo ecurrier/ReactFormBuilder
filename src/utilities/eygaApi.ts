@@ -1,7 +1,6 @@
-import { retrieveEygaConfiguration } from "@utilities";
+import { retrieveEygaConfiguration, resolveEntitySetName } from "@utilities";
 import type { EygaConfiguration } from "@utilities";
 import { createRecord, retrieveRecord } from "@api";
-import { resolveEntitySetName } from "@metadata";
 
 export interface EygaApiContext {
 	RegardingId?: string;

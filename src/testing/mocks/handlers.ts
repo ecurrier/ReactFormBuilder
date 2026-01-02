@@ -60,6 +60,49 @@ export const handlers = [
 		await delay(1000);
 		return HttpResponse.json({ success: true });
 	}),
+	http.get("*/_api/eyfrcc_eygaconfigurations*", async () => {
+		await delay(800);
+		return HttpResponse.json({
+			"@odata.context":
+				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_eygaconfigurations(eyfrcc_eygaconfigurationid,eyfrcc_eygaapikey,eyfrcc_allowedextensions,eyfrcc_maxfilesizemb,eyfrcc_documentapiurl,eyfrcc_addressapiurl,eyfrcc_samgovapiurl)",
+			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
+			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
+			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51526383",
+			value: [
+				{
+					"@odata.etag": 'W/"44049758"',
+					"eyfrcc_maxfilesizemb@OData.Community.Display.V1.FormattedValue": "10",
+					eyfrcc_maxfilesizemb: 10,
+					eyfrcc_eygaapikey: "528491afa7824e1cb60a79b85e720554",
+					eyfrcc_documentapiurl: "https://americorps-fed-core-2.azure-api.net/document/v1",
+					eyfrcc_allowedextensions:
+						'{"ValidFileTypes":[{"m":"application/vnd.openxmlformats-officedocument.wordprocessingml.document","e":"docx"},{"m":"image/bmp","e":"bmp"},{"m":"application/msword","e":"doc"},{"m":"application/pdf","e":"pdf"},{"m":"image/gif","e":"gif"},{"m":"image/jpeg","e":"jpg,jpeg"},{"m":"image/png","e":"png"},{"m":"application/vnd.ms-powerpoint","e":"ppt"},{"m":"application/vnd.openxmlformats-officedocument.presentationml.presentation","e":"pptx"},{"m":"application/rtf","e":"rtf"},{"m":"image/tiff","e":"tif,tiff"},{"m":"text/plain","e":"txt"},{"m":"application/vnd.ms-excel","e":"xls"},{"m":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","e":"xlsx"},{"m":"image/heic","e":"heic"},{"m":"image/heif","e":"heif"},{"m":"text/csv","e":"csv"}]}',
+					eyfrcc_addressapiurl: "https://americorps-fed-core-2.azure-api.net/address/v1",
+					eyfrcc_eygaconfigurationid: "993ae21c-08e6-ed11-a7c7-0022482a942e",
+					eyfrcc_samgovapiurl: "https://americorps-fed-core-2.azure-api.net/samgov/v1",
+				},
+			],
+		});
+	}),
+	http.get("*/_api/eyfrcc_apitokens*", async () => {
+		await delay(800);
+		return HttpResponse.json({
+			"@odata.context": "https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_apitokens",
+			"@Microsoft.Dynamics.CRM.totalrecordcount": 0,
+			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
+			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51526383",
+			value: [
+				{
+					eyfrcc_token:
+						"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzb3VyY2UiOiJwb3J0YWwiLCJwb3J0YWwtdXNlci1pZCI6IjhiODk2MTE4LThkZjYtZWUxMS1hMWZlLTAwMjI0ODI1YjE3YSIsInBvcnRhbC1vcmctaWQiOiJhZWMzNGYxZC03NjI3LWVmMTEtOGVlNy0wMDIyNDg1M2Q0MjAiLCJuYmYiOjE3NjczODEwNjgsImV4cCI6MTc2NzM4ODI2OCwiaWF0IjoxNzY3MzgxMDY4fQ.tDdfEn33NGn9jjxZlcd4imeVHJeBfDPtoQXPTxdu9e0",
+					"eyfrcc_expirationdate@OData.Community.Display.V1.FormattedValue": "1/2/2026 3:11 PM",
+					eyfrcc_expirationdate: "2026-01-02T21:11:08.4104192Z",
+					eyfrcc_apitokenid: "4e63a104-9b0e-4381-8e5e-24ce4ea79c71",
+					eyfrcc_name: "API Token Expires: 1/2/2026 9:11:08 PM",
+				},
+			],
+		});
+	}),
 	http.get("*/_api/eyfrcc_versions*", async () => {
 		await delay(1500);
 		return HttpResponse.json({
