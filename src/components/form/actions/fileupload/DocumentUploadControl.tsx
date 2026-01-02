@@ -35,7 +35,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	const [allowedFileTypes, setAllowedFileTypes] = React.useState<string[] | null>(null);
 	const [maxFileSizeMB, setMaxFileSizeMB] = React.useState<number | null>(null);
 
-	React.useEffect(() => { 
+	React.useEffect(() => {
 		const fetchConfiguration = async () => {
 			try {
 				// Placeholder for fetching configuration logic
@@ -43,8 +43,8 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 				setAllowedFileTypes(eygaConfiguration.AllowedFileTypes.map((fileType) => fileType.Extensions).flat());
 				setMaxFileSizeMB(eygaConfiguration.MaxFileSizeMB);
 
-                // Retrieve Document Path? Or do i do that at the time of upload?
-                // probably better at the time of upload to ensure the parent record is created
+				// Retrieve Document Path? Or do i do that at the time of upload?
+				// probably better at the time of upload to ensure the parent record is created
 			} catch (error) {
 				console.error("Failed to fetch document upload configuration:", error);
 			}
@@ -55,7 +55,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 
 	return (
 		<>
-            <h3 className="h3">{config.Description}</h3>
+			<h3 className="h3">{config.Description}</h3>
 			<div className="form-field-file-upload">
 				<input
 					className="file-upload-core"
