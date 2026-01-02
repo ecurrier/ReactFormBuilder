@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import LookupAdvancedSearchModal from "@components/form/fields/lookup/LookupAdvancedSearchModal";
+import { LookupAdvancedSearchModal } from "@components";
 import { quickSearchLookup } from "@services/lookupService";
 import { resolveEntityDisplayName } from "@/utilities/metadata";
 

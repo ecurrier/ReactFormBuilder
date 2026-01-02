@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import FieldInput from "@components/form/fields/FieldInput";
-import TableEntryAction from "@components/form/TableEntryAction";
+import { FieldInput, TableEntryAction, DocumentUploadControl } from "@components";
 import { ActionType } from "@constants/enums";
 
 const StepActions = ({ actionItems, formState, tableEntryOptions }) => {
@@ -16,12 +15,13 @@ const StepActions = ({ actionItems, formState, tableEntryOptions }) => {
 					return null;
 				}
 
+				const actionKey = action.Id ?? action.Name;
+
 				if (action.Type === ActionType.FieldInput) {
-					return <FieldInput key={action.Id ?? action.Name} action={action} formState={formState} entityName={entityName} />;
+					return <FieldInput key={actionKey} action={action} formState={formState} entityName={entityName} />;
 				}
 
 				if (action.Type === ActionType.TableEntry) {
-					const actionKey = action.Id ?? action.Name;
 					const fetchFunc = tableEntryOptions?.fetchFunctions?.get(actionKey);
 					const fetchData = fetchFunc ?? tableEntryOptions?.fallbackFetch;
 
@@ -42,6 +42,10 @@ const StepActions = ({ actionItems, formState, tableEntryOptions }) => {
 							onDelete={tableEntryOptions?.onDelete}
 						/>
 					);
+				}
+
+				if (action.Type === ActionType.FileUpload) {
+					return <DocumentUploadControl key={actionKey} config={action.Properties} formState={formState} />;
 				}
 
 				return null;
