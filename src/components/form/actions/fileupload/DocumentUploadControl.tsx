@@ -3,20 +3,30 @@ import { Alert } from "@components";
 import { retrieveEygaConfiguration } from "@utilities";
 
 /*
-    Implementation plan:
+	For non-persisted parents, we need to stage uploads  (similar to table entry)
+		- on file select, upload to temp storage with a generated temp id
+		- store the temp id and file info in state
+		- on parent save, associate the temp uploads with the new parent record
+
+	For persisted parents, we can upload directly
+		- on file select, upload document immediately
+		- refresh the list of uploaded documents
+
+	Notes:
 
     1. Document Uploads require a Document Path to work
-        Document Path is available on App/Secondary Report/Award at the moment
-        This can be retrieved via the table metadata under "ConfigurationIdentifierMetadata" via FieldLogicalName
-        We need to use this to retrieve the document path value
-        once we know theres a value, we can render the document upload control and allow uploads
+        Document Path is available on some records, to determine if there is a value
+        	This can be retrieved via the table metadata under "ConfigurationIdentifierMetadata" via FieldLogicalName
+        	We need to use this to retrieve the document path value
     2. The control should allow upload multiple documents
-    3. The control should show existing documents in a table view with options to download or delete
-    4. The control will retrieve from eyga configuration to determine: (consider building an eyga config service/cache)
-        - documents endpoint
+		Documents are displayed in a table format below the upload file button
+    3. The control should show existing documents in a table view with options to either download or delete
+		These should use the appropriate eyga api actions to perform these operations
+    4. To initially validate uploads, there are some settings on eyga configuration we can retrieve
         - allowed file types
         - max file size
-    5. Control should be useable even when parent is not persisted yet. Need to stage uploads like we do with table entries
+	5. If upload fails, display an error banner
+		If success, display a success banner
 */
 
 export interface DocumentUploadControlProps {
