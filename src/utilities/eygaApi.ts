@@ -1,12 +1,13 @@
 import { retrieveEygaConfiguration } from "@utilities";
-import type EygaConfiguration from "@utilities";
-import { createRecord } from "@api";
+import type { EygaConfiguration } from "@utilities";
+import { createRecord, retrieveRecord } from "@api";
 import { resolveEntitySetName } from "@metadata";
 
 export interface EygaApiContext {
 	RegardingId?: string;
 	RegardingLogicalName?: string;
 	UserId?: string;
+	ApiAction?: string;
 }
 
 export enum EygaApi {
@@ -109,13 +110,13 @@ export const EygaApiClient = {
 			formData.append(
 				"json",
 				JSON.stringify({
-					Name: request.fileName,
-					DocumentFolder: request.documentFolder,
-					RecordFolder: request.recordFolder,
-					Tags: request.tags,
+					Name: request.FileName,
+					DocumentFolder: request.DocumentFolder,
+					RecordFolder: request.RecordFolder,
+					Tags: request.Tags,
 				})
 			);
-			formData.append("file", request.file);
+			formData.append("file", request.File);
 
 			return callEygaApi<FormData, void>(EygaApi.Documents, EygaApiEndpoint.UploadDocument, context, formData);
 		},
@@ -152,8 +153,59 @@ export const EygaApiClient = {
 	},
 };
 
+const TOKEN_CACHE_KEY = "eyga-api-token";
+
+const getCachedApiToken = (): { token: string; expiresAt: number } | null => {
+	if (typeof sessionStorage === "undefined") {
+		return null;
+	}
+
+	try {
+		const cachedValue = sessionStorage.getItem(TOKEN_CACHE_KEY);
+		if (!cachedValue) {
+			return null;
+		}
+
+		const cached = JSON.parse(cachedValue) as { token: string; expiresAt: number };
+		if (!cached?.token || !cached.expiresAt) {
+			sessionStorage.removeItem(TOKEN_CACHE_KEY);
+			return null;
+		}
+
+		if (Date.now() > cached.expiresAt) {
+			sessionStorage.removeItem(TOKEN_CACHE_KEY);
+			return null;
+		}
+
+		return cached;
+	} catch (error) {
+		console.warn("Failed to read EYGA API token cache.", error);
+		return null;
+	}
+};
+
+const setCachedApiToken = (token: string, expiresAt: number | null): void => {
+	if (typeof sessionStorage === "undefined" || !expiresAt) {
+		return;
+	}
+
+	try {
+		const payload = {
+			token,
+			expiresAt,
+		};
+		sessionStorage.setItem(TOKEN_CACHE_KEY, JSON.stringify(payload));
+	} catch (error) {
+		console.warn("Failed to cache EYGA API token.", error);
+	}
+};
+
 export const retrieveApiToken = async (): Promise<string> => {
-	// implement some caching here as well, based on expiration date
+	const cachedToken = getCachedApiToken();
+	if (cachedToken) {
+		return cachedToken.token;
+	}
+
 	const fetchXml = `
         <fetch top="1">
             <entity name="eyfrcc_apitoken">
@@ -168,34 +220,47 @@ export const retrieveApiToken = async (): Promise<string> => {
 		throw new Error("Failed to retrieve EYGA API token");
 	}
 
-	return response.eyfrcc_token as string;
+	const token = response.eyfrcc_token as string;
+	const expiration = response.eyfrcc_expirationdate ? new Date(response.eyfrcc_expirationdate).getTime() : null;
+
+	if (expiration && !Number.isNaN(expiration)) {
+		setCachedApiToken(token, expiration);
+	}
+
+	return token;
 };
 
-export const callEygaApi = async <TRequest, TResponse>(eygaApi: EygaApi, apiFunction: EygaApiEndpoint, apiContext: EygaApiContext): Promise<TResponse> => {
+export const callEygaApi = async <TRequest, TResponse>(
+	eygaApi: EygaApi,
+	apiFunction: EygaApiEndpoint,
+	apiContext: EygaApiContext,
+	payload?: TRequest
+): Promise<TResponse> => {
 	const eygaConfiguration = await retrieveEygaConfiguration();
 	if (!eygaConfiguration) {
 		throw new Error("EYGA configuration not found");
 	}
 
 	const baseEndpoint = eygaConfiguration.ApiEndpoints[eygaApi];
-	const apiEndpointConfiguration = ApiEndpoints[apiFunction];
-	if (!apiEndpointConfiguration) {
+	const endpointConfig = ApiEndpoints[apiFunction];
+	if (!endpointConfig) {
 		throw new Error(`API endpoint configuration not found for ${apiFunction}`);
 	}
 
 	const headers = await getApiHeaders(eygaConfiguration, apiContext);
 
-	let url = `${baseEndpoint}${apiEndpointConfiguration.Path}`;
-	if (queryParams) {
-		const params = new URLSearchParams(queryParams);
-		url += `?${params.toString()}`;
-	}
+	let url = `${baseEndpoint}${endpointConfig.Path}`;
 
 	let body: any;
 	let fetchHeaders: Record<string, string> = { ...headers };
 
 	if (endpointConfig.ContentType === "multipart/form-data") {
 		body = payload;
+	} else if (endpointConfig.Method === "GET") {
+		if (payload && typeof payload === "object") {
+			const params = new URLSearchParams(payload as Record<string, string>);
+			url += `?${params.toString()}`;
+		}
 	} else if (payload !== undefined) {
 		fetchHeaders["Content-Type"] = "application/json";
 		body = JSON.stringify(payload);
@@ -220,7 +285,7 @@ export const callEygaApi = async <TRequest, TResponse>(eygaApi: EygaApi, apiFunc
 		const data = await response.json();
 		return data as TResponse;
 	} catch (error) {
-		console.error(`Error calling ${apiEndpoint}:`, error);
+		console.error(`Error calling ${apiFunction}:`, error);
 		throw error;
 	}
 };
@@ -236,7 +301,7 @@ export const getApiHeaders = async (eygaConfiguration: EygaConfiguration, apiCon
 		throw new Error("Failed to retrieve EYGA API token");
 	}
 
-	const headerResponse = {
+	const headerResponse: Record<string, string> = {
 		"eyga-api-key": apiKey,
 		"EYGA-Authorization": apiToken.value,
 	};
@@ -252,15 +317,15 @@ export const getApiHeaders = async (eygaConfiguration: EygaConfiguration, apiCon
 	return headerResponse;
 };
 
-export const createEygaEvent = async (apiContext: EygaApiContext): Promise<{ eygaEventId: string }> => {
+export const createEygaEvent = async (apiContext: EygaApiContext): Promise<string | null> => {
 	if (!apiContext.RegardingId || !apiContext.RegardingLogicalName || !apiContext.UserId) {
-		return "";
+		return null;
 	}
 
 	const newEygaEvent = {
 		[`eyfrcc_RegardingId_${apiContext.RegardingLogicalName}@odata.bind`]: `/${resolveEntitySetName(apiContext.RegardingLogicalName)}(${apiContext.RegardingId})`,
 		["eyfrcc_PortalUser@odata.bind"]: `/contacts(${apiContext.UserId})`,
-		["eyfrcc_name"]: apiContext.ApiAction,
+		["eyfrcc_name"]: apiContext.ApiAction ?? "",
 		["eyfrcc_source"]: 643260000, // Portal TO-DO: enum
 	};
 
