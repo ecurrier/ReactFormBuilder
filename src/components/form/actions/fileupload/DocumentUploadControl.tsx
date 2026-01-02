@@ -50,9 +50,7 @@ type AlertState = {
 	message: string;
 };
 
-type DeleteTarget =
-	| { type: "pending"; id: string; name: string }
-	| { type: "persisted"; fullName: string; name: string; restrictDelete?: boolean };
+type DeleteTarget = { type: "pending"; id: string; name: string } | { type: "persisted"; fullName: string; name: string; restrictDelete?: boolean };
 
 const formatUploadDate = (date: Date): string => {
 	const month = date.getUTCMonth() + 1;
@@ -271,10 +269,10 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 			id: upload.id,
 		})),
 		...documents.map((doc) => ({
-			key: doc.FullName,
-			name: doc.Name || doc.FullName.split("/").pop() || doc.FullName,
-			fullName: doc.FullName,
-			restrictDelete: doc.Tags?.RestrictDelete === true,
+			key: doc.fullName,
+			name: doc.name || doc.fullName.split("/").pop() || doc.fullName,
+			fullName: doc.fullName,
+			restrictDelete: doc.tags?.RestrictDelete === true,
 			isPending: false,
 		})),
 	];
@@ -301,10 +299,8 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 					Choose File
 				</button>
 			</div>
-			<div className="contextual-loading-container mt-2">
+			<div className="file-upload-table contextual-loading-container mt-3">
 				<LoadingIndicator visible={isLoading || isUploading || isDeleting} variant="contextual" message={busyMessage} />
-			</div>
-			<div className="file-upload-table mt-3">
 				<table id="file-upload-table" aria-live="polite" role="grid" className="table table-custom table-header-bg table-border-bottom table-hover">
 					<thead>
 						<tr>
@@ -339,10 +335,14 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 												handleDeleteRequest(
 													row.isPending
 														? { type: "pending", id: row.id, name: row.name }
-														: { type: "persisted", fullName: row.fullName || "", name: row.name, restrictDelete: row.restrictDelete }
-													)
-											}
-										>
+														: {
+																type: "persisted",
+																fullName: row.fullName || "",
+																name: row.name,
+																restrictDelete: row.restrictDelete,
+															}
+												)
+											}>
 											<span className="glyphicon glyphicon-trash icon-size-md"></span>
 										</button>
 									</td>

@@ -151,10 +151,7 @@ export const retrieveDocuments = async (entityName: string, recordId: string, fo
 		payload.ChildId = childId;
 	}
 
-	return EygaApiClient.Documents.SearchByTags(
-		payload,
-		buildEygaContext(entityName, recordId, "Search Documents")
-	);
+	return EygaApiClient.Documents.SearchByTags(payload, buildEygaContext(entityName, recordId, "Search Documents"));
 };
 
 export const downloadDocument = async (entityName: string, recordId: string, fullName: string): Promise<void> => {

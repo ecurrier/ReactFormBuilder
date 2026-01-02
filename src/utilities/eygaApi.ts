@@ -51,9 +51,9 @@ export interface SearchByTagsRequest {
 }
 
 export interface DocumentMetadata {
-	Name: string;
-	FullName: string;
-	Tags: Record<string, any>;
+	name: string;
+	fullName: string;
+	tags: Record<string, any>;
 }
 
 const ApiEndpoints: Record<EygaApiEndpoint, ApiEndpointConfig> = {
@@ -295,18 +295,18 @@ export const getApiHeaders = async (eygaConfiguration: EygaConfiguration, apiCon
 		throw new Error("EYGA API Key not found in configuration");
 	}
 
-	const { apiToken, eygaEventId } = await Promise.allSettled([retrieveApiToken(), createEygaEvent(apiContext)]);
-	if (apiToken.status !== "fulfilled" || !apiToken.value) {
+	const [apiTokenResult, eygaEventResult] = await Promise.allSettled([retrieveApiToken(), createEygaEvent(apiContext)]);
+	if (apiTokenResult.status !== "fulfilled" || !apiTokenResult.value) {
 		throw new Error("Failed to retrieve EYGA API token");
 	}
 
 	const headerResponse: Record<string, string> = {
 		"eyga-api-key": apiKey,
-		"EYGA-Authorization": apiToken.value,
+		"EYGA-Authorization": apiTokenResult.value,
 	};
 
-	if (eygaEventId.status === "fulfilled" && eygaEventId.value) {
-		headerResponse["EYGA-EventId"] = eygaEventId.value;
+	if (eygaEventResult.status === "fulfilled" && eygaEventResult.value) {
+		headerResponse["EYGA-EventId"] = eygaEventResult.value;
 	}
 
 	if (apiContext.RegardingId) {
