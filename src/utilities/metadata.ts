@@ -9,6 +9,7 @@ export interface TableMetadataEntry {
 	EntityDescription?: string;
 	PrimaryIdAttribute?: string;
 	PrimaryNameAttribute?: string;
+	PrimaryNameAttributeDisplayName?: string;
 }
 
 let entityMetadataCache = new Map<string, TableMetadataEntry>();
@@ -127,6 +128,15 @@ export const resolvePrimaryNameAttribute = (entityName: string, map?: Map<string
 
 	const metadata = getEntityMetadata(entityName, map);
 	return metadata?.PrimaryNameAttribute || `${entityName}name`;
+};
+
+export const resolvePrimaryNameAttributeDisplayName = (entityName: string, map?: Map<string, TableMetadataEntry>): string => {
+	if (!entityName) {
+		return entityName;
+	}
+
+	const metadata = getEntityMetadata(entityName, map);
+	return metadata?.PrimaryNameAttributeDisplayName || `Name`;
 };
 
 export const resolveEntityDisplayName = (entityName: string, map?: Map<string, TableMetadataEntry>): string => {

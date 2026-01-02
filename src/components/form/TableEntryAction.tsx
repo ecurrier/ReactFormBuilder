@@ -507,6 +507,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		<>
 			<TableEntry
 				ref={tableRef}
+				label={config.DisplayName || ""}
 				columns={columns}
 				fetchData={shouldLoadData ? fetchDataWithPending : emptyFetch}
 				className={className}

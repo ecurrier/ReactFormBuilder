@@ -2,16 +2,19 @@ import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import TableEntry from "@components/form/TableEntry";
 import { advancedSearchLookup } from "@services/lookupService";
+import { resolvePrimaryNameAttributeDisplayName } from "@utilities/metadata";
 
-const formatLabel = (value) => {
-	if (!value) {
+// TO-DO: Need to handle display names better/Lookup columns in general
+const resolveDisplayName = (attributeName: string): string => {
+	if (!attributeName) {
 		return "";
 	}
 
-	return value
-		.replace(/_/g, " ")
-		.replace(/([a-z])([A-Z])/g, "$1 $2")
-		.replace(/\b\w/g, (match) => match.toUpperCase());
+	if (attributeName === "createdon") {
+		return "Created On";
+	}
+
+	return resolvePrimaryNameAttributeDisplayName(attributeName);
 };
 
 const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selectedTarget, onTargetChange, searchPlaceholder }) => {
@@ -26,7 +29,7 @@ const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selecte
 	const columns = useMemo(() => {
 		const baseColumns = (selectedTarget?.Columns || []).map((column) => ({
 			key: column,
-			label: formatLabel(column),
+			label: resolveDisplayName(column),
 			sortEnabled: true,
 		}));
 
@@ -54,7 +57,7 @@ const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selecte
 		const response = await advancedSearchLookup(selectedTarget, query, pagination, sort?.key);
 		const rows = response.results.map((result) => ({
 			id: result.id,
-			...result.columns,
+			...(result.attributes ?? result.columns ?? {}),
 			_lookupResult: result,
 		}));
 
@@ -89,7 +92,7 @@ const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selecte
 										onChange={(event) => onTargetChange(event.target.value)}>
 										{targets.map((target) => (
 											<option key={target.EntityLogicalName} value={target.EntityLogicalName}>
-												{formatLabel(target.EntityLogicalName)}
+												{resolveDisplayName(target.EntityLogicalName)}
 											</option>
 										))}
 									</select>
