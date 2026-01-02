@@ -130,7 +130,7 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 					<label className="h3">{label}</label>
 				</h3>
 			)}
-			<div>
+			<div className="contextual-loading-container">
 				<LoadingIndicator visible={loading} variant="contextual" message={loadingMessage} />
 
 				{error && (

@@ -57,7 +57,7 @@ const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selecte
 		const response = await advancedSearchLookup(selectedTarget, query, pagination, sort?.key);
 		const rows = response.results.map((result) => ({
 			id: result.id,
-			...result.columns,
+			...(result.attributes ?? result.columns ?? {}),
 			_lookupResult: result,
 		}));
 
