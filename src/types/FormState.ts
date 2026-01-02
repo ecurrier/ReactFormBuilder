@@ -30,6 +30,14 @@ export interface PendingChildRecord {
 	isNew: boolean;
 }
 
+export interface PendingDocumentUpload {
+	id: string;
+	entityName: string;
+	folderName: string;
+	file: File;
+	uploadDate: string;
+}
+
 export interface FormState {
 	fields: Record<string, FieldValue>;
 	metadata: Record<string, FieldMetadata>;
@@ -40,6 +48,7 @@ export interface FormState {
 	relatedRecords: Record<string, RelatedRecordInfo>;
 	childRecords: Record<string, Record<string, Entity>>;
 	pendingChildRecords: Record<string, PendingChildRecord>;
+	pendingDocumentUploads: Record<string, PendingDocumentUpload>;
 }
 
 export interface EntityChanges {
@@ -70,4 +79,7 @@ export type FormStateAction =
 	| { type: "ADD_PENDING_CHILD"; record: PendingChildRecord }
 	| { type: "UPDATE_PENDING_CHILD"; key: string; data: Partial<Entity> }
 	| { type: "DELETE_PENDING_CHILD"; key: string }
-	| { type: "CLEAR_PENDING_CHILDREN"; entityName?: string };
+	| { type: "CLEAR_PENDING_CHILDREN"; entityName?: string }
+	| { type: "ADD_PENDING_DOCUMENT_UPLOAD"; upload: PendingDocumentUpload }
+	| { type: "DELETE_PENDING_DOCUMENT_UPLOAD"; key: string }
+	| { type: "CLEAR_PENDING_DOCUMENT_UPLOADS"; entityName?: string };

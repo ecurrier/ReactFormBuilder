@@ -1,10 +1,11 @@
 import { createRecord, updateRecord } from "@/services/api";
 import type { Entity, EntityReference } from "@types/Entity";
-import type { PendingChildRecord } from "@types/FormState";
+import type { PendingChildRecord, PendingDocumentUpload } from "@types/FormState";
 import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "@types/config";
 import type { SaveError, SaveProgressEvent, SaveResult } from "@types/SaveOrchestrator";
 import { validateField } from "@services/validation/validators";
 import { createFormInstance, createUserFormSession } from "@services/formInstanceManagement";
+import { uploadDocumentForRecord } from "@services/documentService";
 import { isTempId, sanitizeGuid } from "@utilities/common";
 import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "@utilities/metadata";
 import { resolveRequestorId } from "@utilities/session";
@@ -240,6 +241,25 @@ const groupPendingChildrenByParent = (formState: any, primaryEntity?: string) =>
 	return pendingByParent;
 };
 
+const groupPendingDocumentUploadsByParent = (formState: any, primaryEntity?: string) => {
+	const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
+	const pendingByParent = new Map<string, PendingDocumentUpload[]>();
+
+	for (const pending of pendingUploads) {
+		const parentEntityName = pending.entityName || primaryEntity;
+		if (!parentEntityName) {
+			continue;
+		}
+
+		if (!pendingByParent.has(parentEntityName)) {
+			pendingByParent.set(parentEntityName, []);
+		}
+		pendingByParent.get(parentEntityName)?.push(pending);
+	}
+
+	return pendingByParent;
+};
+
 const savePendingChildRecords = async ({
 	formState,
 	primaryEntity,
@@ -311,6 +331,111 @@ const savePendingChildRecords = async ({
 				const message = buildErrorMessage(result.reason);
 				console.error(`Failed to save child record:`, result.reason);
 				errors.push(buildSaveError("child", `Failed to save child record: ${message}`, pending.entityName));
+			}
+		});
+	}
+
+	return errors;
+};
+
+const savePendingDocumentUploads = async ({
+	formState,
+	primaryEntity,
+	primaryRecordId,
+	recordIdsByEntity,
+	stepReferenceByEntity,
+	config,
+	onProgress,
+}: {
+	formState: any;
+	primaryEntity?: string;
+	primaryRecordId: string | null;
+	recordIdsByEntity: Map<string, string>;
+	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
+	config: ReactFormConfiguration;
+	onProgress: SaveContext["onProgress"];
+}): Promise<SaveError[]> => {
+	if (!formState.hasPendingDocumentUploads) {
+		return [];
+	}
+
+	const errors: SaveError[] = [];
+	const pendingByParent = groupPendingDocumentUploadsByParent(formState, primaryEntity);
+
+	for (const [parentEntityName, uploads] of pendingByParent) {
+		let parentId: string | null = null;
+
+		try {
+			parentId = await ensureSecondaryParentRecord({
+				parentEntityName,
+				primaryEntity,
+				primaryRecordId,
+				formState,
+				recordIdsByEntity,
+				stepReferenceByEntity,
+				config,
+			});
+		} catch (error) {
+			const message = buildErrorMessage(error);
+			console.error(`Failed to ensure parent record for ${parentEntityName}:`, error);
+			errors.push(buildSaveError("child", `Failed to ensure parent record for ${parentEntityName}: ${message}`, parentEntityName));
+			continue;
+		}
+
+		if (!parentId) {
+			errors.push(buildSaveError("child", `Missing parent record for ${parentEntityName}`, parentEntityName));
+			continue;
+		}
+
+		const results = await Promise.allSettled(
+			uploads.map(async (pending) => {
+				const progressId = buildProgressId("child", pending.entityName, pending.id);
+				reportProgress(onProgress, {
+					id: progressId,
+					scope: "child",
+					entityName: pending.entityName,
+					label: pending.file?.name || pending.id,
+					status: "saving",
+				});
+
+				try {
+					await uploadDocumentForRecord({
+						entityName: parentEntityName,
+						recordId: parentId,
+						folderName: pending.folderName,
+						file: pending.file,
+						uploadDate: pending.uploadDate,
+						childId: parentEntityName !== primaryEntity ? parentId : undefined,
+					});
+
+					const key = `${pending.entityName}_${pending.id}`;
+					formState.deletePendingDocumentUpload(key);
+
+					reportProgress(onProgress, {
+						id: progressId,
+						scope: "child",
+						entityName: pending.entityName,
+						status: "saved",
+					});
+				} catch (error) {
+					reportProgress(onProgress, {
+						id: progressId,
+						scope: "child",
+						entityName: pending.entityName,
+						status: "failed",
+						message: buildErrorMessage(error),
+					});
+					throw error;
+				}
+			})
+		);
+
+		results.forEach((result, index) => {
+			if (result.status === "rejected") {
+				const pending = uploads[index];
+				const message = buildErrorMessage(result.reason);
+				console.error("Failed to upload document:", result.reason);
+				errors.push(buildSaveError("child", `Failed to upload document: ${message}`, pending.entityName));
 			}
 		});
 	}
@@ -735,14 +860,14 @@ export async function executeSave(context: SaveContext): Promise<SaveResult> {
 		const stepReferenceByEntity = buildStepReferenceMap(config, primaryEntity);
 		const { entityChanges, primaryChanges, secondaryEntityChanges } = collectEntityChanges(formState, primaryEntity);
 
-		if (entityChanges.length === 0 && !formState.hasPendingChildren) {
+		if (entityChanges.length === 0 && !formState.hasPendingUploads) {
 			return {
 				success: true,
 				message: "No changes to save",
 			};
 		}
 
-		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingChildren || secondaryEntityChanges.length > 0);
+		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingUploads || secondaryEntityChanges.length > 0);
 		const primaryRecordId = await savePrimaryRecord({
 			formState,
 			primaryEntity,
@@ -776,6 +901,17 @@ export async function executeSave(context: SaveContext): Promise<SaveResult> {
 			onProgress,
 		});
 		errors.push(...childErrors);
+
+		const documentErrors = await savePendingDocumentUploads({
+			formState,
+			primaryEntity,
+			primaryRecordId,
+			recordIdsByEntity,
+			stepReferenceByEntity,
+			config,
+			onProgress,
+		});
+		errors.push(...documentErrors);
 
 		if (errors.length === 0) {
 			await ensureFormInstanceAndSession({

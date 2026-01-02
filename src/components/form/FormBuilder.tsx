@@ -126,7 +126,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		const changes = formState.serializeForSubmission();
 		const secondaryChanges = changes.filter((change) => change.entityName !== primaryEntityName);
 		const primaryChanges = changes.find((change) => change.entityName === primaryEntityName);
-		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingChildren || secondaryChanges.length > 0);
+		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingUploads || secondaryChanges.length > 0);
 		const items = [];
 
 		if (primaryEntityName && ((primaryChanges && primaryChanges.data && Object.keys(primaryChanges.data).length > 0) || shouldEnsurePrimaryExists)) {
@@ -154,6 +154,17 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				scope: "child",
 				entityName: pending.entityName,
 				label: pending.id,
+				status: "saving",
+			});
+		});
+
+		const pendingUploads = Object.values(formState.pendingDocumentUploads || {});
+		pendingUploads.forEach((pending) => {
+			items.push({
+				id: buildProgressId("child", pending.entityName, pending.id),
+				scope: "child",
+				entityName: pending.entityName,
+				label: pending.file?.name || pending.id,
 				status: "saving",
 			});
 		});
@@ -552,7 +563,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 								type="button"
 								className="btn btn-default"
 								onClick={handleSave}
-								disabled={isSaving || (!formState.hasChanges && !formState.hasPendingChildren)}>
+								disabled={isSaving || (!formState.hasChanges && !formState.hasPendingUploads)}>
 								{isSaving ? "Saving..." : "Save Draft"}
 							</button>
 							<button type="button" className="btn btn-primary" onClick={handleValidateAndSubmit} disabled={isSaving}>
