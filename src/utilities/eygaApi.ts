@@ -50,6 +50,7 @@ export interface SearchByTagsRequest {
 	ChildId?: string;
 }
 
+// Case-sensitive keys as expected by the EYGA API
 export interface DocumentMetadata {
 	name: string;
 	fullName: string;

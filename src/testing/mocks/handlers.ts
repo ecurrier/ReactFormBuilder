@@ -73,7 +73,7 @@ export const handlers = [
 					"@odata.etag": 'W/"44049758"',
 					"eyfrcc_maxfilesizemb@OData.Community.Display.V1.FormattedValue": "10",
 					eyfrcc_maxfilesizemb: 10,
-					eyfrcc_eygaapikey: "528491afa7824e1cb60a79b85e720554",
+					eyfrcc_eygaapikey: "DUMMY_API_KEY_FOR_TESTING_PURPOSES_ONLY",
 					eyfrcc_documentapiurl: "https://americorps-fed-core-2.azure-api.net/document/v1",
 					eyfrcc_allowedextensions:
 						'{"ValidFileTypes":[{"m":"application/vnd.openxmlformats-officedocument.wordprocessingml.document","e":"docx"},{"m":"image/bmp","e":"bmp"},{"m":"application/msword","e":"doc"},{"m":"application/pdf","e":"pdf"},{"m":"image/gif","e":"gif"},{"m":"image/jpeg","e":"jpg,jpeg"},{"m":"image/png","e":"png"},{"m":"application/vnd.ms-powerpoint","e":"ppt"},{"m":"application/vnd.openxmlformats-officedocument.presentationml.presentation","e":"pptx"},{"m":"application/rtf","e":"rtf"},{"m":"image/tiff","e":"tif,tiff"},{"m":"text/plain","e":"txt"},{"m":"application/vnd.ms-excel","e":"xls"},{"m":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","e":"xlsx"},{"m":"image/heic","e":"heic"},{"m":"image/heif","e":"heif"},{"m":"text/csv","e":"csv"}]}',
