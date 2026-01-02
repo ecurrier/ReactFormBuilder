@@ -5,7 +5,7 @@ export interface EygaConfiguration {
 	ApiKey: string;
 	AllowedFileTypes: ValidFileType[];
 	MaxFileSizeMB: number;
-	ApiEndpoints: Record<EygaApi, string>[];
+	ApiEndpoints: Record<EygaApi, string>;
 }
 
 export interface ValidFileType {
@@ -13,10 +13,59 @@ export interface ValidFileType {
 	Extensions: string[];
 }
 
+const CONFIG_CACHE_KEY = "eyga-configuration";
+const CONFIG_CACHE_TTL_MS = 60 * 60 * 1000;
+
+const getCachedConfiguration = (): EygaConfiguration | null => {
+	if (typeof sessionStorage === "undefined") {
+		return null;
+	}
+
+	try {
+		const cachedValue = sessionStorage.getItem(CONFIG_CACHE_KEY);
+		if (!cachedValue) {
+			return null;
+		}
+
+		const cached = JSON.parse(cachedValue) as { value: EygaConfiguration; expiresAt: number };
+		if (!cached?.value || !cached.expiresAt) {
+			sessionStorage.removeItem(CONFIG_CACHE_KEY);
+			return null;
+		}
+
+		if (Date.now() > cached.expiresAt) {
+			sessionStorage.removeItem(CONFIG_CACHE_KEY);
+			return null;
+		}
+
+		return cached.value;
+	} catch (error) {
+		console.warn("Failed to read EYGA configuration cache.", error);
+		return null;
+	}
+};
+
+const setCachedConfiguration = (configuration: EygaConfiguration): void => {
+	if (typeof sessionStorage === "undefined") {
+		return;
+	}
+
+	try {
+		const payload = {
+			value: configuration,
+			expiresAt: Date.now() + CONFIG_CACHE_TTL_MS,
+		};
+		sessionStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(payload));
+	} catch (error) {
+		console.warn("Failed to cache EYGA configuration.", error);
+	}
+};
+
 export const retrieveEygaConfiguration = async (): Promise<EygaConfiguration> => {
-	// Placeholder for actual implementation to fetch configuration from EYGA service
-	// This could involve making an HTTP request to a configuration endpoint
-	// First, check cache (not implemented here for brevity)
+	const cachedConfiguration = getCachedConfiguration();
+	if (cachedConfiguration) {
+		return cachedConfiguration;
+	}
 
 	// If cache not initialized, retrieve via fetch
 	const fetchXml = `
@@ -28,6 +77,7 @@ export const retrieveEygaConfiguration = async (): Promise<EygaConfiguration> =>
                 <attribute name="eyfrcc_maxfilesizemb" />
                 <attribute name="eyfrcc_documentapiurl" />
                 <attribute name="eyfrcc_addressapiurl" />
+                <attribute name="eyfrcc_samgovapiurl" />
             </entity>
         </fetch>`;
 
@@ -36,12 +86,15 @@ export const retrieveEygaConfiguration = async (): Promise<EygaConfiguration> =>
 		throw new Error("Failed to retrieve EYGA configuration");
 	}
 
-	const validFileTypes: ValidFileType[] = JSON.parse(response.eyfrcc_allowedextensions).map((item: any) => ({
-		MimeType: item.m,
-		Extensions: item.e.split(","),
-	}));
+	const rawAllowedExtensions = response.eyfrcc_allowedextensions;
+	const validFileTypes: ValidFileType[] = rawAllowedExtensions
+		? JSON.parse(rawAllowedExtensions).map((item: { m: string; e: string }) => ({
+				MimeType: item.m,
+				Extensions: item.e.split(","),
+			}))
+		: [];
 
-	return {
+	const configuration: EygaConfiguration = {
 		ApiKey: response.eyfrcc_eygaapikey,
 		AllowedFileTypes: validFileTypes,
 		MaxFileSizeMB: response.eyfrcc_maxfilesizemb || 10,
@@ -50,5 +103,9 @@ export const retrieveEygaConfiguration = async (): Promise<EygaConfiguration> =>
 			[EygaApi.Address]: response.eyfrcc_addressapiurl,
 			[EygaApi.SamGov]: response.eyfrcc_samgovapiurl,
 		},
-	} as EygaConfiguration;
+	};
+
+	setCachedConfiguration(configuration);
+
+	return configuration;
 };
