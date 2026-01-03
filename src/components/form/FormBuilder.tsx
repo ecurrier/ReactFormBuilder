@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import Step from "@components/form/Step";
 import { ActionType } from "@constants/enums";
@@ -34,6 +34,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	const [savePhase, setSavePhase] = useState("idle");
 	const [showSaveOverlay, setShowSaveOverlay] = useState(false);
 	const [isBannerSticky, setIsBannerSticky] = useState(false);
+	const [metadataReady, setMetadataReady] = useState(false);
 	const bannerSentinelRef = useRef(null);
 	const entityMetadata = useMemo(() => buildEntityMetadataMap(config), [config]);
 
@@ -83,8 +84,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		}
 	}, [formSessionInfo, formState.setFormInstanceId, formState.setUserFormSessionId]);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		setEntityMetadataCache(entityMetadata);
+		setMetadataReady(true);
 	}, [entityMetadata]);
 
 	useEffect(() => {
@@ -108,10 +110,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		observer.observe(sentinel);
 		return () => observer.disconnect();
 	}, []);
-
-	if (visibleSteps.length === 0) {
-		return <p>No field inputs were provided in this configuration.</p>;
-	}
 
 	const buildProgressId = (scope, entityName, recordId) => {
 		if (recordId) {
@@ -485,6 +483,14 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			setSavePhase("summary");
 		}
 	};
+
+	if (!metadataReady) {
+		return <LoadingIndicator visible={true} message="Loading form metadata..." />;
+	}
+
+	if (visibleSteps.length === 0) {
+		return <p>No field inputs were provided in this configuration.</p>;
+	}
 
 	return (
 		<main className="page-content">

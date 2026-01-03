@@ -45,8 +45,6 @@ const getIdentifierFieldName = (entityName: string, identifier: string): string 
 		return cached.get(identifier) ?? null;
 	}
 
-	// for eyfrcc_childapplicationtest, the identifierFieldCache is storing nulls
-	// need to find out why
 	const metadata = getEntityMetadata(entityName) as ReactTableMetadataEntry | undefined;
 	const identifierMetadata = normalizeIdentifierMetadata(metadata?.ConfigurationIdentifierMetadata);
 	const match = identifierMetadata.find((entry) => entry.ConfigurationIdentifier === identifier);
