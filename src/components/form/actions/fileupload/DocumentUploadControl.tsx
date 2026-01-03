@@ -1,7 +1,7 @@
 import React from "react";
 import { Alert, ConfirmationModal, LoadingIndicator } from "@components";
 import { retrieveEygaConfiguration } from "@utilities";
-import { generateTempId } from "@utilities/common";
+import { generateTempId, isTempId } from "@utilities/common";
 import type { DocumentMetadata } from "@utilities/eygaApi";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord } from "@services/documentService";
 
@@ -80,8 +80,14 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	const resolvedEntityName = entityName || primaryEntityName || "";
 	const relatedRecord = resolvedEntityName && resolvedEntityName !== primaryEntityName ? formState?.getRelatedRecord?.(resolvedEntityName) : undefined;
 	const recordId = resolvedEntityName === primaryEntityName ? formState?.recordId : relatedRecord?.recordId;
+	const isTableEntry = formState?.type === "tableEntry";
+	const childRecordId = isTableEntry ? recordId : undefined;
+	const contextEntityName = resolvedEntityName;
+	const contextRecordId = recordId;
+	const isPersistedRecord = Boolean(contextRecordId && !isTempId(contextRecordId));
 
-	const pendingUploads = formState?.getPendingDocumentUploads?.(resolvedEntityName, config.FolderName) ?? [];
+	const pendingUploads = formState?.getPendingDocumentUploads?.(contextEntityName, config.FolderName, childRecordId) ?? [];
+	const uploadChildId = childRecordId && contextRecordId !== childRecordId ? childRecordId : undefined;
 
 	const normalizedAllowedTypes = React.useMemo(() => {
 		if (!allowedFileTypes) {
@@ -92,15 +98,14 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	}, [allowedFileTypes]);
 
 	const loadDocuments = React.useCallback(async () => {
-		if (!recordId || !resolvedEntityName) {
+		if (!contextRecordId || !contextEntityName || !isPersistedRecord) {
 			setDocuments([]);
 			return;
 		}
 
 		setIsLoading(true);
 		try {
-			const childId = resolvedEntityName !== primaryEntityName ? recordId : undefined;
-			const response = await retrieveDocuments(resolvedEntityName, recordId, config.FolderName, childId);
+			const response = await retrieveDocuments(contextEntityName, contextRecordId, config.FolderName, uploadChildId);
 			setDocuments(response || []);
 		} catch (error) {
 			console.error("Failed to load documents:", error);
@@ -108,7 +113,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 		} finally {
 			setIsLoading(false);
 		}
-	}, [config.FolderName, primaryEntityName, recordId, resolvedEntityName]);
+	}, [config.FolderName, contextEntityName, contextRecordId, isPersistedRecord, uploadChildId]);
 
 	React.useEffect(() => {
 		const fetchConfiguration = async () => {
@@ -163,11 +168,13 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 
 		setAlertState(null);
 
-		if (!recordId) {
+		if (!contextRecordId || !isPersistedRecord) {
 			files.forEach((file) => {
 				formState?.addPendingDocumentUpload?.({
 					id: generateTempId(),
-					entityName: resolvedEntityName,
+					entityName: contextEntityName,
+					recordId: isTableEntry && childRecordId ? undefined : contextRecordId,
+					childRecordId,
 					folderName: config.FolderName,
 					file,
 					uploadDate: formatUploadDate(new Date()),
@@ -179,16 +186,15 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 
 		setIsUploading(true);
 		try {
-			const childId = resolvedEntityName !== primaryEntityName ? recordId : undefined;
 			// TO-DO: Consider parallel uploads with Promise.all if needed
 			for (const file of files) {
 				await uploadDocumentForRecord({
-					entityName: resolvedEntityName,
-					recordId,
+					entityName: contextEntityName,
+					recordId: contextRecordId,
 					folderName: config.FolderName,
 					file,
 					uploadDate: formatUploadDate(new Date()),
-					childId,
+					childId: uploadChildId,
 				});
 			}
 			setAlertState({ type: "success", message: "Files uploaded successfully." });
@@ -231,14 +237,14 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 			return;
 		}
 
-		if (!recordId) {
+		if (!contextRecordId || !isPersistedRecord) {
 			setDeleteTarget(null);
 			return;
 		}
 
 		setIsDeleting(true);
 		try {
-			await deleteDocument(resolvedEntityName, recordId, deleteTarget.fullName);
+			await deleteDocument(contextEntityName, contextRecordId, deleteTarget.fullName);
 			setAlertState({ type: "success", message: "File deleted successfully." });
 			await loadDocuments();
 		} catch (error) {
@@ -251,12 +257,12 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	};
 
 	const handleDownload = async (fullName: string) => {
-		if (!recordId) {
+		if (!contextRecordId || !isPersistedRecord) {
 			return;
 		}
 
 		try {
-			await downloadDocument(resolvedEntityName, recordId, fullName);
+			await downloadDocument(contextEntityName, contextRecordId, fullName);
 		} catch (error) {
 			console.error("Download failed:", error);
 			setAlertState({ type: "danger", message: "Failed to download file." });

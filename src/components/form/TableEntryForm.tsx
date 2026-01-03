@@ -39,13 +39,24 @@ interface TableEntryFormProps {
 	config: TableEntryActionConfig;
 	initialData: any | null;
 	parentRecordId?: string;
+	parentEntityName?: string;
+	parentFormState?: any;
 	onSave: (data: any) => void;
 	onCancel: () => void;
 }
 
-export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialData, parentRecordId, onSave, onCancel }) => {
+export const TableEntryForm: React.FC<TableEntryFormProps> = ({
+	config,
+	initialData,
+	parentRecordId,
+	parentEntityName,
+	parentFormState,
+	onSave,
+	onCancel,
+}) => {
 	const [formData, setFormData] = useState<any>(initialData || {});
 	const metadataRef = React.useRef<Record<string, any>>({});
+	const recordId = initialData?.id;
 	const getFieldKey = React.useCallback((path: string) => {
 		const parts = String(path).split(".");
 		return parts[parts.length - 1] || path;
@@ -83,15 +94,63 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 		[formData, getFieldKey]
 	);
 
+	const addPendingDocumentUpload = React.useCallback(
+		(upload: any) => {
+			parentFormState?.addPendingDocumentUpload?.(upload);
+		},
+		[parentFormState]
+	);
+
+	const deletePendingDocumentUpload = React.useCallback(
+		(key: string) => {
+			parentFormState?.deletePendingDocumentUpload?.(key);
+		},
+		[parentFormState]
+	);
+
+	const getPendingDocumentUploads = React.useCallback(
+		(entityName?: string, folderName?: string, childRecordId?: string) => {
+			return parentFormState?.getPendingDocumentUploads?.(entityName, folderName, childRecordId) ?? [];
+		},
+		[parentFormState]
+	);
+
+	const clearPendingDocumentUploads = React.useCallback(
+		(entityName?: string) => {
+			parentFormState?.clearPendingDocumentUploads?.(entityName);
+		},
+		[parentFormState]
+	);
+
 	const localFormState = React.useMemo(
 		() => ({
+			type: "tableEntry",
+			recordId,
 			primaryEntityName: config.ChildEntityLogicalName,
+			parentEntityName,
+			parentRecordId,
 			registerField,
 			updateFieldValue,
 			getFieldValue,
 			getFieldMetadata: (path: string) => metadataRef.current[path],
+			addPendingDocumentUpload,
+			deletePendingDocumentUpload,
+			getPendingDocumentUploads,
+			clearPendingDocumentUploads,
 		}),
-		[config.ChildEntityLogicalName, getFieldValue, registerField, updateFieldValue]
+		[
+			addPendingDocumentUpload,
+			clearPendingDocumentUploads,
+			config.ChildEntityLogicalName,
+			deletePendingDocumentUpload,
+			getFieldValue,
+			getPendingDocumentUploads,
+			parentEntityName,
+			parentRecordId,
+			recordId,
+			registerField,
+			updateFieldValue,
+		]
 	);
 
 	// Collect all actions from all steps

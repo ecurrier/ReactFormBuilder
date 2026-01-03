@@ -246,6 +246,10 @@ const groupPendingDocumentUploadsByParent = (formState: any, primaryEntity?: str
 	const pendingByParent = new Map<string, PendingDocumentUpload[]>();
 
 	for (const pending of pendingUploads) {
+		if (pending.recordId || pending.childRecordId) {
+			continue;
+		}
+
 		const parentEntityName = pending.entityName || primaryEntity;
 		if (!parentEntityName) {
 			continue;
@@ -278,12 +282,13 @@ const savePendingChildRecords = async ({
 	config: ReactFormConfiguration;
 	entityMetadataMap: Map<string, TableMetadataEntry>;
 	onProgress: SaveContext["onProgress"];
-}): Promise<SaveError[]> => {
+}): Promise<{ errors: SaveError[]; handledUploadIds: Set<string> }> => {
 	if (!formState.hasPendingChildren) {
-		return [];
+		return { errors: [], handledUploadIds: new Set() };
 	}
 
 	const errors: SaveError[] = [];
+	const handledUploadIds = new Set<string>();
 	const pendingByParent = groupPendingChildrenByParent(formState, primaryEntity);
 
 	for (const [parentEntityName, records] of pendingByParent) {
@@ -331,11 +336,14 @@ const savePendingChildRecords = async ({
 				const message = buildErrorMessage(result.reason);
 				console.error(`Failed to save child record:`, result.reason);
 				errors.push(buildSaveError("child", `Failed to save child record: ${message}`, pending.entityName));
+			} else {
+				errors.push(...result.value.errors);
+				result.value.handledUploadIds.forEach((id) => handledUploadIds.add(id));
 			}
 		});
 	}
 
-	return errors;
+	return { errors, handledUploadIds };
 };
 
 const savePendingDocumentUploads = async ({
@@ -389,10 +397,10 @@ const savePendingDocumentUploads = async ({
 
 		const results = await Promise.allSettled(
 			uploads.map(async (pending) => {
-				const progressId = buildProgressId("child", pending.entityName, pending.id);
+				const progressId = buildProgressId("upload", pending.entityName, pending.id);
 				reportProgress(onProgress, {
 					id: progressId,
-					scope: "child",
+					scope: "upload",
 					entityName: pending.entityName,
 					label: pending.file?.name || pending.id,
 					status: "saving",
@@ -405,7 +413,7 @@ const savePendingDocumentUploads = async ({
 						folderName: pending.folderName,
 						file: pending.file,
 						uploadDate: pending.uploadDate,
-						childId: parentEntityName !== primaryEntity ? parentId : undefined,
+						childId: pending.childRecordId,
 					});
 
 					const key = `${pending.entityName}_${pending.id}`;
@@ -413,14 +421,14 @@ const savePendingDocumentUploads = async ({
 
 					reportProgress(onProgress, {
 						id: progressId,
-						scope: "child",
+						scope: "upload",
 						entityName: pending.entityName,
 						status: "saved",
 					});
 				} catch (error) {
 					reportProgress(onProgress, {
 						id: progressId,
-						scope: "child",
+						scope: "upload",
 						entityName: pending.entityName,
 						status: "failed",
 						message: buildErrorMessage(error),
@@ -431,14 +439,100 @@ const savePendingDocumentUploads = async ({
 		);
 
 		results.forEach((result, index) => {
-			if (result.status === "rejected") {
-				const pending = uploads[index];
-				const message = buildErrorMessage(result.reason);
-				console.error("Failed to upload document:", result.reason);
-				errors.push(buildSaveError("child", `Failed to upload document: ${message}`, pending.entityName));
-			}
-		});
+		if (result.status === "rejected") {
+			const pending = uploads[index];
+			const message = buildErrorMessage(result.reason);
+			console.error("Failed to upload document:", result.reason);
+			errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
+		}
+	});
 	}
+
+	return errors;
+};
+
+const savePendingDocumentUploadsForRecords = async ({
+	formState,
+	primaryEntity,
+	onProgress,
+	skipUploadIds,
+}: {
+	formState: any;
+	primaryEntity?: string;
+	onProgress: SaveContext["onProgress"];
+	skipUploadIds?: Set<string>;
+}): Promise<SaveError[]> => {
+	const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
+	const uploadsForRecords = pendingUploads.filter((upload) => {
+		if (!upload.recordId || isTempId(upload.recordId)) {
+			return false;
+		}
+
+		if (skipUploadIds?.has(upload.id)) {
+			return false;
+		}
+
+		return !upload.childRecordId || !isTempId(upload.childRecordId);
+	});
+
+	if (uploadsForRecords.length === 0) {
+		return [];
+	}
+
+	const errors: SaveError[] = [];
+
+	const results = await Promise.allSettled(
+		uploadsForRecords.map(async (pending) => {
+			const progressId = buildProgressId("upload", pending.entityName, pending.id);
+			reportProgress(onProgress, {
+				id: progressId,
+				scope: "upload",
+				entityName: pending.entityName,
+				label: pending.file?.name || pending.id,
+				status: "saving",
+			});
+
+			try {
+				const childId = pending.childRecordId && pending.childRecordId !== pending.recordId ? pending.childRecordId : undefined;
+				await uploadDocumentForRecord({
+					entityName: pending.entityName,
+					recordId: pending.recordId as string,
+					folderName: pending.folderName,
+					file: pending.file,
+					uploadDate: pending.uploadDate,
+					childId,
+				});
+
+				const key = `${pending.entityName}_${pending.id}`;
+				formState.deletePendingDocumentUpload(key);
+
+				reportProgress(onProgress, {
+					id: progressId,
+					scope: "upload",
+					entityName: pending.entityName,
+					status: "saved",
+				});
+			} catch (error) {
+				reportProgress(onProgress, {
+					id: progressId,
+					scope: "upload",
+					entityName: pending.entityName,
+					status: "failed",
+					message: buildErrorMessage(error),
+				});
+				throw error;
+			}
+		})
+	);
+
+	results.forEach((result, index) => {
+		if (result.status === "rejected") {
+			const pending = uploadsForRecords[index];
+			const message = buildErrorMessage(result.reason);
+			console.error("Failed to upload document:", result.reason);
+			errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
+		}
+	});
 
 	return errors;
 };
@@ -756,7 +850,7 @@ const saveChildRecord = async ({
 	config: ReactFormConfiguration;
 	entityMetadataMap: Map<string, TableMetadataEntry>;
 	onProgress: SaveContext["onProgress"];
-}) => {
+}): Promise<{ errors: SaveError[]; handledUploadIds: Set<string> }> => {
 	const progressId = buildProgressId("child", pending.entityName, pending.id);
 	reportProgress(onProgress, {
 		id: progressId,
@@ -766,6 +860,8 @@ const saveChildRecord = async ({
 		status: "saving",
 	});
 	let didReportFailure = false;
+	const errors: SaveError[] = [];
+	const handledUploadIds = new Set<string>();
 
 	try {
 		const defaults = buildDefaultOnCreateData(pending.entityName, config);
@@ -828,6 +924,60 @@ const saveChildRecord = async ({
 			entityName: pending.entityName,
 			status: "saved",
 		});
+
+		const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
+		const uploadsForChild = pendingUploads.filter((upload) => upload.childRecordId === pending.id);
+
+		for (const upload of uploadsForChild) {
+			const updatedUpload = {
+				...upload,
+				recordId: childId,
+				childRecordId: childId,
+			};
+			formState.addPendingDocumentUpload?.(updatedUpload);
+
+			const uploadProgressId = buildProgressId("upload", pending.entityName, upload.id);
+			reportProgress(onProgress, {
+				id: uploadProgressId,
+				scope: "upload",
+				entityName: pending.entityName,
+				label: upload.file?.name || upload.id,
+				status: "saving",
+			});
+
+			try {
+				await uploadDocumentForRecord({
+					entityName: pending.entityName,
+					recordId: childId,
+					folderName: upload.folderName,
+					file: upload.file,
+					uploadDate: upload.uploadDate,
+				});
+
+				const uploadKey = `${upload.entityName}_${upload.id}`;
+				formState.deletePendingDocumentUpload(uploadKey);
+
+				reportProgress(onProgress, {
+					id: uploadProgressId,
+					scope: "upload",
+					entityName: pending.entityName,
+					status: "saved",
+				});
+				handledUploadIds.add(upload.id);
+			} catch (error) {
+				reportProgress(onProgress, {
+					id: uploadProgressId,
+					scope: "upload",
+					entityName: pending.entityName,
+					status: "failed",
+					message: buildErrorMessage(error),
+				});
+				errors.push(
+					buildSaveError("upload", `Failed to upload document: ${buildErrorMessage(error)}`, pending.entityName, upload.id)
+				);
+				handledUploadIds.add(upload.id);
+			}
+		}
 	} catch (error) {
 		if (!didReportFailure) {
 			reportProgress(onProgress, {
@@ -841,6 +991,8 @@ const saveChildRecord = async ({
 		}
 		throw error;
 	}
+
+	return { errors, handledUploadIds };
 };
 
 /**
@@ -890,7 +1042,7 @@ export async function executeSave(context: SaveContext): Promise<SaveResult> {
 		});
 		errors.push(...secondaryErrors);
 
-		const childErrors = await savePendingChildRecords({
+		const { errors: childErrors, handledUploadIds } = await savePendingChildRecords({
 			formState,
 			primaryEntity,
 			primaryRecordId,
@@ -901,6 +1053,14 @@ export async function executeSave(context: SaveContext): Promise<SaveResult> {
 			onProgress,
 		});
 		errors.push(...childErrors);
+
+		const recordDocumentErrors = await savePendingDocumentUploadsForRecords({
+			formState,
+			primaryEntity,
+			onProgress,
+			skipUploadIds: handledUploadIds,
+		});
+		errors.push(...recordDocumentErrors);
 
 		const documentErrors = await savePendingDocumentUploads({
 			formState,
