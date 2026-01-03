@@ -439,13 +439,13 @@ const savePendingDocumentUploads = async ({
 		);
 
 		results.forEach((result, index) => {
-		if (result.status === "rejected") {
-			const pending = uploads[index];
-			const message = buildErrorMessage(result.reason);
-			console.error("Failed to upload document:", result.reason);
-			errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
-		}
-	});
+			if (result.status === "rejected") {
+				const pending = uploads[index];
+				const message = buildErrorMessage(result.reason);
+				console.error("Failed to upload document:", result.reason);
+				errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
+			}
+		});
 	}
 
 	return errors;
@@ -972,9 +972,7 @@ const saveChildRecord = async ({
 					status: "failed",
 					message: buildErrorMessage(error),
 				});
-				errors.push(
-					buildSaveError("upload", `Failed to upload document: ${buildErrorMessage(error)}`, pending.entityName, upload.id)
-				);
+				errors.push(buildSaveError("upload", `Failed to upload document: ${buildErrorMessage(error)}`, pending.entityName, upload.id));
 				handledUploadIds.add(upload.id);
 			}
 		}

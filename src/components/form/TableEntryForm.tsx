@@ -45,15 +45,7 @@ interface TableEntryFormProps {
 	onCancel: () => void;
 }
 
-export const TableEntryForm: React.FC<TableEntryFormProps> = ({
-	config,
-	initialData,
-	parentRecordId,
-	parentEntityName,
-	parentFormState,
-	onSave,
-	onCancel,
-}) => {
+export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialData, parentRecordId, parentEntityName, parentFormState, onSave, onCancel }) => {
 	const [formData, setFormData] = useState<any>(initialData || {});
 	const metadataRef = React.useRef<Record<string, any>>({});
 	const recordId = initialData?.id;
