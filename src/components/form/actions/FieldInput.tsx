@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { ActionType, DataType } from "@constants/enums";
-import ChoiceInput from "@components/form/fields/ChoiceInput";
-import CurrencyInput from "@components/form/fields/CurrencyInput";
-import DateTimeInput from "@components/form/fields/DateTimeInput";
-import LookupControl from "@components/form/fields/lookup/LookupControl";
-import MultiLineTextInput from "@components/form/fields/MultiLineTextInput";
-import NumberInput from "@components/form/fields/NumberInput";
-import SingleLineTextInput from "@components/form/fields/SingleLineTextInput";
-import YesNoInput from "@components/form/fields/YesNoInput";
+import { ChoiceInput, CurrencyInput, DateTimeInput, LookupControl, MultiLineTextInput, NumberInput, SingleLineTextInput, YesNoInput } from "@components";
 
 const formatDescription = (description) => {
 	if (!description) {
@@ -125,7 +118,7 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 	}
 };
 
-const FieldInput = ({ action, formState, entityName: stepEntityName }) => {
+export const FieldInput = ({ action, formState, entityName: stepEntityName }) => {
 	const properties = action?.Properties ?? {};
 	const inputId = properties.LogicalName ?? action.Id ?? action.Name ?? "field-input";
 	const label = properties.Label ?? action.Name ?? properties.LogicalName;

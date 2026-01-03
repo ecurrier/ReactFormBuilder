@@ -58,6 +58,7 @@ export interface ReactTableMetadataEntry {
 	PrimaryNameAttribute?: string;
 	PrimaryNameAttributeDisplayName?: string;
 	DefaultOnCreateActions?: ReactDefaultOnCreateAction[];
+	ConfigurationIdentifierMetadata?: ReactConfigurationIdentifierMetadata | ReactConfigurationIdentifierMetadata[];
 }
 
 export interface ReactDefaultOnCreateAction {

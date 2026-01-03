@@ -7,3 +7,5 @@ export * from "./MultiLineTextInput";
 export * from "./YesNoInput";
 export * from "./DateTimeInput";
 export * from "./lookup/LookupControl";
+export * from "./lookup/LookupAdvancedSearchModal";
+export * from "./fileupload/DocumentUploadControl";

@@ -1,6 +1,6 @@
 import { useReducer, useCallback, useMemo } from "react";
 import type { Entity } from "@types/Entity";
-import type { EntityChanges, FieldMetadata, FormState, FormStateAction, PendingChildRecord, RelatedRecordInfo } from "@types/FormState";
+import type { EntityChanges, FieldMetadata, FormState, FormStateAction, PendingChildRecord, PendingDocumentUpload, RelatedRecordInfo } from "@types/FormState";
 import { resolveEntitySetName, resolvePrimaryIdAttribute, serializeForApi } from "@utilities";
 
 /**
@@ -16,6 +16,7 @@ const initialFormState: FormState = {
 	relatedRecords: {},
 	childRecords: {},
 	pendingChildRecords: {},
+	pendingDocumentUploads: {},
 };
 
 const resolveRecordId = (entityName: string, record: Entity): string | null => {
@@ -278,6 +279,49 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
 			}
 		}
 
+		case "ADD_PENDING_DOCUMENT_UPLOAD": {
+			const { upload } = action;
+			const key = `${upload.entityName}_${upload.id}`;
+			return {
+				...state,
+				pendingDocumentUploads: {
+					...state.pendingDocumentUploads,
+					[key]: upload,
+				},
+			};
+		}
+
+		case "DELETE_PENDING_DOCUMENT_UPLOAD": {
+			const { key } = action;
+			const updatedPending = { ...state.pendingDocumentUploads };
+			delete updatedPending[key];
+			return {
+				...state,
+				pendingDocumentUploads: updatedPending,
+			};
+		}
+
+		case "CLEAR_PENDING_DOCUMENT_UPLOADS": {
+			const { entityName } = action;
+			if (!entityName) {
+				return {
+					...state,
+					pendingDocumentUploads: {},
+				};
+			}
+
+			const updatedPending = { ...state.pendingDocumentUploads };
+			Object.keys(updatedPending).forEach((key) => {
+				if (key.startsWith(`${entityName}_`)) {
+					delete updatedPending[key];
+				}
+			});
+			return {
+				...state,
+				pendingDocumentUploads: updatedPending,
+			};
+		}
+
 		default:
 			return state;
 	}
@@ -482,6 +526,48 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	}, []);
 
 	/**
+	 * Adds a pending document upload (for uploads before parent exists).
+	 */
+	const addPendingDocumentUpload = useCallback((upload: PendingDocumentUpload) => {
+		dispatch({ type: "ADD_PENDING_DOCUMENT_UPLOAD", upload });
+	}, []);
+
+	/**
+	 * Deletes a pending document upload.
+	 */
+	const deletePendingDocumentUpload = useCallback((key: string) => {
+		dispatch({ type: "DELETE_PENDING_DOCUMENT_UPLOAD", key });
+	}, []);
+
+	/**
+	 * Gets all pending document uploads for an entity/folder.
+	 */
+	const getPendingDocumentUploads = useCallback(
+		(entityName?: string, folderName?: string, childRecordId?: string): PendingDocumentUpload[] => {
+			return Object.values(state.pendingDocumentUploads).filter((upload) => {
+				if (entityName && upload.entityName !== entityName) {
+					return false;
+				}
+				if (folderName && upload.folderName !== folderName) {
+					return false;
+				}
+				if (childRecordId && upload.childRecordId !== childRecordId) {
+					return false;
+				}
+				return true;
+			});
+		},
+		[state.pendingDocumentUploads]
+	);
+
+	/**
+	 * Clears pending document uploads, optionally filtered by entity name.
+	 */
+	const clearPendingDocumentUploads = useCallback((entityName?: string) => {
+		dispatch({ type: "CLEAR_PENDING_DOCUMENT_UPLOADS", entityName });
+	}, []);
+
+	/**
 	 * Gets all dirty field values grouped by entity.
 	 * Returns an array of EntityChanges objects ready for API submission.
 	 */
@@ -587,7 +673,16 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		return Object.keys(state.pendingChildRecords).length > 0;
 	}, [state.pendingChildRecords]);
 
+	const hasPendingDocumentUploads = useMemo(() => {
+		return Object.keys(state.pendingDocumentUploads).length > 0;
+	}, [state.pendingDocumentUploads]);
+
+	const hasPendingUploads = useMemo(() => {
+		return hasPendingChildren || hasPendingDocumentUploads;
+	}, [hasPendingChildren, hasPendingDocumentUploads]);
+
 	return {
+		type: "main",
 		// State
 		recordId: state.recordId,
 		primaryEntityName: state.primaryEntityName,
@@ -596,8 +691,11 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		relatedRecords: state.relatedRecords,
 		childRecords: state.childRecords,
 		pendingChildRecords: state.pendingChildRecords,
+		pendingDocumentUploads: state.pendingDocumentUploads,
 		hasChanges,
 		hasPendingChildren,
+		hasPendingDocumentUploads,
+		hasPendingUploads,
 		dirtyFields,
 
 		// Actions
@@ -623,6 +721,12 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		deletePendingChildRecord,
 		getPendingChildRecords,
 		clearPendingChildRecords,
+
+		// Pending document upload operations
+		addPendingDocumentUpload,
+		deletePendingDocumentUpload,
+		getPendingDocumentUploads,
+		clearPendingDocumentUploads,
 
 		// Getters
 		getFieldValue,

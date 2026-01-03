@@ -17,7 +17,7 @@ const resolveDisplayName = (attributeName: string): string => {
 	return resolvePrimaryNameAttributeDisplayName(attributeName);
 };
 
-const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selectedTarget, onTargetChange, searchPlaceholder }) => {
+export const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selectedTarget, onTargetChange, searchPlaceholder }) => {
 	const [query, setQuery] = useState("");
 
 	useEffect(() => {

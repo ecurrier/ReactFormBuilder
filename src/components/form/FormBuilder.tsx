@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import Step from "@components/form/Step";
 import { ActionType } from "@constants/enums";
@@ -34,6 +34,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	const [savePhase, setSavePhase] = useState("idle");
 	const [showSaveOverlay, setShowSaveOverlay] = useState(false);
 	const [isBannerSticky, setIsBannerSticky] = useState(false);
+	const [metadataReady, setMetadataReady] = useState(false);
 	const bannerSentinelRef = useRef(null);
 	const entityMetadata = useMemo(() => buildEntityMetadataMap(config), [config]);
 
@@ -83,8 +84,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		}
 	}, [formSessionInfo, formState.setFormInstanceId, formState.setUserFormSessionId]);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		setEntityMetadataCache(entityMetadata);
+		setMetadataReady(true);
 	}, [entityMetadata]);
 
 	useEffect(() => {
@@ -109,10 +111,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		return () => observer.disconnect();
 	}, []);
 
-	if (visibleSteps.length === 0) {
-		return <p>No field inputs were provided in this configuration.</p>;
-	}
-
 	const buildProgressId = (scope, entityName, recordId) => {
 		if (recordId) {
 			return `${scope}:${entityName}:${recordId}`;
@@ -126,7 +124,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		const changes = formState.serializeForSubmission();
 		const secondaryChanges = changes.filter((change) => change.entityName !== primaryEntityName);
 		const primaryChanges = changes.find((change) => change.entityName === primaryEntityName);
-		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingChildren || secondaryChanges.length > 0);
+		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingUploads || secondaryChanges.length > 0);
 		const items = [];
 
 		if (primaryEntityName && ((primaryChanges && primaryChanges.data && Object.keys(primaryChanges.data).length > 0) || shouldEnsurePrimaryExists)) {
@@ -158,6 +156,17 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			});
 		});
 
+		const pendingUploads = Object.values(formState.pendingDocumentUploads || {});
+		pendingUploads.forEach((pending) => {
+			items.push({
+				id: buildProgressId("upload", pending.entityName, pending.id),
+				scope: "upload",
+				entityName: pending.entityName,
+				label: pending.file?.name || pending.id,
+				status: "saving",
+			});
+		});
+
 		return items;
 	}, [config?.Form?.PrimaryApplicationTable?.TableLogicalName, formState]);
 
@@ -182,7 +191,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				return;
 			}
 
-			const scope = error.phase === "secondary" ? "secondary" : error.phase === "child" ? "child" : "primary";
+			const scope = error.phase === "secondary" ? "secondary" : error.phase === "child" ? "child" : error.phase === "upload" ? "upload" : "primary";
 			const entityName = error.entityName || "Unknown";
 			const key = `${scope}:${entityName}`;
 
@@ -309,6 +318,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		if (scope === "primary") return "Primary";
 		if (scope === "secondary") return "Secondary";
 		if (scope === "child") return "Child";
+		if (scope === "upload") return "Upload";
 		return scope;
 	};
 
@@ -475,6 +485,14 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		}
 	};
 
+	if (!metadataReady) {
+		return <LoadingIndicator visible={true} message="Loading form metadata..." />;
+	}
+
+	if (visibleSteps.length === 0) {
+		return <p>No field inputs were provided in this configuration.</p>;
+	}
+
 	return (
 		<main className="page-content">
 			<LoadingIndicator
@@ -552,7 +570,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 								type="button"
 								className="btn btn-default"
 								onClick={handleSave}
-								disabled={isSaving || (!formState.hasChanges && !formState.hasPendingChildren)}>
+								disabled={isSaving || (!formState.hasChanges && !formState.hasPendingUploads)}>
 								{isSaving ? "Saving..." : "Save Draft"}
 							</button>
 							<button type="button" className="btn btn-primary" onClick={handleValidateAndSubmit} disabled={isSaving}>

@@ -3,3 +3,5 @@ export * from "./common";
 export * from "./serialization";
 export * from "./fetchXml";
 export * from "./metadata";
+export * from "./eygaConfiguration";
+export * from "./eygaApi";
