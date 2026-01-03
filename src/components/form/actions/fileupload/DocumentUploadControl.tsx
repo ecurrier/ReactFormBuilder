@@ -82,12 +82,12 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	const recordId = resolvedEntityName === primaryEntityName ? formState?.recordId : relatedRecord?.recordId;
 	const isTableEntry = formState?.type === "tableEntry";
 	const childRecordId = isTableEntry ? recordId : undefined;
-	const contextEntityName = isTableEntry ? formState?.parentEntityName || resolvedEntityName : resolvedEntityName;
-	const contextRecordId = isTableEntry ? formState?.parentRecordId : recordId;
+	const contextEntityName = resolvedEntityName;
+	const contextRecordId = recordId;
 	const isPersistedRecord = Boolean(contextRecordId && !isTempId(contextRecordId));
-	const isPersistedChild = Boolean(!childRecordId || !isTempId(childRecordId));
 
 	const pendingUploads = formState?.getPendingDocumentUploads?.(contextEntityName, config.FolderName, childRecordId) ?? [];
+	const uploadChildId = childRecordId && contextRecordId !== childRecordId ? childRecordId : undefined;
 
 	const normalizedAllowedTypes = React.useMemo(() => {
 		if (!allowedFileTypes) {
@@ -98,14 +98,14 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	}, [allowedFileTypes]);
 
 	const loadDocuments = React.useCallback(async () => {
-		if (!contextRecordId || !contextEntityName || !isPersistedRecord || !isPersistedChild) {
+		if (!contextRecordId || !contextEntityName || !isPersistedRecord) {
 			setDocuments([]);
 			return;
 		}
 
 		setIsLoading(true);
 		try {
-			const response = await retrieveDocuments(contextEntityName, contextRecordId, config.FolderName, childRecordId);
+			const response = await retrieveDocuments(contextEntityName, contextRecordId, config.FolderName, uploadChildId);
 			setDocuments(response || []);
 		} catch (error) {
 			console.error("Failed to load documents:", error);
@@ -113,7 +113,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 		} finally {
 			setIsLoading(false);
 		}
-	}, [config.FolderName, contextEntityName, contextRecordId, isPersistedChild, isPersistedRecord, childRecordId]);
+	}, [config.FolderName, contextEntityName, contextRecordId, isPersistedRecord, uploadChildId]);
 
 	React.useEffect(() => {
 		const fetchConfiguration = async () => {
@@ -168,12 +168,12 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 
 		setAlertState(null);
 
-		if (!contextRecordId || !isPersistedRecord || !isPersistedChild) {
+		if (!contextRecordId || !isPersistedRecord) {
 			files.forEach((file) => {
 				formState?.addPendingDocumentUpload?.({
 					id: generateTempId(),
 					entityName: contextEntityName,
-					recordId: contextRecordId,
+					recordId: isTableEntry && childRecordId ? undefined : contextRecordId,
 					childRecordId,
 					folderName: config.FolderName,
 					file,
@@ -194,7 +194,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 					folderName: config.FolderName,
 					file,
 					uploadDate: formatUploadDate(new Date()),
-					childId: childRecordId,
+					childId: uploadChildId,
 				});
 			}
 			setAlertState({ type: "success", message: "Files uploaded successfully." });
@@ -237,7 +237,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 			return;
 		}
 
-		if (!contextRecordId || !isPersistedRecord || !isPersistedChild) {
+		if (!contextRecordId || !isPersistedRecord) {
 			setDeleteTarget(null);
 			return;
 		}
@@ -257,7 +257,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	};
 
 	const handleDownload = async (fullName: string) => {
-		if (!contextRecordId || !isPersistedRecord || !isPersistedChild) {
+		if (!contextRecordId || !isPersistedRecord) {
 			return;
 		}
 

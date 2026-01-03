@@ -246,7 +246,7 @@ const groupPendingDocumentUploadsByParent = (formState: any, primaryEntity?: str
 	const pendingByParent = new Map<string, PendingDocumentUpload[]>();
 
 	for (const pending of pendingUploads) {
-		if (pending.recordId) {
+		if (pending.recordId || pending.childRecordId) {
 			continue;
 		}
 
@@ -462,11 +462,7 @@ const savePendingDocumentUploadsForRecords = async ({
 			return false;
 		}
 
-		if (upload.childRecordId && isTempId(upload.childRecordId)) {
-			return false;
-		}
-
-		return true;
+		return !upload.childRecordId || !isTempId(upload.childRecordId);
 	});
 
 	if (uploadsForRecords.length === 0) {
@@ -487,7 +483,7 @@ const savePendingDocumentUploadsForRecords = async ({
 			});
 
 			try {
-				const childId = pending.childRecordId;
+				const childId = pending.childRecordId && pending.childRecordId !== pending.recordId ? pending.childRecordId : undefined;
 				await uploadDocumentForRecord({
 					entityName: pending.entityName,
 					recordId: pending.recordId as string,
@@ -912,6 +908,7 @@ const saveChildRecord = async ({
 			.forEach((upload) => {
 				formState.addPendingDocumentUpload?.({
 					...upload,
+					recordId: childId,
 					childRecordId: childId,
 				});
 			});
