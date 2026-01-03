@@ -1,4 +1,4 @@
-export type SaveEntityScope = "primary" | "secondary" | "child";
+export type SaveEntityScope = "primary" | "secondary" | "child" | "upload";
 
 export type SaveProgressStatus = "saving" | "saved" | "failed";
 
@@ -11,7 +11,7 @@ export interface SaveProgressEvent {
 	message?: string;
 }
 
-export type SaveErrorPhase = "primary" | "secondary" | "child" | "validation" | "save" | "reload";
+export type SaveErrorPhase = "primary" | "secondary" | "child" | "upload" | "validation" | "save" | "reload";
 
 export interface SaveError {
 	phase: SaveErrorPhase;

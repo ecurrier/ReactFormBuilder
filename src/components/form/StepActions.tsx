@@ -45,7 +45,7 @@ const StepActions = ({ actionItems, formState, tableEntryOptions }) => {
 				}
 
 				if (action.Type === ActionType.FileUpload) {
-					return <DocumentUploadControl key={actionKey} config={action.Properties} formState={formState} />;
+					return <DocumentUploadControl key={actionKey} config={action.Properties} formState={formState} entityName={entityName} />;
 				}
 
 				return null;

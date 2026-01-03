@@ -73,7 +73,7 @@ export const handlers = [
 					"@odata.etag": 'W/"44049758"',
 					"eyfrcc_maxfilesizemb@OData.Community.Display.V1.FormattedValue": "10",
 					eyfrcc_maxfilesizemb: 10,
-					eyfrcc_eygaapikey: "528491afa7824e1cb60a79b85e720554",
+					eyfrcc_eygaapikey: "DUMMY_API_KEY_FOR_TESTING_PURPOSES_ONLY",
 					eyfrcc_documentapiurl: "https://americorps-fed-core-2.azure-api.net/document/v1",
 					eyfrcc_allowedextensions:
 						'{"ValidFileTypes":[{"m":"application/vnd.openxmlformats-officedocument.wordprocessingml.document","e":"docx"},{"m":"image/bmp","e":"bmp"},{"m":"application/msword","e":"doc"},{"m":"application/pdf","e":"pdf"},{"m":"image/gif","e":"gif"},{"m":"image/jpeg","e":"jpg,jpeg"},{"m":"image/png","e":"png"},{"m":"application/vnd.ms-powerpoint","e":"ppt"},{"m":"application/vnd.openxmlformats-officedocument.presentationml.presentation","e":"pptx"},{"m":"application/rtf","e":"rtf"},{"m":"image/tiff","e":"tif,tiff"},{"m":"text/plain","e":"txt"},{"m":"application/vnd.ms-excel","e":"xls"},{"m":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","e":"xlsx"},{"m":"image/heic","e":"heic"},{"m":"image/heif","e":"heif"},{"m":"text/csv","e":"csv"}]}',
@@ -309,6 +309,33 @@ export const handlers = [
 			],
 		});
 	}),
+	http.get("*/_api/eyfrcc_standardform424as*", async () => {
+		await delay(1500);
+		return HttpResponse.json({
+			"@odata.context":
+				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_standardform424as(eyfrcc_standardform424aid,eyfrcc_attestation)",
+			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
+			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
+			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
+			"@generated_alias_eyfrcc_application_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_application_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
+			"@generated_alias_eyfrcc_application_2.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_application_3.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_application_4.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
+			"@generated_alias_eyfrcc_application_5.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
+			"@generated_alias_eyfrcc_secondaryreport_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
+			"@generated_alias_eyfrcc_secondaryreport_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
+			"@generated_alias_eyfrcc_recordpermission_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_standardform424id",
+			value: [
+				{
+					"@odata.etag": 'W/"51511838"',
+					"eyfrcc_attestation@OData.Community.Display.V1.FormattedValue": "Yes",
+					eyfrcc_attestation: true,
+					eyfrcc_standardform424aid: "bb7ef80c-d9e4-f011-8544-7ced8d21d821",
+				},
+			],
+		});
+	}),
 	http.get("*/_api/eyfrcc_standardform425s*", async () => {
 		await delay(1500);
 		return HttpResponse.json({
@@ -396,6 +423,44 @@ export const handlers = [
 		const response = HttpResponse.json({}, 204);
 		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8433");
 
+		return response;
+	}),
+	http.post("*https://americorps-fed-core-2.azure-api.net/document/v1/searchbytags*", async ({ request }) => {
+		await delay(1500);
+
+		console.log("[MSW] Documents Search By Tags POST request:", { request });
+		const requestBody = await request.json();
+		const response = HttpResponse.json(
+			[
+				{
+					name: "ErrorDetails (34).txt",
+					fullName: `Activity Proposal/${requestBody.Id}/${requestBody.Folder}/ErrorDetails (34).txt`,
+					uri: `https://eygaamericorpsfedcore2.blob.core.windows.net/dev/Activity Proposal/${requestBody.Id}/${requestBody.Folder}/ErrorDetails (34).txt?sv=2024-05-04&se=2026-01-02T20%3A31%3A10Z&sr=b&sp=r&sig=7ur58B3n3c1YHImPLG3rumR1btcP69JUjvGknHCZ%2B00%3D`,
+					tags: {
+						EntityReference: "c61baf4b-46d6-f011-ad8f-6045bd54c9b2:undefined",
+						Folder: requestBody.Folder,
+						Id: requestBody.Id,
+						PortalOrgId: "61ae137f-4ec9-f011-8544-6045bd540aa6",
+						PortalUserId: "54329348-dfc0-f011-bbd3-6045bd540aa6",
+						RestrictDelete: "false",
+						Status: requestBody.Status,
+						UploadSource: "Portal",
+						"Upload Date": "01/02/2026",
+					},
+					uploadDate: "01/02/2026",
+				},
+			],
+			200
+		);
+
+		return response;
+	}),
+	http.post("*https://americorps-fed-core-2.azure-api.net/document/v1/upload*", async ({ request }) => {
+		await delay(1500);
+
+		console.log("[MSW] Documents Upload POST request:", { request });
+
+		const response = HttpResponse.json({}, 200);
 		return response;
 	}),
 	http.patch("*/_api/eyfrcc_forminstances*", async ({ request }) => {

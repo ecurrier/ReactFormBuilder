@@ -48,7 +48,7 @@ export const Alert: React.FC<AlertProps> = ({
 			{contained ? (
 				<div className="container">
 					{dismissible && (
-						<button type="button" className="close" data-bs-dismiss="alert" aria-label="Close" onClick={onDismiss}>
+						<button type="button" className="close" aria-label="Close" onClick={onDismiss}>
 							×
 						</button>
 					)}
@@ -67,7 +67,7 @@ export const Alert: React.FC<AlertProps> = ({
 			) : (
 				<>
 					{dismissible && (
-						<button type="button" className="close" data-bs-dismiss="alert" aria-label="Close" onClick={onDismiss}>
+						<button type="button" className="close" aria-label="Close" onClick={onDismiss}>
 							×
 						</button>
 					)}

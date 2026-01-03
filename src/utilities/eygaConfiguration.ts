@@ -67,7 +67,6 @@ export const retrieveEygaConfiguration = async (): Promise<EygaConfiguration> =>
 		return cachedConfiguration;
 	}
 
-	// If cache not initialized, retrieve via fetch
 	const fetchXml = `
         <fetch top="1">
             <entity name="eyfrcc_eygaconfiguration">
@@ -86,13 +85,11 @@ export const retrieveEygaConfiguration = async (): Promise<EygaConfiguration> =>
 		throw new Error("Failed to retrieve EYGA configuration");
 	}
 
-	const rawAllowedExtensions = response.eyfrcc_allowedextensions;
-	const validFileTypes: ValidFileType[] = rawAllowedExtensions
-		? JSON.parse(rawAllowedExtensions).map((item: { m: string; e: string }) => ({
-				MimeType: item.m,
-				Extensions: item.e.split(","),
-			}))
-		: [];
+	const allowedExtensions = JSON.parse(response.eyfrcc_allowedextensions || '{"ValidFileTypes": []}');
+	const validFileTypes: ValidFileType[] = allowedExtensions.ValidFileTypes.map((item: { m: string; e: string }) => ({
+		MimeType: item.m,
+		Extensions: item.e.split(","),
+	}));
 
 	const configuration: EygaConfiguration = {
 		ApiKey: response.eyfrcc_eygaapikey,
