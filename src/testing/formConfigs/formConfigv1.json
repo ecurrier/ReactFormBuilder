@@ -1472,7 +1472,18 @@
 				"PrimaryIdAttribute": "eyfrcc_standardform424aid",
 				"PrimaryNameAttribute": "eyfrcc_name",
 				"PrimaryNameAttributeDisplayName": "Name",
-				"ConfigurationIdentifierMetadata": [],
+				"ConfigurationIdentifierMetadata": [
+					{
+						"ConfigurationIdentifier": "DocumentPath",
+						"FieldLogicalName": "eyfrcc_documentpath",
+						"NavigationPropertyName": null
+					},
+					{
+						"ConfigurationIdentifier": "ApplicationNumber",
+						"FieldLogicalName": "eyfrcc_recordnumber",
+						"NavigationPropertyName": null
+					}
+				],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_standardform424": {
@@ -1484,7 +1495,18 @@
 				"PrimaryIdAttribute": "eyfrcc_standardform424id",
 				"PrimaryNameAttribute": "eyfrcc_name",
 				"PrimaryNameAttributeDisplayName": "Name",
-				"ConfigurationIdentifierMetadata": [],
+				"ConfigurationIdentifierMetadata": [
+					{
+						"ConfigurationIdentifier": "DocumentPath",
+						"FieldLogicalName": "eyfrcc_documentpath",
+						"NavigationPropertyName": null
+					},
+					{
+						"ConfigurationIdentifier": "ApplicationNumber",
+						"FieldLogicalName": "eyfrcc_recordnumber",
+						"NavigationPropertyName": null
+					}
+				],
 				"DefaultOnCreateActions": []
 			},
 			"eyfrcc_standardform425": {
