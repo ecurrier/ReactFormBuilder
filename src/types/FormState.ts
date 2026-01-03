@@ -34,6 +34,7 @@ export interface PendingDocumentUpload {
 	id: string;
 	entityName: string;
 	recordId?: string;
+	childRecordId?: string;
 	folderName: string;
 	file: File;
 	uploadDate: string;

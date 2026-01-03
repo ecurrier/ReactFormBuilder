@@ -393,10 +393,10 @@ const savePendingDocumentUploads = async ({
 
 		const results = await Promise.allSettled(
 			uploads.map(async (pending) => {
-				const progressId = buildProgressId("child", pending.entityName, pending.id);
+				const progressId = buildProgressId("upload", pending.entityName, pending.id);
 				reportProgress(onProgress, {
 					id: progressId,
-					scope: "child",
+					scope: "upload",
 					entityName: pending.entityName,
 					label: pending.file?.name || pending.id,
 					status: "saving",
@@ -409,7 +409,7 @@ const savePendingDocumentUploads = async ({
 						folderName: pending.folderName,
 						file: pending.file,
 						uploadDate: pending.uploadDate,
-						childId: parentEntityName !== primaryEntity ? parentId : undefined,
+						childId: pending.childRecordId,
 					});
 
 					const key = `${pending.entityName}_${pending.id}`;
@@ -417,14 +417,14 @@ const savePendingDocumentUploads = async ({
 
 					reportProgress(onProgress, {
 						id: progressId,
-						scope: "child",
+						scope: "upload",
 						entityName: pending.entityName,
 						status: "saved",
 					});
 				} catch (error) {
 					reportProgress(onProgress, {
 						id: progressId,
-						scope: "child",
+						scope: "upload",
 						entityName: pending.entityName,
 						status: "failed",
 						message: buildErrorMessage(error),
@@ -435,13 +435,13 @@ const savePendingDocumentUploads = async ({
 		);
 
 		results.forEach((result, index) => {
-			if (result.status === "rejected") {
-				const pending = uploads[index];
-				const message = buildErrorMessage(result.reason);
-				console.error("Failed to upload document:", result.reason);
-				errors.push(buildSaveError("child", `Failed to upload document: ${message}`, pending.entityName));
-			}
-		});
+		if (result.status === "rejected") {
+			const pending = uploads[index];
+			const message = buildErrorMessage(result.reason);
+			console.error("Failed to upload document:", result.reason);
+			errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
+		}
+	});
 	}
 
 	return errors;
@@ -457,7 +457,17 @@ const savePendingDocumentUploadsForRecords = async ({
 	onProgress: SaveContext["onProgress"];
 }): Promise<SaveError[]> => {
 	const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
-	const uploadsForRecords = pendingUploads.filter((upload) => upload.recordId && !isTempId(upload.recordId));
+	const uploadsForRecords = pendingUploads.filter((upload) => {
+		if (!upload.recordId || isTempId(upload.recordId)) {
+			return false;
+		}
+
+		if (upload.childRecordId && isTempId(upload.childRecordId)) {
+			return false;
+		}
+
+		return true;
+	});
 
 	if (uploadsForRecords.length === 0) {
 		return [];
@@ -467,17 +477,17 @@ const savePendingDocumentUploadsForRecords = async ({
 
 	const results = await Promise.allSettled(
 		uploadsForRecords.map(async (pending) => {
-			const progressId = buildProgressId("child", pending.entityName, pending.id);
+			const progressId = buildProgressId("upload", pending.entityName, pending.id);
 			reportProgress(onProgress, {
 				id: progressId,
-				scope: "child",
+				scope: "upload",
 				entityName: pending.entityName,
 				label: pending.file?.name || pending.id,
 				status: "saving",
 			});
 
 			try {
-				const childId = pending.entityName !== primaryEntity ? pending.recordId : undefined;
+				const childId = pending.childRecordId;
 				await uploadDocumentForRecord({
 					entityName: pending.entityName,
 					recordId: pending.recordId as string,
@@ -492,14 +502,14 @@ const savePendingDocumentUploadsForRecords = async ({
 
 				reportProgress(onProgress, {
 					id: progressId,
-					scope: "child",
+					scope: "upload",
 					entityName: pending.entityName,
 					status: "saved",
 				});
 			} catch (error) {
 				reportProgress(onProgress, {
 					id: progressId,
-					scope: "child",
+					scope: "upload",
 					entityName: pending.entityName,
 					status: "failed",
 					message: buildErrorMessage(error),
@@ -514,7 +524,7 @@ const savePendingDocumentUploadsForRecords = async ({
 			const pending = uploadsForRecords[index];
 			const message = buildErrorMessage(result.reason);
 			console.error("Failed to upload document:", result.reason);
-			errors.push(buildSaveError("child", `Failed to upload document: ${message}`, pending.entityName));
+			errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
 		}
 	});
 
@@ -898,11 +908,11 @@ const saveChildRecord = async ({
 
 		const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
 		pendingUploads
-			.filter((upload) => upload.entityName === pending.entityName && upload.recordId === pending.id)
+			.filter((upload) => upload.childRecordId === pending.id)
 			.forEach((upload) => {
 				formState.addPendingDocumentUpload?.({
 					...upload,
-					recordId: childId,
+					childRecordId: childId,
 				});
 			});
 
