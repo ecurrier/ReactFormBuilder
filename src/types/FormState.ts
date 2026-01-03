@@ -33,6 +33,7 @@ export interface PendingChildRecord {
 export interface PendingDocumentUpload {
 	id: string;
 	entityName: string;
+	recordId?: string;
 	folderName: string;
 	file: File;
 	uploadDate: string;

@@ -246,6 +246,10 @@ const groupPendingDocumentUploadsByParent = (formState: any, primaryEntity?: str
 	const pendingByParent = new Map<string, PendingDocumentUpload[]>();
 
 	for (const pending of pendingUploads) {
+		if (pending.recordId) {
+			continue;
+		}
+
 		const parentEntityName = pending.entityName || primaryEntity;
 		if (!parentEntityName) {
 			continue;
@@ -439,6 +443,80 @@ const savePendingDocumentUploads = async ({
 			}
 		});
 	}
+
+	return errors;
+};
+
+const savePendingDocumentUploadsForRecords = async ({
+	formState,
+	primaryEntity,
+	onProgress,
+}: {
+	formState: any;
+	primaryEntity?: string;
+	onProgress: SaveContext["onProgress"];
+}): Promise<SaveError[]> => {
+	const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
+	const uploadsForRecords = pendingUploads.filter((upload) => upload.recordId && !isTempId(upload.recordId));
+
+	if (uploadsForRecords.length === 0) {
+		return [];
+	}
+
+	const errors: SaveError[] = [];
+
+	const results = await Promise.allSettled(
+		uploadsForRecords.map(async (pending) => {
+			const progressId = buildProgressId("child", pending.entityName, pending.id);
+			reportProgress(onProgress, {
+				id: progressId,
+				scope: "child",
+				entityName: pending.entityName,
+				label: pending.file?.name || pending.id,
+				status: "saving",
+			});
+
+			try {
+				const childId = pending.entityName !== primaryEntity ? pending.recordId : undefined;
+				await uploadDocumentForRecord({
+					entityName: pending.entityName,
+					recordId: pending.recordId as string,
+					folderName: pending.folderName,
+					file: pending.file,
+					uploadDate: pending.uploadDate,
+					childId,
+				});
+
+				const key = `${pending.entityName}_${pending.id}`;
+				formState.deletePendingDocumentUpload(key);
+
+				reportProgress(onProgress, {
+					id: progressId,
+					scope: "child",
+					entityName: pending.entityName,
+					status: "saved",
+				});
+			} catch (error) {
+				reportProgress(onProgress, {
+					id: progressId,
+					scope: "child",
+					entityName: pending.entityName,
+					status: "failed",
+					message: buildErrorMessage(error),
+				});
+				throw error;
+			}
+		})
+	);
+
+	results.forEach((result, index) => {
+		if (result.status === "rejected") {
+			const pending = uploadsForRecords[index];
+			const message = buildErrorMessage(result.reason);
+			console.error("Failed to upload document:", result.reason);
+			errors.push(buildSaveError("child", `Failed to upload document: ${message}`, pending.entityName));
+		}
+	});
 
 	return errors;
 };
@@ -818,6 +896,16 @@ const saveChildRecord = async ({
 			throw new Error(`Failed to create child record for ${pending.entityName}`);
 		}
 
+		const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
+		pendingUploads
+			.filter((upload) => upload.entityName === pending.entityName && upload.recordId === pending.id)
+			.forEach((upload) => {
+				formState.addPendingDocumentUpload?.({
+					...upload,
+					recordId: childId,
+				});
+			});
+
 		const key = `${pending.entityName}_${pending.id}`;
 		formState.deletePendingChildRecord(key);
 		formState.upsertChildRecord?.(pending.entityName, { id: childId, ...childData });
@@ -901,6 +989,13 @@ export async function executeSave(context: SaveContext): Promise<SaveResult> {
 			onProgress,
 		});
 		errors.push(...childErrors);
+
+		const recordDocumentErrors = await savePendingDocumentUploadsForRecords({
+			formState,
+			primaryEntity,
+			onProgress,
+		});
+		errors.push(...recordDocumentErrors);
 
 		const documentErrors = await savePendingDocumentUploads({
 			formState,

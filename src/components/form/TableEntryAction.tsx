@@ -527,6 +527,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					config={config}
 					initialData={editingRecord}
 					parentRecordId={parentRecordId}
+					parentFormState={formState}
 					onSave={handleFormSave}
 					onCancel={handleFormCancel}
 				/>

@@ -543,12 +543,15 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	 * Gets all pending document uploads for an entity/folder.
 	 */
 	const getPendingDocumentUploads = useCallback(
-		(entityName?: string, folderName?: string): PendingDocumentUpload[] => {
+		(entityName?: string, folderName?: string, recordId?: string): PendingDocumentUpload[] => {
 			return Object.values(state.pendingDocumentUploads).filter((upload) => {
 				if (entityName && upload.entityName !== entityName) {
 					return false;
 				}
 				if (folderName && upload.folderName !== folderName) {
+					return false;
+				}
+				if (recordId && upload.recordId !== recordId) {
 					return false;
 				}
 				return true;
@@ -679,6 +682,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	}, [hasPendingChildren, hasPendingDocumentUploads]);
 
 	return {
+		type: "main",
 		// State
 		recordId: state.recordId,
 		primaryEntityName: state.primaryEntityName,
