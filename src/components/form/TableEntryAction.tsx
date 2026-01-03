@@ -371,8 +371,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			// Load from pending state
 			const pendingRecords = formState?.getPendingChildRecords(config.ChildEntityLogicalName) || [];
 			const pendingRecord =
-				pendingRecords.find((p: any) => p.id === recordId) ||
-				Object.values(formState?.pendingChildRecords || {}).find((p: any) => p?.id === recordId);
+				pendingRecords.find((p: any) => p.id === recordId) || Object.values(formState?.pendingChildRecords || {}).find((p: any) => p?.id === recordId);
 
 			if (pendingRecord) {
 				setEditingRecord({ id: recordId, ...pendingRecord.data, _isNew: false });

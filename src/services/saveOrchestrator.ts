@@ -435,13 +435,13 @@ const savePendingDocumentUploads = async ({
 		);
 
 		results.forEach((result, index) => {
-		if (result.status === "rejected") {
-			const pending = uploads[index];
-			const message = buildErrorMessage(result.reason);
-			console.error("Failed to upload document:", result.reason);
-			errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
-		}
-	});
+			if (result.status === "rejected") {
+				const pending = uploads[index];
+				const message = buildErrorMessage(result.reason);
+				console.error("Failed to upload document:", result.reason);
+				errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
+			}
+		});
 	}
 
 	return errors;
