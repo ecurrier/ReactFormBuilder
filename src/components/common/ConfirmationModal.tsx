@@ -18,6 +18,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 	cancelText = "No",
 	onConfirm,
 	onCancel,
+	modalSize = "lg",
 }) => {
 	if (!isOpen) {
 		return null;
@@ -27,7 +28,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 		<>
 			<div className="modal-backdrop fade in"></div>
 			<div className="modal modal-lookup in" role="dialog" style={{ display: "block" }} aria-modal="true">
-				<div className="modal-dialog modal-lg">
+				<div className={`modal-dialog modal-${modalSize}`}>
 					<div className="modal-content">
 						<div className="modal-header">
 							<h2 className="modal-title">{title}</h2>

@@ -32,7 +32,7 @@ interface ApiEndpointConfig {
 	Path: string;
 	ContentType?: string;
 	ProcessData?: boolean;
-	ResponseType?: "json" | "blob";
+	ResponseType?: "json" | "blob" | "none";
 }
 
 export interface UploadDocumentRequest {
@@ -64,6 +64,7 @@ const ApiEndpoints: Record<EygaApiEndpoint, ApiEndpointConfig> = {
 		Path: "/upload",
 		ContentType: "multipart/form-data",
 		ProcessData: false,
+		ResponseType: "none",
 	},
 	[EygaApiEndpoint.DownloadDocument]: {
 		ApiName: "Documents",
@@ -276,6 +277,10 @@ export const callEygaApi = async <TRequest, TResponse>(
 		if (!response.ok) {
 			const errorText = await response.text();
 			throw new Error(`API call failed: ${response.status} - ${errorText}`);
+		}
+
+		if (endpointConfig.ResponseType === "none") {
+			return null as unknown as TResponse;
 		}
 
 		if (endpointConfig.ResponseType === "blob") {

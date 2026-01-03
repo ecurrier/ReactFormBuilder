@@ -180,6 +180,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 		setIsUploading(true);
 		try {
 			const childId = resolvedEntityName !== primaryEntityName ? recordId : undefined;
+			// TO-DO: Consider parallel uploads with Promise.all if needed
 			for (const file of files) {
 				await uploadDocumentForRecord({
 					entityName: resolvedEntityName,
@@ -191,6 +192,8 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 				});
 			}
 			setAlertState({ type: "success", message: "Files uploaded successfully." });
+			// Due to azure latency, we may need to wait a moment before reloading
+			// Currently, after an upload, the new document is not appearing immediately
 			await loadDocuments();
 		} catch (error) {
 			console.error("Upload failed:", error);
@@ -366,6 +369,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 				cancelText="Cancel"
 				onConfirm={handleConfirmDelete}
 				onCancel={() => setDeleteTarget(null)}
+				modalSize="md"
 			/>
 		</>
 	);
