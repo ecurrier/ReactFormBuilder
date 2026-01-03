@@ -159,8 +159,8 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		const pendingUploads = Object.values(formState.pendingDocumentUploads || {});
 		pendingUploads.forEach((pending) => {
 			items.push({
-				id: buildProgressId("child", pending.entityName, pending.id),
-				scope: "child",
+				id: buildProgressId("upload", pending.entityName, pending.id),
+				scope: "upload",
 				entityName: pending.entityName,
 				label: pending.file?.name || pending.id,
 				status: "saving",
@@ -191,7 +191,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				return;
 			}
 
-			const scope = error.phase === "secondary" ? "secondary" : error.phase === "child" ? "child" : "primary";
+			const scope = error.phase === "secondary" ? "secondary" : error.phase === "child" ? "child" : error.phase === "upload" ? "upload" : "primary";
 			const entityName = error.entityName || "Unknown";
 			const key = `${scope}:${entityName}`;
 
@@ -318,6 +318,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		if (scope === "primary") return "Primary";
 		if (scope === "secondary") return "Secondary";
 		if (scope === "child") return "Child";
+		if (scope === "upload") return "Upload";
 		return scope;
 	};
 
