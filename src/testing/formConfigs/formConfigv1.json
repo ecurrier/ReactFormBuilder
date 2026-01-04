@@ -536,6 +536,44 @@
 						}
 					},
 					{
+						"Id": "0eb5e738-40dd-f011-8544-6045bdd311dg",
+						"Name": "Primary Record - All Controls - Field Input - Standard Forms Lookup",
+						"Order": 11,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_standardformid",
+							"SchemaName": "eyfrcc_standardformid",
+							"Label": "Standard Form",
+							"DataType": 643260009,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "TESTING - Standard Forms Polymorphic Lookup.",
+							"Targets": [
+								{
+									"EntityLogicalName": "eyfrcc_standardform424",
+									"EntitySetName": "eyfrcc_standardform424s",
+									"PrimaryIdAttribute": "eyfrcc_standardform424id",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_standardformid_eyfrcc_standardform424"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_standardform424a",
+									"EntitySetName": "eyfrcc_standardform424as",
+									"PrimaryIdAttribute": "eyfrcc_standardform424aid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_standardformid_eyfrcc_standardform424a"
+								}
+							]
+						}
+					},
+					{
 						"Id": "0f17c076-0de0-f011-8544-7ced8d21d821",
 						"Name": "Primary Record - All Controls - Quick View Form",
 						"Order": 11,

@@ -1,5 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 
+/* Figure out a way to support new tab links, maybe just pass in a component instead of a label idk */
+/* position may need to be absolute to allow it to not be clipped by other ui elements */
 export interface DropdownMenuItem {
 	label: string;
 	onClick: () => void;

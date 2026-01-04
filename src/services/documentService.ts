@@ -165,3 +165,7 @@ export const downloadDocument = async (entityName: string, recordId: string, ful
 export const deleteDocument = async (entityName: string, recordId: string, fullName: string): Promise<void> => {
 	await EygaApiClient.Documents.Delete(fullName, buildEygaContext(entityName, recordId, "Delete Document"));
 };
+
+export const getSASUrlForDocument = async (entityName: string, recordId: string, fullName: string): Promise<string> => {
+	return EygaApiClient.Documents.GetSASUrl({ blobName: fullName }, buildEygaContext(entityName, recordId, "Get SAS URL"));
+};
