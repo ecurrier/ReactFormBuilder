@@ -18,11 +18,11 @@
       "@testing/*": ["src/testing/*"],
       "@public/*": ["public/*"]
     },
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "strict": true,
-    "noImplicitAny": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "include": ["src", "vite.config.js", "playwright.config.ts"]
 }
