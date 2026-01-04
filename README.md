@@ -18,13 +18,13 @@ This project is a Vite-powered React application that turns a JSON-form configur
 
 ## Project structure
 
-- `src/testing/formConfigs/formConfigv5.json` – local debug/testing configuration used by the debug mode.
+- `src/testing/formConfigs/formConfigv1.json` – local debug/testing configuration used by debug mode.
 - `src/App.tsx` – loads configuration and data, including debug-mode handling.
 - `src/components/form/FormBuilder.tsx` – orchestrates steps and renders supported actions.
 - `src/components/form/Step.tsx` – handles the layout for an individual step.
-- `src/components/form/fields/FieldInput.tsx` – renders field input actions, including nested child actions.
+- `src/components/form/actions/FieldInput.tsx` – renders field input actions, including nested child actions.
 - `src/testing/mocks/handlers.ts` – MSW handlers for local API mocks.
-- `src/styles.css` – minimal styling to make the generated form readable.
+- `public/styles/styles.css` – global styles loaded after Bootstrap.
 
 ## Local testing
 
@@ -40,7 +40,7 @@ To bypass live data loading and use the local testing configuration, add the `de
 http://localhost:5173/?debug=true
 ```
 
-When `debug` is present, the app loads the form configuration from `src/testing/formConfigs/formConfigv5.json` and skips normal URL parameter requirements. If `debug` is not set, the standard loading flow is used.
+When `debug` is present, the app loads the form configuration from `src/testing/formConfigs/formConfigv1.json` and skips normal URL parameter requirements. If `debug` is not set, the standard loading flow is used.
 
 ## Automated testing (Playwright)
 
@@ -59,6 +59,10 @@ Playwright runs against the Vite dev server and uses debug mode for deterministi
    npm run test:e2e:ui
    npm run test:e2e:headed
    ```
+
+## Type checking
+
+Vite does not type-check by default. Run `npm run typecheck` for a standalone check, or use `npm run build`, which now includes type checking.
 
 ## Next steps
 

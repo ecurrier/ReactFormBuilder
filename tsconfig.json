@@ -1,8 +1,28 @@
 {
   "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@api/*": ["src/services/api/*"],
+      "@types/*": ["src/types/*"],
+      "@utilities/*": ["src/utilities/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@constants/*": ["src/constants/*"],
+      "@services/*": ["src/services/*"],
+      "@testing/*": ["src/testing/*"],
+      "@public/*": ["public/*"]
+    },
+    "types": ["vite/client"],
     "strict": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true
-  }
+  },
+  "include": ["src", "vite.config.js", "playwright.config.ts"]
 }

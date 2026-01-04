@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "vite",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss}\"",
-    "build": "npm run format && vite build",
+    "build": "npm run format && npm run typecheck && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"
@@ -30,6 +31,7 @@
     "eslint-plugin-react": "^7.34.3",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
+    "typescript": "^5.5.4",
     "vite": "^7.3.0"
   },
   "msw": {
