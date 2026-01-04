@@ -1,8 +1,6 @@
 import React from "react";
 import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuItem } from "@components";
-import { retrieveEygaConfiguration } from "@utilities";
-import { generateTempId, isTempId } from "@utilities/Common";
-import type { DocumentMetadata } from "@utilities/eygaApi";
+import { retrieveEygaConfiguration, generateTempId, isTempId, type DocumentMetadata } from "@utilities";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord, getSASUrlForDocument } from "@services/documentService";
 
 export interface DocumentUploadControlProps {

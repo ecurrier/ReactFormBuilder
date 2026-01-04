@@ -7,9 +7,7 @@ import { validateField } from "@services/validation/validators";
 import { createFormInstance, createUserFormSession } from "@services/formInstanceManagement";
 import { uploadDocumentForRecord } from "@services/documentService";
 import { loadChildRecords, loadRecordData } from "@services/dataLoader";
-import { isTempId, sanitizeGuid } from "@utilities/Common";
-import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "@utilities/metadata";
-import { resolveRequestorId } from "@utilities/session";
+import { isTempId, sanitizeGuid, buildEntityMetadataMap, resolvePrimaryIdAttribute, resolveRequestorId, type TableMetadataEntry } from "@utilities";
 
 export interface SaveContext {
 	formState: any;
