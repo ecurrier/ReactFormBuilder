@@ -78,14 +78,13 @@ export interface FieldInputProperties {
 ```
 src/
 ├── components/           # React components
-│   ├── actions/         # Action renderers (FieldInput, TableEntry, FileUpload)
-│   ├── fields/          # Field-specific renderers
-│   └── ...              # Other UI components
+│   ├── common/          # Shared UI (alerts, loading, modals)
+│   └── form/            # Form renderer and actions
+│       └── actions/     # Action renderers (FieldInput, TableEntry, FileUpload, etc.)
 ├── constants/           # Enums and constants (ActionType, DataType, etc.)
-├── hooks/               # Custom React hooks
-│   ├── api/             # API layer (CRUD operations)
-│   └── useFormState.ts  # Form state management hook
-├── services/            # Business logic services
+├── hooks/               # Custom React hooks (useFormState, etc.)
+├── services/            # Business logic services + API layer
+│   ├── api/             # CRUD operations
 │   ├── conditions/      # Condition evaluation engine
 │   └── validation/      # Field validation functions
 ├── types/               # TypeScript type definitions
@@ -96,8 +95,8 @@ src/
 ├── utilities/           # Helper functions
 │   ├── Common.ts        # Common utilities (getEntitySetName)
 │   ├── Serialization.ts # API serialization (serializeForApi)
-│   └── FetchXmlBuilder.ts # FetchXML query helpers
-└── data/                # Sample configurations (dev mode only)
+│   └── fetchXml.ts      # FetchXML query helpers
+└── testing/             # Local test data + MSW mocks
 ```
 
 ## API Layer Architecture
@@ -246,31 +245,34 @@ Each form instance (parent or child) has its own `useFormState` instance:
 ## FetchXML Helper Patterns
 
 ### Common Query Patterns
-Located in `src/utilities/FetchXmlBuilder.ts`:
+Located in `src/utilities/fetchXml.ts`:
 
 ```typescript
-// Get all records for lookup dropdown
-buildFetchXmlForLookup(entityName, columns, orderBy)
-
 // Get child records for parent
 buildFetchXmlForChildRecords(childEntity, parentLookupField, parentId, columns)
 
 // Add filter conditions dynamically
-buildFetchXmlWithFilter(entityName, columns, filter)
+buildFetchXmlWithFilter(entityName, columns, filter, "and")
+
+// Add a link-entity join
+addLinkEntity(fetchXml, linkEntityName, from, to, alias, columns, "outer")
+
+// Build a single-record query
+buildFetchXmlForRecord(entityName, recordId, columns)
 ```
 
 ### When to Use Which Helper
-- **buildFetchXmlForEntity**: Simple queries, specify columns and entity
-- **buildFetchXmlForLookup**: Populate dropdown/search fields (includes primary name + createdon)
 - **buildFetchXmlForChildRecords**: Load TableEntry data (related records via relationship)
 - **buildFetchXmlWithFilter**: Dynamic filtering based on user input
+- **addLinkEntity**: Join related entities in a single query
+- **buildFetchXmlForRecord**: Fetch a single record by ID
 
 ## Environment-Based Configuration
 
 ### Development Mode
-- Set `VITE_USE_DEBUG_CONFIG=true` or run with `npm run dev`
-- Loads configuration from `/src/data/formConfigv3.json`
-- No API calls required for testing
+- Run with `npm run dev`
+- Use the `?debug=true` URL parameter to load local configuration from `/src/testing/formConfigs/formConfigv1.json`
+- MSW starts automatically in development (`src/testing/mocks/browser.ts`)
 
 ### Production Mode
 - Configuration loaded via Power Pages Web API
@@ -490,9 +492,9 @@ See `src/constants/enums.ts`:
 ### Adding New Action Types
 1. Create interface in `src/types/config/Properties.ts`
 2. Update `ActionProperties` union type
-3. Create renderer component in `src/components/actions/`
+3. Create renderer component in `src/components/form/actions/`
 4. Update `ReactActionConfiguration.Create()` switch in C#
-5. Add rendering logic to `Step.jsx`
+5. Add rendering logic to `src/components/form/StepActions.tsx`
 
 ### Adding New Validators
 1. Create function in `src/services/validation/validators.ts`
@@ -506,8 +508,8 @@ See `src/constants/enums.ts`:
 3. Update C# enum if this is a new operator
 
 ### Testing with Local Data
-1. Update `/src/data/formConfigv3.json` with test configuration
-2. Run `npm run dev` to use local data
+1. Update `/src/testing/formConfigs/formConfigv1.json` with test configuration
+2. Run `npm run dev` and load `http://localhost:5173/?debug=true`
 3. Test changes without requiring Dataverse connection
 
 ## Component Strategy
