@@ -1,12 +1,13 @@
 import { createRecord, updateRecord } from "@/services/api";
-import type { Entity, EntityReference } from "@types/Entity";
-import type { PendingChildRecord, PendingDocumentUpload } from "@types/FormState";
-import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "@types/config";
-import type { SaveError, SaveProgressEvent, SaveResult } from "@types/SaveOrchestrator";
+import type { Entity, EntityReference } from "@app-types/Entity";
+import type { FieldMetadata, PendingChildRecord, PendingDocumentUpload } from "@app-types/FormState";
+import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "@app-types/config";
+import type { SaveError, SaveProgressEvent, SaveResult } from "@app-types/SaveOrchestrator";
 import { validateField } from "@services/validation/validators";
 import { createFormInstance, createUserFormSession } from "@services/formInstanceManagement";
 import { uploadDocumentForRecord } from "@services/documentService";
-import { isTempId, sanitizeGuid } from "@utilities/common";
+import { loadChildRecords, loadRecordData } from "@services/dataLoader";
+import { isTempId, sanitizeGuid } from "@utilities/Common";
 import { buildEntityMetadataMap, resolvePrimaryIdAttribute, type TableMetadataEntry } from "@utilities/metadata";
 import { resolveRequestorId } from "@utilities/session";
 
@@ -232,6 +233,9 @@ const groupPendingChildrenByParent = (formState: any, primaryEntity?: string) =>
 
 	for (const pending of pendingRecords) {
 		const parentEntityName = pending.parentEntityName || primaryEntity;
+		if (!parentEntityName) {
+			continue;
+		}
 		if (!pendingByParent.has(parentEntityName)) {
 			pendingByParent.set(parentEntityName, []);
 		}
@@ -790,9 +794,9 @@ const ensureSecondaryParentRecord = async ({
 	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
 	config: ReactFormConfiguration;
 }) => {
-	let parentId = recordIdsByEntity.get(parentEntityName);
+	let parentId: string | null = recordIdsByEntity.get(parentEntityName) ?? null;
 
-	if (!parentId && parentEntityName === primaryEntity) {
+	if (!parentId && parentEntityName === primaryEntity && primaryRecordId) {
 		parentId = primaryRecordId;
 	}
 
@@ -1114,7 +1118,7 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 
 	try {
 		// Step 1: Run all field validators
-		const allFields = Object.entries(formState.metadata || {});
+		const allFields = Object.entries(formState.metadata || {}) as Array<[string, FieldMetadata]>;
 
 		for (const [fieldPath, metadata] of allFields) {
 			const fieldValue = formState.getFieldValue(fieldPath);
@@ -1171,7 +1175,7 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
  * @returns Reloaded record data
  */
 export async function reloadFormData(context: SaveContext, recordId: string): Promise<Entity | null> {
-	const { config, urlParams } = context;
+	const { config, urlParams, formState } = context;
 
 	try {
 		const entityName = urlParams.recordLogicalName || config.Form?.PrimaryApplicationTable?.TableLogicalName;

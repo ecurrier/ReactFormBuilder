@@ -379,7 +379,7 @@ export const handlers = [
 
 		console.log("[MSW] Child Application Test POST request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8499");
 
 		return response;
@@ -389,7 +389,7 @@ export const handlers = [
 
 		console.log("[MSW] Child Application Test PATCH request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		return response;
 	}),
 	http.post("*/_api/eyfrcc_standardform424s*", async ({ request }) => {
@@ -397,7 +397,7 @@ export const handlers = [
 
 		console.log("[MSW] Standard Form 424 POST request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		response.headers.set("entityid", "d3a5c3f4-6f4e-ec11-b6e6-0022481f8500");
 
 		return response;
@@ -407,7 +407,7 @@ export const handlers = [
 
 		console.log("[MSW] Standard Form 425 POST request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		response.headers.set("entityid", "c3a5c3f4-6f4e-ec11-b6e6-0022481f8500");
 
 		return response;
@@ -417,7 +417,7 @@ export const handlers = [
 
 		console.log("[MSW] Subrecipients POST request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		response.headers.set("entityid", "e4a5c3f4-6f4e-ec11-b6e6-0022481f8501");
 
 		return response;
@@ -427,7 +427,7 @@ export const handlers = [
 
 		console.log("[MSW] Expenditures POST request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		response.headers.set("entityid", "f5a5c3f4-6f4e-ec11-b6e6-0022481f8502");
 
 		return response;
@@ -437,7 +437,7 @@ export const handlers = [
 
 		console.log("[MSW] Form Instances POST request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8433");
 
 		return response;
@@ -446,7 +446,7 @@ export const handlers = [
 		await delay(1500);
 
 		console.log("[MSW] Documents Search By Tags POST request:", { request });
-		const requestBody = await request.json();
+		const requestBody = (await request.json()) as { Id: string; Folder: string; Status?: string };
 		const response = HttpResponse.json(
 			[
 				{
@@ -467,7 +467,7 @@ export const handlers = [
 					uploadDate: "01/02/2026",
 				},
 			],
-			200
+			{ status: 200 }
 		);
 
 		return response;
@@ -477,7 +477,7 @@ export const handlers = [
 
 		console.log("[MSW] Documents Upload POST request:", { request });
 
-		const response = HttpResponse.json({}, 200);
+		const response = HttpResponse.json({}, { status: 200 });
 		return response;
 	}),
 	http.patch("*/_api/eyfrcc_forminstances*", async ({ request }) => {
@@ -485,7 +485,7 @@ export const handlers = [
 
 		console.log("[MSW] Form Instances PATCH request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		return response;
 	}),
 	http.post("*/_api/eyfrcc_userformsessions*", async ({ request }) => {
@@ -493,7 +493,7 @@ export const handlers = [
 
 		console.log("[MSW] User Form Sessions POST request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8444");
 
 		return response;
@@ -503,7 +503,7 @@ export const handlers = [
 
 		console.log("[MSW] User Form Sessions PATCH request:", { request });
 
-		const response = HttpResponse.json({}, 204);
+		const response = HttpResponse.json({}, { status: 204 });
 		return response;
 	}),
 ];

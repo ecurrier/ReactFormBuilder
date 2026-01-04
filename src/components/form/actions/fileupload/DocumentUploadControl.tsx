@@ -1,7 +1,7 @@
 import React from "react";
 import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuItem } from "@components";
 import { retrieveEygaConfiguration } from "@utilities";
-import { generateTempId, isTempId } from "@utilities/common";
+import { generateTempId, isTempId } from "@utilities/Common";
 import type { DocumentMetadata } from "@utilities/eygaApi";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord, getSASUrlForDocument } from "@services/documentService";
 
@@ -183,7 +183,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	};
 
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const files = event.target.files ? Array.from(event.target.files) : [];
+		const files = event.target.files ? (Array.from(event.target.files) as File[]) : [];
 		event.target.value = "";
 		void handleFilesSelected(files);
 	};

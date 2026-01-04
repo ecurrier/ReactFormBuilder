@@ -1,6 +1,6 @@
 import type { ConditionResult, ConditionContext } from "./types";
 import { compareValues } from "./operators";
-import type { ReactConditionConfiguration, ReactConditionExpression } from "@types";
+import type { ReactConditionConfiguration, ReactConditionExpression } from "@app-types";
 
 /**
  * Evaluates a single condition expression

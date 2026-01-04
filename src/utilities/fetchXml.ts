@@ -1,4 +1,4 @@
-import { sanitizeGuid } from "@utilities/common";
+import { sanitizeGuid } from "@utilities/Common";
 import { resolvePrimaryIdAttribute } from "@utilities/metadata";
 
 /**

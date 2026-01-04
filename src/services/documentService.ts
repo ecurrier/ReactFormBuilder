@@ -1,7 +1,7 @@
 import { retrieveRecord } from "@/services/api";
 import type { DocumentMetadata, EygaApiContext } from "@utilities/eygaApi";
 import { EygaApiClient } from "@utilities/eygaApi";
-import type { ReactConfigurationIdentifierMetadata, ReactTableMetadataEntry } from "@types/config";
+import type { ReactConfigurationIdentifierMetadata, ReactTableMetadataEntry } from "@app-types/config";
 import { buildFetchXmlForRecord } from "@utilities/fetchXml";
 import { getEntityMetadata } from "@utilities/metadata";
 import { resolveRequestorId } from "@utilities/session";

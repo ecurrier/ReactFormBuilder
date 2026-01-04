@@ -1,4 +1,4 @@
-import type { Entity, EntityReference } from "@types/Entity";
+import type { Entity, EntityReference } from "@app-types/Entity";
 import { resolveEntitySetName, sanitizeGuid } from "@utilities";
 
 /**

@@ -1,5 +1,5 @@
 import { ActionType, DataType } from "@constants/enums";
-import type { ReactFormConfiguration } from "@types/config";
+import type { ReactFormConfiguration } from "@app-types/config";
 
 export interface TableMetadataEntry {
 	EntityLogicalName: string;
@@ -26,14 +26,15 @@ const addLookupTargets = (map: Map<string, TableMetadataEntry>, config?: ReactFo
 
 	config.Form.Steps.forEach((step) => {
 		step.Actions?.forEach((action) => {
-			const actionsToCheck = [action, ...(action.ChildActions ?? [])];
+			const actionsToCheck = [action, ...(((action as any).ChildActions ?? []) as (typeof action)[])];
 
 			actionsToCheck.forEach((currentAction) => {
-				if (currentAction.Type !== ActionType.FieldInput || currentAction.Properties?.DataType !== DataType.Lookup) {
+				const properties = currentAction.Properties as any;
+				if (currentAction.Type !== ActionType.FieldInput || properties?.DataType !== DataType.Lookup) {
 					return;
 				}
 
-				currentAction.Properties?.Targets?.forEach((target) => {
+				properties?.Targets?.forEach((target: any) => {
 					const logicalName = target?.EntityLogicalName;
 					if (!logicalName) {
 						return;

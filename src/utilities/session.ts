@@ -1,4 +1,4 @@
-import type { ExtendedWindow } from "@types";
+import type { ExtendedWindow } from "@app-types";
 
 export const resolveRequestorId = (): string | null => {
 	if (typeof window === "undefined") {

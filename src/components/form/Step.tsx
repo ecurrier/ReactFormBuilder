@@ -6,7 +6,17 @@ import { createRecord, deleteRecord, retrieveMultipleRecords, updateRecord } fro
 import { buildFetchXmlForChildRecords } from "@utilities/fetchXml";
 import { resolvePrimaryIdAttribute } from "@utilities/metadata";
 
-const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formState, urlParams }) => {
+type StepProps = {
+	step: any;
+	isActive: boolean;
+	hasBeenVisited: boolean;
+	positionLabel?: string;
+	recordId?: string;
+	formState: any;
+	urlParams?: any;
+};
+
+const Step: React.FC<StepProps> = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formState, urlParams }) => {
 	// Memoize sorted actions to prevent infinite loops
 	const actions = useMemo(() => {
 		return Array.isArray(step.Actions) ? [...step.Actions].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0)) : [];
@@ -46,7 +56,7 @@ const Step = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formSta
 					const fetchXml = buildFetchXmlForChildRecords(config.ChildEntityLogicalName, config.ReferencingAttribute, resolvedParentRecordId, columns);
 
 					try {
-						const options = {};
+						const options: { orderBy?: string; pagination?: { page: number; pageSize: number } } = {};
 						if (sort?.key) {
 							options.orderBy = `${sort.key} ${sort.direction}`;
 						}

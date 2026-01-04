@@ -31,6 +31,8 @@ export interface ReactApplicationTableConfiguration {
 	Usage?: number;
 }
 
+import type { ReactFormStep } from "./Step";
+
 export interface ReactForm {
 	Id: string;
 	Name: string;
@@ -70,5 +72,3 @@ export interface ReactConfigurationIdentifierMetadata {
 	FieldLogicalName: string;
 	NavigationPropertyName?: string;
 }
-
-export type { ReactFormStep } from "./Step";

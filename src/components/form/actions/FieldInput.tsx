@@ -35,7 +35,7 @@ const getPlaceholder = (dataType) => {
 };
 
 const renderInput = (properties, inputId, placeholder, value, onChange, label) => {
-	const commonProps = {
+	const commonProps: Record<string, any> = {
 		id: inputId,
 		name: properties.LogicalName ?? inputId,
 		readOnly: properties.IsReadOnly,
@@ -118,7 +118,7 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 	}
 };
 
-export const FieldInput = ({ action, formState, entityName: stepEntityName }) => {
+export const FieldInput = ({ action, formState, entityName: stepEntityName }: { action: any; formState: any; entityName?: string; key?: string | number }) => {
 	const properties = action?.Properties ?? {};
 	const inputId = properties.LogicalName ?? action.Id ?? action.Name ?? "field-input";
 	const label = properties.Label ?? action.Name ?? properties.LogicalName;

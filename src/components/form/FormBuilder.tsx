@@ -7,6 +7,8 @@ import { populateFieldsFromData } from "@services/dataLoader";
 import { executeSave, executeValidateAndSubmit, reloadFormData } from "@services/saveOrchestrator";
 import LoadingIndicator from "@components/common/LoadingIndicator";
 import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
+import type { PendingChildRecord, PendingDocumentUpload } from "@app-types/FormState";
+import type { SaveError, SaveProgressEvent } from "@app-types/SaveOrchestrator";
 
 const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams }) => {
 	const orderedSteps = useMemo(() => {
@@ -29,8 +31,8 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	// Track which steps have been visited for lazy loading
 	const [visitedSteps, setVisitedSteps] = useState(new Set([0]));
 	const [isSaving, setIsSaving] = useState(false);
-	const [saveProgress, setSaveProgress] = useState([]);
-	const [saveErrors, setSaveErrors] = useState([]);
+	const [saveProgress, setSaveProgress] = useState<SaveProgressEvent[]>([]);
+	const [saveErrors, setSaveErrors] = useState<SaveError[]>([]);
 	const [savePhase, setSavePhase] = useState("idle");
 	const [showSaveOverlay, setShowSaveOverlay] = useState(false);
 	const [isBannerSticky, setIsBannerSticky] = useState(false);
@@ -63,11 +65,12 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				return;
 			}
 
-			const fieldData = populateFieldsFromData(data, entityName, config);
+			const entityData = data as Record<string, any>;
+			const fieldData = populateFieldsFromData(entityData, entityName, config);
 			formState.initializeFormData(fieldData);
 
 			const primaryIdAttribute = resolvePrimaryIdAttribute(entityName);
-			const relatedRecordId = data?.id || data?.[primaryIdAttribute];
+			const relatedRecordId = entityData.id || entityData[primaryIdAttribute];
 			if (relatedRecordId) {
 				formState.setRelatedRecord(entityName, relatedRecordId);
 			}
@@ -111,7 +114,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		return () => observer.disconnect();
 	}, []);
 
-	const buildProgressId = (scope, entityName, recordId) => {
+	const buildProgressId = (scope: string, entityName: string, recordId?: string) => {
 		if (recordId) {
 			return `${scope}:${entityName}:${recordId}`;
 		}
@@ -125,7 +128,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		const secondaryChanges = changes.filter((change) => change.entityName !== primaryEntityName);
 		const primaryChanges = changes.find((change) => change.entityName === primaryEntityName);
 		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingUploads || secondaryChanges.length > 0);
-		const items = [];
+		const items: SaveProgressEvent[] = [];
 
 		if (primaryEntityName && ((primaryChanges && primaryChanges.data && Object.keys(primaryChanges.data).length > 0) || shouldEnsurePrimaryExists)) {
 			items.push({
@@ -145,7 +148,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			});
 		});
 
-		const pendingRecords = Object.values(formState.pendingChildRecords || {});
+		const pendingRecords = Object.values(formState.pendingChildRecords || {}) as PendingChildRecord[];
 		pendingRecords.forEach((pending) => {
 			items.push({
 				id: buildProgressId("child", pending.entityName, pending.id),
@@ -156,7 +159,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			});
 		});
 
-		const pendingUploads = Object.values(formState.pendingDocumentUploads || {});
+		const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
 		pendingUploads.forEach((pending) => {
 			items.push({
 				id: buildProgressId("upload", pending.entityName, pending.id),
@@ -170,7 +173,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		return items;
 	}, [config?.Form?.PrimaryApplicationTable?.TableLogicalName, formState]);
 
-	const handleSaveProgress = React.useCallback((event) => {
+	const handleSaveProgress = React.useCallback((event: SaveProgressEvent) => {
 		setSaveProgress((prev) => {
 			const existingIndex = prev.findIndex((item) => item.id === event.id);
 			if (existingIndex === -1) {
@@ -440,7 +443,8 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			}
 		} catch (error) {
 			console.error("Save draft error:", error);
-			setSaveErrors([{ message: error.message || "An error occurred while saving", phase: "save" }]);
+			const message = error instanceof Error ? error.message : "An error occurred while saving";
+			setSaveErrors([{ message, phase: "save" }]);
 		} finally {
 			setIsSaving(false);
 			setSavePhase("summary");
@@ -478,7 +482,8 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			}
 		} catch (error) {
 			console.error("Validate and submit error:", error);
-			setSaveErrors([{ message: error.message || "An error occurred during submission", phase: "save" }]);
+			const message = error instanceof Error ? error.message : "An error occurred during submission";
+			setSaveErrors([{ message, phase: "save" }]);
 		} finally {
 			setIsSaving(false);
 			setSavePhase("summary");
