@@ -494,7 +494,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	}
 
 	return (
-		<main className="page-content">
+		<div className="form-builder">
 			<LoadingIndicator
 				visible={showSaveOverlay}
 				variant="full-screen"
@@ -657,7 +657,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 					</div>
 				</div>
 			</div>
-		</main>
+		</div>
 	);
 };
 

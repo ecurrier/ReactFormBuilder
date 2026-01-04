@@ -121,6 +121,23 @@ export const handlers = [
 	}),
 	http.get("*/_api/eyfrcc_forminstances*", async () => {
 		await delay(2500);
+
+		// Return permission error for testing purposes
+		// TO-DO: We should do a cool mocking mechanism instead of hardcoding responses
+		// Need to brainstorm exactly what that looks like
+		/*
+			{
+				"error": {
+					"code": "90040120",
+					"message": "You don’t have permission to read the eyfrcc_forminstance table.",
+					"innererror": {
+						"code": "90040120",
+						"message": "You don’t have permission to read the eyfrcc_forminstance table.",
+						"type": "EntityPermissionReadIsMissing"
+					}
+				}
+			}
+		*/
 		return HttpResponse.json({
 			"@odata.context":
 				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_forminstances(eyfrcc_forminstanceid,eyfrcc_primaryrecordid,eyfrcc_primaryrecordlogicalname,eyfrcc_secondaryrecords)",

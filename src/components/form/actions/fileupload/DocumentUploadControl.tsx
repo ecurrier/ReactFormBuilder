@@ -1,9 +1,9 @@
 import React from "react";
-import { Alert, ConfirmationModal, LoadingIndicator } from "@components";
+import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuItem } from "@components";
 import { retrieveEygaConfiguration } from "@utilities";
 import { generateTempId, isTempId } from "@utilities/common";
 import type { DocumentMetadata } from "@utilities/eygaApi";
-import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord } from "@services/documentService";
+import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord, getSASUrlForDocument } from "@services/documentService";
 
 export interface DocumentUploadControlProps {
 	config: DocumentUploadControlConfig;
@@ -242,6 +242,55 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 		}
 	};
 
+	const handleGetSASUrl = async (fullName: string) => {
+		if (!contextRecordId || !isPersistedRecord) {
+			return;
+		}
+
+		try {
+			const sasUrl = await getSASUrlForDocument(contextEntityName, contextRecordId, fullName);
+			window.open(sasUrl, "_blank");
+		} catch (error) {
+			console.error("Failed to get SAS URL:", error);
+			setAlertState({ type: "danger", message: "Failed to open file." });
+		}
+	};
+
+	const getActionsForRow = (row: any): DropdownMenuItem[] => {
+		const actions: DropdownMenuItem[] = [];
+
+		if (row.isPending) {
+			actions.push({
+				label: "Remove",
+				onClick: () => handleDeleteRequest({ type: "pending", id: row.id, name: row.name }),
+			});
+		} else {
+			actions.push(
+				{
+					label: "Download",
+					onClick: () => handleDownload(row.fullName || ""),
+				},
+				{
+					label: "View",
+					onClick: () => handleGetSASUrl(row.fullName || ""),
+				},
+				{
+					label: "Delete",
+					onClick: () =>
+						handleDeleteRequest({
+							type: "persisted",
+							fullName: row.fullName || "",
+							name: row.name,
+							restrictDelete: row.restrictDelete,
+						}),
+					disabled: row.restrictDelete || false,
+				}
+			);
+		}
+
+		return actions;
+	};
+
 	const busyMessage = isUploading ? "Uploading files..." : isDeleting ? "Deleting file..." : "Loading files...";
 	const rows = [
 		...pendingUploads.map((upload) => ({
@@ -290,7 +339,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 								File Name
 							</th>
 							<th scope="col" className="actions-menu">
-								Remove
+								Actions
 							</th>
 						</tr>
 					</thead>
@@ -302,31 +351,11 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 										{row.isPending ? (
 											<span style={{ fontStyle: "italic", opacity: 0.8 }}>{row.name} (Pending)</span>
 										) : (
-											<button type="button" className="btn btn-link-inline" onClick={() => handleDownload(row.fullName || "")}>
-												<p>{row.name}</p>
-											</button>
+											<span>{row.name}</span>
 										)}
 									</td>
-									<td className="actions-menu">
-										<button
-											type="button"
-											className="btn btn-link btn-md btn-icon-only"
-											aria-label="remove"
-											disabled={row.isPending ? false : row.restrictDelete}
-											onClick={() =>
-												handleDeleteRequest(
-													row.isPending
-														? { type: "pending", id: row.id, name: row.name }
-														: {
-																type: "persisted",
-																fullName: row.fullName || "",
-																name: row.name,
-																restrictDelete: row.restrictDelete,
-															}
-												)
-											}>
-											<span className="glyphicon glyphicon-trash icon-size-md"></span>
-										</button>
+									<td className="text-right">
+										<DropdownMenu actions={getActionsForRow(row)} />
 									</td>
 								</tr>
 							))}

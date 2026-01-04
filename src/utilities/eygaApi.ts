@@ -32,7 +32,7 @@ interface ApiEndpointConfig {
 	Path: string;
 	ContentType?: string;
 	ProcessData?: boolean;
-	ResponseType?: "json" | "blob" | "none";
+	ResponseType?: "json" | "blob" | "none" | "text";
 }
 
 export interface UploadDocumentRequest {
@@ -81,6 +81,7 @@ const ApiEndpoints: Record<EygaApiEndpoint, ApiEndpointConfig> = {
 		ApiName: "Documents",
 		Method: "GET",
 		Path: "/getsasurl",
+		ResponseType: "text",
 	},
 	[EygaApiEndpoint.SearchByTags]: {
 		ApiName: "Documents",
@@ -134,8 +135,8 @@ export const EygaApiClient = {
 			return callEygaApi<string, void>(EygaApi.Documents, EygaApiEndpoint.DeleteDocument, context, fullName);
 		},
 
-		GetSASUrl: async (context: EygaApiContext): Promise<string> => {
-			return callEygaApi<void, string>(EygaApi.Documents, EygaApiEndpoint.GetSASUrl, context);
+		GetSASUrl: async (payload: any, context: EygaApiContext): Promise<string> => {
+			return callEygaApi<string, string>(EygaApi.Documents, EygaApiEndpoint.GetSASUrl, context, payload);
 		},
 	},
 	Address: {
@@ -279,16 +280,18 @@ export const callEygaApi = async <TRequest, TResponse>(
 			throw new Error(`API call failed: ${response.status} - ${errorText}`);
 		}
 
-		if (endpointConfig.ResponseType === "none") {
-			return null as unknown as TResponse;
+		switch (endpointConfig.ResponseType) {
+			case "text":
+				return (await response.text()) as unknown as TResponse;
+			case "blob":
+				return (await response.blob()) as unknown as TResponse;
+			case "none":
+				return null as unknown as TResponse;
+			case "json":
+			default:
+				const data = await response.json();
+				return data as TResponse;
 		}
-
-		if (endpointConfig.ResponseType === "blob") {
-			return (await response.blob()) as TResponse;
-		}
-
-		const data = await response.json();
-		return data as TResponse;
 	} catch (error) {
 		console.error(`Error calling ${apiFunction}:`, error);
 		throw error;

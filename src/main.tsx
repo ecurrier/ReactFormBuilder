@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "@/App";
-import "@public/styles/styles.css";
 
 async function enableMocking() {
 	// @ts-ignore
@@ -11,6 +10,10 @@ async function enableMocking() {
 			so this helps catch any conflicts early
 		*/
 		await import("bootstrap/dist/js/bootstrap.bundle.min.js" as any);
+		await import("bootstrap/dist/css/bootstrap.min.css" as any);
+		// Import custom styles AFTER Bootstrap to ensure they take precedence
+		await import("@public/styles/styles.css");
+
 		const { worker } = await import("@testing/mocks/browser");
 		await worker.start({
 			onUnhandledRequest: "bypass",
@@ -19,6 +22,10 @@ async function enableMocking() {
 }
 
 enableMocking().then(() => {
+	if (!import.meta.env.DEV) {
+		import("@public/styles/styles.css");
+	}
+
 	ReactDOM.createRoot(document.getElementById("root")).render(
 		<React.StrictMode>
 			<App />

@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { LookupAdvancedSearchModal } from "@components";
+import { LookupAdvancedSearchModal, LoadingIndicator } from "@components";
 import { quickSearchLookup } from "@services/lookupService";
 import { resolveEntityDisplayName } from "@/utilities/metadata";
+import { Button } from "bootstrap";
 
 export const LookupControl = ({ inputId, label, placeholder, value, onChange, targets, isReadOnly, isRequired }) => {
 	const [searchText, setSearchText] = useState("");
 	const [results, setResults] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+	const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
 	const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 	const [selectedTargetName, setSelectedTargetName] = useState(targets?.[0]?.EntityLogicalName || "");
 	const containerRef = useRef(null);
@@ -41,7 +42,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 	}, [value]);
 
 	useEffect(() => {
-		if (!isDropdownOpen || !selectedTarget || isReadOnly) {
+		if (!isQuickSearchOpen || !selectedTarget || isReadOnly) {
 			return;
 		}
 
@@ -60,12 +61,12 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 		}, 300);
 
 		return () => clearTimeout(timer);
-	}, [searchText, selectedTarget, isDropdownOpen, isReadOnly]);
+	}, [searchText, selectedTarget, isQuickSearchOpen, isReadOnly]);
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {
 			if (containerRef.current && !containerRef.current.contains(event.target)) {
-				setIsDropdownOpen(false);
+				setIsQuickSearchOpen(false);
 			}
 		};
 
@@ -75,8 +76,8 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 
 	const handleInputChange = (event) => {
 		setSearchText(event.target.value);
-		if (!isDropdownOpen) {
-			setIsDropdownOpen(true);
+		if (!isQuickSearchOpen) {
+			setIsQuickSearchOpen(true);
 		}
 		if (!event.target.value) {
 			onChange?.(null);
@@ -90,7 +91,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 			name: result.name,
 		});
 		setSearchText(result.name);
-		setIsDropdownOpen(false);
+		setIsQuickSearchOpen(false);
 	};
 
 	const handleClear = () => {
@@ -101,7 +102,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 
 	const handleOpenAdvanced = () => {
 		setIsAdvancedOpen(true);
-		setIsDropdownOpen(false);
+		setIsQuickSearchOpen(false);
 	};
 
 	const handleAdvancedSelect = (result) => {
@@ -116,27 +117,8 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 	const hasMultipleTargets = targets && targets.length > 1;
 
 	return (
-		<div className="entity-lookup" ref={containerRef}>
-			{hasMultipleTargets && (
-				<div className="lookup-target-selector" style={{ marginBottom: "8px" }}>
-					<label className="control-label" htmlFor={`${inputId}-target`}>
-						Search entity
-					</label>
-					<select
-						id={`${inputId}-target`}
-						className="form-control"
-						value={selectedTarget?.EntityLogicalName || ""}
-						onChange={(event) => setSelectedTargetName(event.target.value)}
-						disabled={isReadOnly}>
-						{targets.map((target) => (
-							<option key={target.EntityLogicalName} value={target.EntityLogicalName}>
-								{resolveEntityDisplayName(target.EntityLogicalName)}
-							</option>
-						))}
-					</select>
-				</div>
-			)}
-			<div className="input-group">
+		<div className="input-group lookup-control-container" ref={containerRef}>
+			<div className={`lookup-control-input-wrapper ${value?.id ? "has-value" : ""}`}>
 				<input
 					id={inputId}
 					type="text"
@@ -144,7 +126,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 					placeholder={placeholder}
 					value={searchText}
 					onChange={handleInputChange}
-					onFocus={() => setIsDropdownOpen(true)}
+					onFocus={() => setIsQuickSearchOpen(true)}
 					readOnly={isReadOnly}
 					required={isRequired}
 					aria-label={label}
@@ -158,28 +140,50 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 				{value?.id && !isReadOnly && (
 					<span className="input-group-btn">
 						<button type="button" className="btn btn-default" onClick={handleClear} title="Remove value">
-							×
+							<span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
 						</button>
 					</span>
 				)}
 			</div>
 
-			{isDropdownOpen && !isReadOnly && (
-				<div className="lookup-results" role="listbox" style={{ position: "relative" }}>
-					{isLoading ? (
-						<div className="help-block">Searching...</div>
-					) : results.length > 0 ? (
-						<ul className="list-group" style={{ marginTop: "4px" }}>
+			{isQuickSearchOpen && !isReadOnly && (
+				<div className="lookup-results" role="listbox">
+					<LoadingIndicator visible={isLoading} variant="contextual" />
+					{hasMultipleTargets && (
+						<div className="lookup-target-selector">
+							{targets.map((target, index) => (
+								<button
+									key={`target-${target.EntityLogicalName}-${index}`}
+									type="button"
+									className={`btn btn-sm ${selectedTargetName === target.EntityLogicalName ? "btn-primary" : "btn-default"}`}
+									onClick={() => setSelectedTargetName(target.EntityLogicalName)}
+									role="tab"
+									aria-selected={selectedTargetName === target.EntityLogicalName}
+									aria-controls={`${inputId}-lookup-results`}>
+									{resolveEntityDisplayName(target.EntityLogicalName)}
+								</button>
+							))}
+						</div>
+					)}
+					{results.length > 0 && (
+						<ul className="list-unstyled mb-0" role="listbox" id={`${inputId}-lookup-results`} aria-label={`Search results for ${label}`}>
 							{results.map((result) => (
-								<li key={result.id} className="list-group-item">
-									<button type="button" className="btn btn-link" onClick={() => handleSelectResult(result)}>
-										{result.name}
-									</button>
+								<li
+									key={result.id}
+									role="option"
+									aria-selected={value?.id === result.id}
+									className={`lookup-result-item ${value?.id === result.id ? "focused" : ""}`}
+									onClick={() => handleSelectResult(result)}
+									onMouseDown={(e) => e.preventDefault()}>
+									<div className="lookup-result-content">
+										<span className="lookup-result-name">{result.name}</span>
+										{hasMultipleTargets && (
+											<span className="badge lookup-entity-badge">{resolveEntityDisplayName(result.logicalName)}</span>
+										)}
+									</div>
 								</li>
 							))}
 						</ul>
-					) : (
-						<div className="help-block">No results found.</div>
 					)}
 				</div>
 			)}
