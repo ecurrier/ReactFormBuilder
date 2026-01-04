@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import TableEntry, { TableColumn, TableDataResponse, PaginationOptions, TableSortState } from "@components/form/TableEntry";
-import { TableEntryForm, LoadingIndicator, Sidepane } from "@components";
+import { TableEntryForm, LoadingIndicator, Sidepane, ConfirmationModal } from "@components";
 import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu";
 import { ActionType, DataType } from "@constants/enums";
 import { retrieveRecord } from "@/services/api/Api";
@@ -212,6 +212,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	const [editingRecord, setEditingRecord] = useState<any | null>(null);
 	const [isLoadingRecord, setIsLoadingRecord] = useState(false);
 	const [isSavingRecord, setIsSavingRecord] = useState(false);
+	const [deleteRecord, setDeleteRecord] = useState<any | null>(null);
 	// TO-DO: More robust validation/error handling
 	const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
 	const tableRef = useRef<any>(null);
@@ -309,6 +310,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				key: "_actions",
 				label: "Actions",
 				sortEnabled: false,
+				width: "8%",
 				render: (row) => {
 					const rowId = resolveRecordId(row, config.ChildEntityLogicalName);
 					const isPending = row._isPending;
@@ -358,7 +360,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		setSidepaneOpen(true);
 	};
 
-	async function handleEdit(record: any) {
+	const handleEdit = async (record: any) => {
 		const recordId = resolveRecordId(record, config.ChildEntityLogicalName);
 
 		if (!recordId) {
@@ -417,33 +419,41 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				setIsLoadingRecord(false);
 			}
 		}
-	}
+	};
 
-	async function handleDelete(record: any) {
+	const handleDelete = async (record: any) => {
 		const recordId = resolveRecordId(record, config.ChildEntityLogicalName);
-
 		if (!recordId) {
 			console.error("Missing record ID for delete:", record);
 			return;
 		}
 
-		// TO-DO: Replace with confirmation modal
-		if (confirm(`Are you sure you want to delete this record?`)) {
-			// Check if this is a pending record
-			if (isTempId(recordId)) {
-				// Delete from pending state
-				const key = `${config.ChildEntityLogicalName}_${recordId}`;
-				formState?.deletePendingChildRecord(key);
+		setDeleteRecord({ record, recordId });
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!deleteRecord) {
+			return;
+		}
+
+		const { recordId } = deleteRecord;
+
+		// Check if this is a pending record
+		if (isTempId(recordId)) {
+			// Delete from pending state
+			const key = `${config.ChildEntityLogicalName}_${recordId}`;
+			formState?.deletePendingChildRecord(key);
+			tableRef.current?.refresh();
+		} else {
+			// Delete persisted record via API
+			if (onDelete) {
+				await onDelete(config.ChildEntityLogicalName, recordId);
 				tableRef.current?.refresh();
-			} else {
-				// Delete persisted record via API
-				if (onDelete) {
-					await onDelete(config.ChildEntityLogicalName, recordId);
-					tableRef.current?.refresh();
-				}
 			}
 		}
-	}
+
+		setDeleteRecord(null);
+	};
 
 	const handleFormSave = async (formData: any) => {
 		const recordId = editingRecord?.id;
@@ -512,6 +522,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				columns={columns}
 				fetchData={shouldLoadData ? fetchDataWithPending : emptyFetch}
 				className={className}
+				initialSortState={columns.length > 0 ? { key: columns[0].key, direction: "asc" } : undefined}
 				createAction={
 					config.CreateEnabled
 						? {
@@ -534,6 +545,17 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					onCancel={handleFormCancel}
 				/>
 			</Sidepane>
+
+			<ConfirmationModal
+				isOpen={Boolean(deleteRecord)}
+				title="Delete Record"
+				message="Are you sure you want to delete this record?"
+				confirmText="Delete"
+				cancelText="Cancel"
+				onConfirm={handleConfirmDelete}
+				onCancel={() => setDeleteRecord(null)}
+				modalSize="md"
+			/>
 		</>
 	);
 };

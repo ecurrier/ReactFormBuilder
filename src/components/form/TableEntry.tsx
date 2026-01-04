@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useImperativeHandle } from "react";
-import LoadingIndicator from "@components/common/LoadingIndicator";
-import Pagination from "@components/common/Pagination";
+import { LoadingIndicator, Pagination, Alert } from "@components";
 
 export interface TableColumn<T = any> {
 	key: string;
 	label: string;
 	sortEnabled?: boolean;
 	className?: string;
+	width?: string | number;
 	render?: (row: T) => React.ReactNode;
 }
 
@@ -130,7 +130,7 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 					<label className="h3">{label}</label>
 				</h3>
 			)}
-			<div className="contextual-loading-container">
+			<div className="contextual-loading-container" style={{ minHeight: "250px" }}>
 				<LoadingIndicator visible={loading} variant="contextual" message={loadingMessage} />
 
 				{error && (
@@ -158,7 +158,7 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 									const isSorted = sortState?.key === col.key;
 									const direction = sortState?.direction;
 									return (
-										<th key={col.key} className={`${col.className || ""} sort-enabled`} scope="col">
+										<th key={col.key} className={`${col.className || ""} sort-enabled`} scope="col" style={{ width: col.width }}>
 											<a
 												href="#"
 												role="button"
@@ -179,7 +179,7 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 									);
 								}
 								return (
-									<th key={col.key} className={col.className || ""} scope="col">
+									<th key={col.key} className={col.className || ""} scope="col" style={{ width: col.width }}>
 										{col.label}
 									</th>
 								);
@@ -187,7 +187,7 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 						</tr>
 					</thead>
 					<tbody>
-						{data.length > 0 ? (
+						{data.length > 0 &&
 							data.map((row, i) => (
 								<tr key={row.id || i}>
 									{columns.map((col) => (
@@ -196,16 +196,14 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 										</td>
 									))}
 								</tr>
-							))
-						) : (
-							<tr>
-								<td colSpan={columns.length} className="no-data">
-									{loading ? "" : "No data available"}
-								</td>
-							</tr>
-						)}
+							))}
 					</tbody>
 				</table>
+				{data.length === 0 && (
+					<Alert type="warning" showIcon={false}>
+						No data available
+					</Alert>
+				)}
 
 				{totalPages && totalPages > 0 && (
 					<Pagination

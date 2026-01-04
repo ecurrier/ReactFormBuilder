@@ -5,33 +5,6 @@ import { generateTempId, isTempId } from "@utilities/common";
 import type { DocumentMetadata } from "@utilities/eygaApi";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord } from "@services/documentService";
 
-/*
-	For non-persisted parents, we need to stage uploads  (similar to table entry)
-		- on file select, upload to temp storage with a generated temp id
-		- store the temp id and file info in state
-		- on parent save, associate the temp uploads with the new parent record
-
-	For persisted parents, we can upload directly
-		- on file select, upload document immediately
-		- refresh the list of uploaded documents
-
-	Notes:
-
-    1. Document Uploads require a Document Path to work
-        Document Path is available on some records, to determine if there is a value
-        	This can be retrieved via the table metadata under "ConfigurationIdentifierMetadata" via FieldLogicalName
-        	We need to use this to retrieve the document path value
-    2. The control should allow upload multiple documents
-		Documents are displayed in a table format below the upload file button
-    3. The control should show existing documents in a table view with options to either download or delete
-		These should use the appropriate eyga api actions to perform these operations
-    4. To initially validate uploads, there are some settings on eyga configuration we can retrieve
-        - allowed file types
-        - max file size
-	5. If upload fails, display an error banner
-		If success, display a success banner
-*/
-
 export interface DocumentUploadControlProps {
 	config: DocumentUploadControlConfig;
 	formState?: any;
@@ -308,7 +281,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 					Choose File
 				</button>
 			</div>
-			<div className="file-upload-table contextual-loading-container mt-3">
+			<div className="file-upload-table contextual-loading-container mt-3" style={{ minHeight: "250px" }}>
 				<LoadingIndicator visible={isLoading || isUploading || isDeleting} variant="contextual" message={busyMessage} />
 				<table id="file-upload-table" aria-live="polite" role="grid" className="table table-custom table-header-bg table-border-bottom table-hover">
 					<thead>
@@ -322,7 +295,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 						</tr>
 					</thead>
 					<tbody>
-						{rows.length > 0 ? (
+						{rows.length > 0 &&
 							rows.map((row) => (
 								<tr key={row.key}>
 									<td>
@@ -356,16 +329,14 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 										</button>
 									</td>
 								</tr>
-							))
-						) : (
-							<tr>
-								<td colSpan={2} className="no-data">
-									{isLoading ? "" : "No documents available"}
-								</td>
-							</tr>
-						)}
+							))}
 					</tbody>
 				</table>
+				{rows.length === 0 && (
+					<Alert type="warning" showIcon={false}>
+						No documents available
+					</Alert>
+				)}
 			</div>
 			<ConfirmationModal
 				isOpen={Boolean(deleteTarget)}
