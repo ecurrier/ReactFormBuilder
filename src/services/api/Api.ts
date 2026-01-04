@@ -1,7 +1,7 @@
 import { DOMParser, XMLSerializer } from "xmldom";
 import { resolveEntitySetName, sanitizeGuid, serializeForApi } from "@utilities";
-import type { ExtendedWindow } from "@types";
-import type { Entity } from "@types";
+import type { ExtendedWindow } from "@app-types";
+import type { Entity } from "@app-types";
 import { ApiError, parseApiError } from "@/services/api";
 
 export interface FilterOption {
@@ -147,8 +147,8 @@ const injectOrderTag = (fetchXml: string, field: string, direction: "asc" | "des
 
 	// Check if the entityAlias is provided and find the corresponding link-entity
 	if (entityAlias) {
-		const linkEntities = xmlDoc.getElementsByTagName("link-entity");
-		for (const linkEntity of Array.from(linkEntities).filter((e) => e.getAttribute("alias") === entityAlias)) {
+		const linkEntities = Array.from(xmlDoc.getElementsByTagName("link-entity")) as Element[];
+		for (const linkEntity of linkEntities.filter((element) => element.getAttribute("alias") === entityAlias)) {
 			const orderNodes = Array.from(linkEntity.getElementsByTagName("order"));
 			orderNodes.forEach((orderNode) => linkEntity.removeChild(orderNode));
 

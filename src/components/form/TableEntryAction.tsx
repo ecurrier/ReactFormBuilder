@@ -4,9 +4,9 @@ import { TableEntryForm, LoadingIndicator, Sidepane, ConfirmationModal } from "@
 import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu";
 import { ActionType, DataType } from "@constants/enums";
 import { retrieveRecord } from "@/services/api/Api";
-import { buildFetchXmlForRecord } from "@utilities/fetchXml";
-import { resolvePrimaryIdAttribute } from "@utilities/metadata";
-import { generateTempId, isTempId } from "@utilities/common";
+import { buildFetchXmlForRecord, resolvePrimaryIdAttribute, generateTempId, isTempId } from "@utilities";
+
+const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { Alert } from "bootstrap";
 
 interface FieldAction {
@@ -336,7 +336,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					if (config.EditEnabled) {
 						menuItems.push({
 							label: "Edit",
-							onClick: (e) => handleEdit(row),
+							onClick: () => void handleEdit(row),
 						});
 					}
 

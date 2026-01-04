@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss}\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss}\" --list-different",
     "build": "npm run format && npm run typecheck && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

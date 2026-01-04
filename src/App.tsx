@@ -203,6 +203,10 @@ const App = () => {
 				return;
 			}
 
+			if (!requestorId) {
+				return;
+			}
+
 			const sessionId = await createUserFormSession({
 				formInstanceId,
 				contactId: requestorId,
@@ -267,7 +271,7 @@ const App = () => {
 
 			// Existing record
 			if (recordId && recordLogicalName) {
-				const formInstance = await getFormInstanceForRecord(recordId, recordLogicalName, versionId);
+				const formInstance = await getFormInstanceForRecord(recordId, recordLogicalName, versionId ?? undefined);
 				const formConfiguration = formInstance.Version.FormContent;
 
 				setConfig(formConfiguration);

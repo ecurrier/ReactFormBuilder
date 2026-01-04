@@ -1,6 +1,8 @@
+import type { FormInstanceEventTypeValue } from "@constants/enums";
+
 export interface UserFormSessionEvent {
 	Id: string;
 	UserFormSessionId: string;
-	EventType: FormInstanceEventType;
+	EventType: FormInstanceEventTypeValue;
 	CreatedOn: Date;
 }

@@ -10,6 +10,5 @@
   "endOfLine": "auto",
   "jsxSingleQuote": false,
   "quoteProps": "as-needed",
-  "useTabs": true,
-  "experimentalDecorators": true
+  "useTabs": true
 }

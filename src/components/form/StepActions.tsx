@@ -3,14 +3,30 @@ import PropTypes from "prop-types";
 import { FieldInput, TableEntryAction, DocumentUploadControl } from "@components";
 import { ActionType } from "@constants/enums";
 
-const StepActions = ({ actionItems, formState, tableEntryOptions }) => {
-	if (!Array.isArray(actionItems) || actionItems.length === 0) {
+type StepActionsProps = {
+	actionItems?: Array<{ action: any; entityName?: string }>;
+	formState: any;
+	tableEntryOptions?: {
+		fetchFunctions?: Map<string, any>;
+		fallbackFetch?: (...args: any[]) => Promise<{ results: any[]; totalRecordCount: number }>;
+		shouldLoadData?: boolean;
+		parentRecordId?: string;
+		parentEntityName?: string;
+		onSave?: (...args: any[]) => Promise<void>;
+		onDelete?: (...args: any[]) => Promise<void>;
+	};
+};
+
+const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, tableEntryOptions }) => {
+	const normalizedActionItems = (actionItems ?? []) as Array<{ action: any; entityName?: string }>;
+
+	if (!Array.isArray(normalizedActionItems) || normalizedActionItems.length === 0) {
 		return null;
 	}
 
 	return (
 		<>
-			{actionItems.map(({ action, entityName }) => {
+			{normalizedActionItems.map(({ action, entityName }) => {
 				if (!action) {
 					return null;
 				}

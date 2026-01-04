@@ -1,7 +1,7 @@
 import { retrieveRecord, retrieveMultipleRecords } from "@/services/api";
 import { ActionType } from "@constants/enums";
-import type { Entity } from "@types/Entity";
-import type { ReactFormConfiguration } from "@types/config";
+import type { Entity } from "@app-types/Entity";
+import type { ReactFormConfiguration } from "@app-types/config";
 import { buildFetchXmlForChildRecords, buildFetchXmlForRecord } from "@utilities/fetchXml";
 import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "@utilities/metadata";
 
@@ -78,14 +78,15 @@ export async function loadRecordData(recordLogicalName: string, recordId: string
 			}
 
 			step.Actions?.forEach((action) => {
-				if (action.Type === ActionType.FieldInput && action.Properties.LogicalName) {
-					fieldNames.add(action.Properties.LogicalName);
+				const properties = action.Properties as any;
+				if (action.Type === ActionType.FieldInput && properties.LogicalName) {
+					fieldNames.add(properties.LogicalName);
 				}
 
 				// Check child actions (for nested structures)
-				if (action.Properties.ChildActions) {
-					action.Properties.ChildActions.forEach((childAction) => {
-						if (childAction.Type === ActionType.FieldInput && childAction.Properties.LogicalName) {
+				if (properties.ChildActions) {
+					properties.ChildActions.forEach((childAction: any) => {
+						if (childAction.Type === ActionType.FieldInput && childAction.Properties?.LogicalName) {
 							fieldNames.add(childAction.Properties.LogicalName);
 						}
 					});
@@ -168,8 +169,9 @@ export async function loadChildRecords(parentRecordId: string, config: ReactForm
 
 		// Load child records for each TableEntry
 		for (const action of tableEntryActions) {
-			const childEntityName = action.Properties.ChildEntityLogicalName;
-			const referencingAttribute = action.Properties.ReferencingAttribute;
+			const properties = action.Properties as any;
+			const childEntityName = properties.ChildEntityLogicalName;
+			const referencingAttribute = properties.ReferencingAttribute;
 
 			if (!childEntityName || !referencingAttribute) {
 				console.warn("TableEntry action missing required properties:", action);
@@ -177,7 +179,7 @@ export async function loadChildRecords(parentRecordId: string, config: ReactForm
 			}
 
 			// Get columns from ChildViewSteps
-			const columns = action.Properties.ChildViewSteps?.[0]?.Actions?.map((a: any) => a.Properties.LogicalName).filter(Boolean) || [];
+			const columns = properties.ChildViewSteps?.[0]?.Actions?.map((a: any) => a.Properties.LogicalName).filter(Boolean) || [];
 
 			// Add primary key
 			columns.push(resolvePrimaryIdAttribute(childEntityName));
@@ -214,8 +216,9 @@ export function populateFieldsFromData(recordData: Entity, entityName: string, c
 	if (config?.Form?.Steps) {
 		config.Form.Steps.forEach((step) => {
 			step.Actions?.forEach((action) => {
-				if (action.Type === ActionType.FieldInput && action.Properties?.DataType === 643260009 && action.Properties?.LogicalName) {
-					lookupFields.set(action.Properties.LogicalName, action.Properties);
+				const properties = action.Properties as any;
+				if (action.Type === ActionType.FieldInput && properties?.DataType === 643260009 && properties?.LogicalName) {
+					lookupFields.set(properties.LogicalName, properties);
 				}
 			});
 		});

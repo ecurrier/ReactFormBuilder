@@ -1,5 +1,4 @@
-import { sanitizeGuid } from "@utilities/common";
-import { resolvePrimaryIdAttribute } from "@utilities/metadata";
+import { sanitizeGuid, resolvePrimaryIdAttribute } from "@utilities";
 
 /**
  * FetchXML Utilities

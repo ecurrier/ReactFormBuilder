@@ -1,6 +1,15 @@
 import { useReducer, useCallback, useMemo } from "react";
-import type { Entity } from "@types/Entity";
-import type { EntityChanges, FieldMetadata, FormState, FormStateAction, PendingChildRecord, PendingDocumentUpload, RelatedRecordInfo } from "@types/FormState";
+import type { Entity } from "@app-types/Entity";
+import type {
+	EntityChanges,
+	FieldMetadata,
+	FieldValue,
+	FormState,
+	FormStateAction,
+	PendingChildRecord,
+	PendingDocumentUpload,
+	RelatedRecordInfo,
+} from "@app-types/FormState";
 import { resolveEntitySetName, resolvePrimaryIdAttribute, serializeForApi } from "@utilities";
 
 /**
@@ -511,9 +520,8 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	 */
 	const getPendingChildRecords = useCallback(
 		(entityName: string): PendingChildRecord[] => {
-			return Object.entries(state.pendingChildRecords)
-				.filter(([key]) => key.startsWith(`${entityName}_`))
-				.map(([_, record]) => record);
+			const pendingEntries = Object.entries(state.pendingChildRecords) as Array<[string, PendingChildRecord]>;
+			return pendingEntries.filter(([key]) => key.startsWith(`${entityName}_`)).map(([_, record]) => record);
 		},
 		[state.pendingChildRecords]
 	);
@@ -544,7 +552,8 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	 */
 	const getPendingDocumentUploads = useCallback(
 		(entityName?: string, folderName?: string, childRecordId?: string): PendingDocumentUpload[] => {
-			return Object.values(state.pendingDocumentUploads).filter((upload) => {
+			const pendingUploads = Object.values(state.pendingDocumentUploads) as PendingDocumentUpload[];
+			return pendingUploads.filter((upload) => {
 				if (entityName && upload.entityName !== entityName) {
 					return false;
 				}
@@ -575,7 +584,8 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		const changedByEntity = new Map<string, { data: Partial<Entity>; metadata: Record<string, FieldMetadata> }>();
 
 		// Group dirty fields by entity
-		Object.entries(state.fields).forEach(([path, fieldValue]) => {
+		const fieldEntries = Object.entries(state.fields) as Array<[string, FieldValue]>;
+		fieldEntries.forEach(([path, fieldValue]) => {
 			if (!fieldValue.isDirty) return;
 
 			const metadata = state.metadata[path];
@@ -654,9 +664,8 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	 * Gets all dirty field paths.
 	 */
 	const dirtyFields = useMemo(() => {
-		return Object.entries(state.fields)
-			.filter(([_, field]) => field.isDirty)
-			.map(([path]) => path);
+		const fieldEntries = Object.entries(state.fields) as Array<[string, FieldValue]>;
+		return fieldEntries.filter(([, field]) => field.isDirty).map(([path]) => path);
 	}, [state.fields]);
 
 	/**

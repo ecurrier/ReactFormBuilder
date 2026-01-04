@@ -1,6 +1,6 @@
-import { FormInstance, Version, UserFormSession } from "@types/session";
+import { FormInstance, Version, UserFormSession } from "@app-types/session";
 import { createRecord, retrieveMultipleRecords } from "@/services/api";
-import type { EntityReference } from "@types/Entity";
+import type { EntityReference } from "@app-types/Entity";
 
 export const resolveFormVersion = async (versionId: string): Promise<Version | null> => {
 	const fetchXml = `

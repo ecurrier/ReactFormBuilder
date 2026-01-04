@@ -97,7 +97,7 @@ export const DateTimeInput = ({ commonProps, dateTimeFormat, dateTimeBehavior })
 	const normalizedBehavior = normalizeDateTimeBehavior(dateTimeBehavior);
 	const formattedValue = formatForInput(commonProps.value, normalizedFormat, normalizedBehavior);
 
-	const handleChange = (event) => {
+	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const inputValue = event.target.value;
 
 		if (!inputValue) {
@@ -105,7 +105,7 @@ export const DateTimeInput = ({ commonProps, dateTimeFormat, dateTimeBehavior })
 			return;
 		}
 
-		let parsedDate = null;
+		let parsedDate: Date | null = null;
 		if (normalizedFormat === DateTimeFormat.DateOnly) {
 			parsedDate = parseDateOnlyUtc(inputValue);
 		} else {

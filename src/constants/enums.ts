@@ -66,6 +66,8 @@ export const FormInstanceEventType = {
 	Navigation: 643260003,
 };
 
+export type FormInstanceEventTypeValue = (typeof FormInstanceEventType)[keyof typeof FormInstanceEventType];
+
 /**
  * Helper function to get a readable name for a DataType value
  * @param {number} value - The numeric DataType value
