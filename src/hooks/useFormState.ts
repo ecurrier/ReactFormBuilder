@@ -635,7 +635,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 				parentNodeId = newParentId;
 			}
 
-			const existingNodeId = Object.values(state.nodesById).find(
+			const existingNodeId = (Object.values(state.nodesById) as FormStateNode[]).find(
 				(node) => node.type === "child" && node.logicalName === childEntityName && node.recordId === recordId
 			)?.id;
 
@@ -681,7 +681,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 
 	const getChildNodes = useCallback(
 		(entityName: string): FormStateNode[] => {
-			return Object.values(state.nodesById).filter((node) => node.type === "child" && node.logicalName === entityName);
+			return (Object.values(state.nodesById) as FormStateNode[]).filter((node) => node.type === "child" && node.logicalName === entityName);
 		},
 		[state.nodesById]
 	);
@@ -706,7 +706,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 			if (!recordId) {
 				return undefined;
 			}
-			return Object.values(state.nodesById).find(
+			return (Object.values(state.nodesById) as FormStateNode[]).find(
 				(node) => node.logicalName === entityName && (node.recordId === recordId || node.id === recordId)
 			);
 		},
@@ -753,7 +753,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 
 	const getUploadNodes = useCallback(
 		({ parentNodeId, entityName, folderName }: { parentNodeId?: string; entityName?: string; folderName?: string }) => {
-			const nodes = Object.values(state.nodesById).filter((node) => node.type === "upload");
+			const nodes = (Object.values(state.nodesById) as FormStateNode[]).filter((node) => node.type === "upload");
 			return nodes.filter((node) => {
 				if (parentNodeId && node.parentId !== parentNodeId) {
 					return false;
@@ -874,7 +874,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	 * Checks if there are any pending child operations.
 	 */
 	const hasPendingChildren = useMemo(() => {
-		return Object.values(state.nodesById).some((node) => {
+		return (Object.values(state.nodesById) as FormStateNode[]).some((node) => {
 			if (node.type !== "child") {
 				return false;
 			}
@@ -884,7 +884,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	}, [state.nodesById]);
 
 	const hasPendingDocumentUploads = useMemo(() => {
-		return Object.values(state.nodesById).some((node) => node.type === "upload");
+		return (Object.values(state.nodesById) as FormStateNode[]).some((node) => node.type === "upload");
 	}, [state.nodesById]);
 
 	const hasPendingUploads = useMemo(() => {
