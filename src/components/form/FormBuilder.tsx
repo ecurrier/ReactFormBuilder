@@ -7,7 +7,6 @@ import { populateFieldsFromData } from "@services/dataLoader";
 import { executeSave, executeValidateAndSubmit, reloadFormData } from "@services/saveOrchestrator";
 import LoadingIndicator from "@components/common/LoadingIndicator";
 import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
-import type { PendingChildRecord, PendingDocumentUpload } from "@app-types/FormState";
 import type { SaveError, SaveProgressEvent } from "@app-types/SaveOrchestrator";
 
 const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams }) => {
@@ -124,13 +123,40 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 	const buildInitialSaveProgress = React.useCallback(() => {
 		const primaryEntityName = config?.Form?.PrimaryApplicationTable?.TableLogicalName;
-		const changes = formState.serializeForSubmission();
-		const secondaryChanges = changes.filter((change) => change.entityName !== primaryEntityName);
-		const primaryChanges = changes.find((change) => change.entityName === primaryEntityName);
-		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingUploads || secondaryChanges.length > 0);
 		const items: SaveProgressEvent[] = [];
+		const saveTree = formState.getSaveTree?.();
 
-		if (primaryEntityName && ((primaryChanges && primaryChanges.data && Object.keys(primaryChanges.data).length > 0) || shouldEnsurePrimaryExists)) {
+		const shouldSaveNode = (node: any) => {
+			if (!node || node.type === "upload") {
+				return node?.type === "upload";
+			}
+
+			const hasData = node.data && Object.keys(node.data).length > 0;
+			const hasChildren = node.children && node.children.length > 0;
+			return hasData || (!node.isPersisted && hasChildren);
+		};
+
+		const walk = (node: any) => {
+			if (!node) {
+				return;
+			}
+
+			if (shouldSaveNode(node)) {
+				items.push({
+					id: buildProgressId(node.type, node.logicalName || "upload", node.id),
+					scope: node.type,
+					entityName: node.logicalName || "upload",
+					label: node.type === "upload" ? node.data?.file?.name || node.id : undefined,
+					status: "saving",
+				});
+			}
+
+			node.children?.forEach((child: any) => walk(child));
+		};
+
+		if (saveTree) {
+			walk(saveTree);
+		} else if (primaryEntityName) {
 			items.push({
 				id: buildProgressId("primary", primaryEntityName),
 				scope: "primary",
@@ -138,37 +164,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				status: "saving",
 			});
 		}
-
-		secondaryChanges.forEach((change) => {
-			items.push({
-				id: buildProgressId("secondary", change.entityName),
-				scope: "secondary",
-				entityName: change.entityName,
-				status: "saving",
-			});
-		});
-
-		const pendingRecords = Object.values(formState.pendingChildRecords || {}) as PendingChildRecord[];
-		pendingRecords.forEach((pending) => {
-			items.push({
-				id: buildProgressId("child", pending.entityName, pending.id),
-				scope: "child",
-				entityName: pending.entityName,
-				label: pending.id,
-				status: "saving",
-			});
-		});
-
-		const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
-		pendingUploads.forEach((pending) => {
-			items.push({
-				id: buildProgressId("upload", pending.entityName, pending.id),
-				scope: "upload",
-				entityName: pending.entityName,
-				label: pending.file?.name || pending.id,
-				status: "saving",
-			});
-		});
 
 		return items;
 	}, [config?.Form?.PrimaryApplicationTable?.TableLogicalName, formState]);

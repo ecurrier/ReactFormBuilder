@@ -1,13 +1,13 @@
 import { createRecord, updateRecord } from "@/services/api";
 import type { Entity, EntityReference } from "@app-types/Entity";
-import type { FieldMetadata, PendingChildRecord, PendingDocumentUpload } from "@app-types/FormState";
+import type { FieldMetadata, FormStateTreeNode, UploadNodeData } from "@app-types/FormState";
 import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "@app-types/config";
 import type { SaveError, SaveProgressEvent, SaveResult } from "@app-types/SaveOrchestrator";
 import { validateField } from "@services/validation/validators";
 import { createFormInstance, createUserFormSession } from "@services/formInstanceManagement";
 import { uploadDocumentForRecord } from "@services/documentService";
 import { loadChildRecords, loadRecordData } from "@services/dataLoader";
-import { isTempId, sanitizeGuid, buildEntityMetadataMap, resolvePrimaryIdAttribute, resolveRequestorId, type TableMetadataEntry } from "@utilities";
+import { isTempId, sanitizeGuid, buildEntityMetadataMap, resolvePrimaryIdAttribute, resolveRequestorId, serializeForApi, type TableMetadataEntry } from "@utilities";
 
 export interface SaveContext {
 	formState: any;
@@ -135,31 +135,6 @@ const mergeDefaultOnCreateData = (data: Partial<Entity>, defaults: Partial<Entit
 	return merged;
 };
 
-const collectEntityChanges = (formState: any, primaryEntity?: string) => {
-	const entityChanges = formState.serializeForSubmission();
-	const primaryChanges = entityChanges.find((change: any) => change.entityName === primaryEntity);
-	const secondaryEntityChanges = entityChanges.filter((change: any) => change.entityName !== primaryEntity);
-
-	return { entityChanges, primaryChanges, secondaryEntityChanges };
-};
-
-const buildRecordIdsByEntity = ({ formState, primaryEntity, primaryRecordId }: { formState: any; primaryEntity?: string; primaryRecordId: string | null }) => {
-	const recordIdsByEntity = new Map<string, string>();
-
-	if (primaryRecordId && primaryEntity) {
-		recordIdsByEntity.set(primaryEntity, primaryRecordId);
-	}
-
-	const relatedRecords = formState.relatedRecords || {};
-	Object.entries(relatedRecords).forEach(([entityName, recordInfo]: any) => {
-		if (recordInfo?.recordId && !recordIdsByEntity.has(entityName)) {
-			recordIdsByEntity.set(entityName, recordInfo.recordId);
-		}
-	});
-
-	return recordIdsByEntity;
-};
-
 const buildSecondaryRecordsPayload = (recordIdsByEntity: Map<string, string>, primaryEntity?: string) => {
 	const secondaryRecords: Array<{ LogicalName: string; Id: string }> = [];
 
@@ -174,369 +149,225 @@ const buildSecondaryRecordsPayload = (recordIdsByEntity: Map<string, string>, pr
 	return secondaryRecords;
 };
 
-const saveSecondaryEntityChanges = async ({
-	secondaryEntityChanges,
-	primaryEntity,
-	primaryRecordId,
-	formState,
-	recordIdsByEntity,
-	stepReferenceByEntity,
-	config,
-	onProgress,
-}: {
-	secondaryEntityChanges: any[];
-	primaryEntity?: string;
-	primaryRecordId: string | null;
-	formState: any;
-	recordIdsByEntity: Map<string, string>;
-	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
-	config: ReactFormConfiguration;
-	onProgress: SaveContext["onProgress"];
-}): Promise<SaveError[]> => {
-	if (secondaryEntityChanges.length === 0) {
-		return [];
+const shouldPersistEntityNode = (node: FormStateTreeNode) => {
+	if (node.type === "upload") {
+		return false;
 	}
 
-	const errors: SaveError[] = [];
-	const results = await Promise.allSettled(
-		secondaryEntityChanges.map((change: any) =>
-			saveSecondaryRecord({
-				change,
-				primaryEntity,
-				primaryRecordId,
-				formState,
-				recordIdsByEntity,
-				stepReferenceByEntity,
-				config,
-				onProgress,
-			})
-		)
-	);
+	const data = node.data ?? {};
+	const hasData = Object.keys(data).length > 0;
+	const hasChildren = node.children.length > 0;
 
-	results.forEach((result, index) => {
-		if (result.status === "rejected") {
-			const change = secondaryEntityChanges[index];
-			const message = buildErrorMessage(result.reason);
-			console.error(`Failed to save entity ${change.entityName}:`, result.reason);
-			errors.push(buildSaveError("secondary", `Failed to save ${change.entityName}: ${message}`, change.entityName));
-		}
+	return hasData || (!node.isPersisted && hasChildren);
+};
+
+const saveUploadNode = async ({
+	node,
+	parentNode,
+	onProgress,
+	formState,
+}: {
+	node: FormStateTreeNode;
+	parentNode: FormStateTreeNode | null;
+	onProgress: SaveContext["onProgress"];
+	formState: any;
+}): Promise<SaveError[]> => {
+	const uploadData = node.data as UploadNodeData;
+	const parentId = parentNode?.recordId;
+	const parentEntityName = node.logicalName || parentNode?.logicalName;
+
+	if (!parentId || !parentEntityName) {
+		return [buildSaveError("upload", "Missing parent record for upload", parentEntityName)];
+	}
+
+	const progressId = buildProgressId("upload", parentEntityName, node.id);
+	reportProgress(onProgress, {
+		id: progressId,
+		scope: "upload",
+		entityName: parentEntityName,
+		label: uploadData?.file?.name || node.id,
+		status: "saving",
 	});
 
-	return errors;
-};
+	try {
+		const childId = uploadData?.childRecordId && uploadData.childRecordId !== parentId ? uploadData.childRecordId : undefined;
+		await uploadDocumentForRecord({
+			entityName: parentEntityName,
+			recordId: parentId,
+			folderName: uploadData.folderName,
+			file: uploadData.file,
+			uploadDate: uploadData.uploadDate,
+			childId,
+		});
 
-const groupPendingChildrenByParent = (formState: any, primaryEntity?: string) => {
-	const pendingRecords = Object.values(formState.pendingChildRecords || {}) as PendingChildRecord[];
-	const pendingByParent = new Map<string, PendingChildRecord[]>();
+		formState.deleteNode?.(node.id);
 
-	for (const pending of pendingRecords) {
-		const parentEntityName = pending.parentEntityName || primaryEntity;
-		if (!parentEntityName) {
-			continue;
-		}
-		if (!pendingByParent.has(parentEntityName)) {
-			pendingByParent.set(parentEntityName, []);
-		}
-		pendingByParent.get(parentEntityName)?.push(pending);
+		reportProgress(onProgress, {
+			id: progressId,
+			scope: "upload",
+			entityName: parentEntityName,
+			status: "saved",
+		});
+		return [];
+	} catch (error) {
+		reportProgress(onProgress, {
+			id: progressId,
+			scope: "upload",
+			entityName: parentEntityName,
+			status: "failed",
+			message: buildErrorMessage(error),
+		});
+		return [buildSaveError("upload", `Failed to upload document: ${buildErrorMessage(error)}`, parentEntityName, node.id)];
 	}
-
-	return pendingByParent;
 };
 
-const groupPendingDocumentUploadsByParent = (formState: any, primaryEntity?: string) => {
-	const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
-	const pendingByParent = new Map<string, PendingDocumentUpload[]>();
-
-	for (const pending of pendingUploads) {
-		if (pending.recordId || pending.childRecordId) {
-			continue;
-		}
-
-		const parentEntityName = pending.entityName || primaryEntity;
-		if (!parentEntityName) {
-			continue;
-		}
-
-		if (!pendingByParent.has(parentEntityName)) {
-			pendingByParent.set(parentEntityName, []);
-		}
-		pendingByParent.get(parentEntityName)?.push(pending);
-	}
-
-	return pendingByParent;
-};
-
-const savePendingChildRecords = async ({
+const saveEntityNode = async ({
+	node,
+	parentNode,
 	formState,
 	primaryEntity,
-	primaryRecordId,
-	recordIdsByEntity,
 	stepReferenceByEntity,
 	config,
 	entityMetadataMap,
+	recordIdsByEntity,
 	onProgress,
 }: {
+	node: FormStateTreeNode;
+	parentNode: FormStateTreeNode | null;
 	formState: any;
 	primaryEntity?: string;
-	primaryRecordId: string | null;
-	recordIdsByEntity: Map<string, string>;
 	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
 	config: ReactFormConfiguration;
 	entityMetadataMap: Map<string, TableMetadataEntry>;
-	onProgress: SaveContext["onProgress"];
-}): Promise<{ errors: SaveError[]; handledUploadIds: Set<string> }> => {
-	if (!formState.hasPendingChildren) {
-		return { errors: [], handledUploadIds: new Set() };
-	}
-
-	const errors: SaveError[] = [];
-	const handledUploadIds = new Set<string>();
-	const pendingByParent = groupPendingChildrenByParent(formState, primaryEntity);
-
-	for (const [parentEntityName, records] of pendingByParent) {
-		let parentId: string | null = null;
-
-		try {
-			parentId = await ensureSecondaryParentRecord({
-				parentEntityName,
-				primaryEntity,
-				primaryRecordId,
-				formState,
-				recordIdsByEntity,
-				stepReferenceByEntity,
-				config,
-			});
-		} catch (error) {
-			const message = buildErrorMessage(error);
-			console.error(`Failed to ensure parent record for ${parentEntityName}:`, error);
-			errors.push(buildSaveError("child", `Failed to ensure parent record for ${parentEntityName}: ${message}`, parentEntityName));
-			continue;
-		}
-
-		if (!parentId) {
-			errors.push(buildSaveError("child", `Missing parent record for ${parentEntityName}`, parentEntityName));
-			continue;
-		}
-
-		const childResults = await Promise.allSettled(
-			records.map((pending) =>
-				saveChildRecord({
-					pending,
-					parentEntityName,
-					parentId,
-					formState,
-					config,
-					entityMetadataMap,
-					onProgress,
-				})
-			)
-		);
-
-		childResults.forEach((result, index) => {
-			if (result.status === "rejected") {
-				const pending = records[index];
-				const message = buildErrorMessage(result.reason);
-				console.error(`Failed to save child record:`, result.reason);
-				errors.push(buildSaveError("child", `Failed to save child record: ${message}`, pending.entityName));
-			} else {
-				errors.push(...result.value.errors);
-				result.value.handledUploadIds.forEach((id) => handledUploadIds.add(id));
-			}
-		});
-	}
-
-	return { errors, handledUploadIds };
-};
-
-const savePendingDocumentUploads = async ({
-	formState,
-	primaryEntity,
-	primaryRecordId,
-	recordIdsByEntity,
-	stepReferenceByEntity,
-	config,
-	onProgress,
-}: {
-	formState: any;
-	primaryEntity?: string;
-	primaryRecordId: string | null;
 	recordIdsByEntity: Map<string, string>;
-	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
-	config: ReactFormConfiguration;
 	onProgress: SaveContext["onProgress"];
-}): Promise<SaveError[]> => {
-	if (!formState.hasPendingDocumentUploads) {
-		return [];
+}): Promise<{ recordId: string | null; errors: SaveError[] }> => {
+	const errors: SaveError[] = [];
+	const entityName = node.logicalName;
+
+	if (!entityName) {
+		return { recordId: null, errors: [buildSaveError("save", "Missing entity name for node")] };
 	}
 
-	const errors: SaveError[] = [];
-	const pendingByParent = groupPendingDocumentUploadsByParent(formState, primaryEntity);
+	const progressId = buildProgressId(node.type, entityName, node.id);
+	reportProgress(onProgress, { id: progressId, scope: node.type, entityName, status: "saving" });
+	let didReportFailure = false;
 
-	for (const [parentEntityName, uploads] of pendingByParent) {
-		let parentId: string | null = null;
+	try {
+		const defaults = buildDefaultOnCreateData(entityName, config);
+		const serializedData = serializeForApi(node.data ?? {}, entityName);
+		const dataToSave = mergeDefaultOnCreateData({ ...(serializedData as any) }, defaults);
+		const shouldPersist = shouldPersistEntityNode(node);
+		let recordId = node.recordId ?? null;
 
-		try {
-			parentId = await ensureSecondaryParentRecord({
-				parentEntityName,
-				primaryEntity,
-				primaryRecordId,
-				formState,
-				recordIdsByEntity,
-				stepReferenceByEntity,
-				config,
-			});
-		} catch (error) {
-			const message = buildErrorMessage(error);
-			console.error(`Failed to ensure parent record for ${parentEntityName}:`, error);
-			errors.push(buildSaveError("child", `Failed to ensure parent record for ${parentEntityName}: ${message}`, parentEntityName));
-			continue;
-		}
-
-		if (!parentId) {
-			errors.push(buildSaveError("child", `Missing parent record for ${parentEntityName}`, parentEntityName));
-			continue;
-		}
-
-		const results = await Promise.allSettled(
-			uploads.map(async (pending) => {
-				const progressId = buildProgressId("upload", pending.entityName, pending.id);
-				reportProgress(onProgress, {
-					id: progressId,
-					scope: "upload",
-					entityName: pending.entityName,
-					label: pending.file?.name || pending.id,
-					status: "saving",
-				});
-
-				try {
-					await uploadDocumentForRecord({
-						entityName: parentEntityName,
-						recordId: parentId,
-						folderName: pending.folderName,
-						file: pending.file,
-						uploadDate: pending.uploadDate,
-						childId: pending.childRecordId,
-					});
-
-					const key = `${pending.entityName}_${pending.id}`;
-					formState.deletePendingDocumentUpload(key);
-
-					reportProgress(onProgress, {
-						id: progressId,
-						scope: "upload",
-						entityName: pending.entityName,
-						status: "saved",
-					});
-				} catch (error) {
-					reportProgress(onProgress, {
-						id: progressId,
-						scope: "upload",
-						entityName: pending.entityName,
-						status: "failed",
-						message: buildErrorMessage(error),
-					});
-					throw error;
+		if (node.type === "primary") {
+			if (shouldPersist) {
+				if (recordId) {
+					await updateRecord(entityName, recordId, dataToSave);
+				} else {
+					recordId = await createRecord(entityName, dataToSave);
+					if (!recordId) {
+						throw new Error("Failed to create primary record");
+					}
+					formState.setRecordId?.(recordId);
 				}
-			})
-		);
-
-		results.forEach((result, index) => {
-			if (result.status === "rejected") {
-				const pending = uploads[index];
-				const message = buildErrorMessage(result.reason);
-				console.error("Failed to upload document:", result.reason);
-				errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
 			}
-		});
-	}
+		} else if (node.type === "secondary") {
+			const referenceInfo = stepReferenceByEntity.get(entityName);
+			const navigationProperty = referenceInfo?.navigationProperty;
+			const parentId = parentNode?.recordId;
 
-	return errors;
-};
+			if (!recordId && navigationProperty && parentId && dataToSave[navigationProperty] === undefined) {
+				dataToSave[navigationProperty] = {
+					id: parentId,
+					logicalName: primaryEntity,
+				};
+			}
 
-const savePendingDocumentUploadsForRecords = async ({
-	formState,
-	primaryEntity,
-	onProgress,
-	skipUploadIds,
-}: {
-	formState: any;
-	primaryEntity?: string;
-	onProgress: SaveContext["onProgress"];
-	skipUploadIds?: Set<string>;
-}): Promise<SaveError[]> => {
-	const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
-	const uploadsForRecords = pendingUploads.filter((upload) => {
-		if (!upload.recordId || isTempId(upload.recordId)) {
-			return false;
+			if (!recordId && !navigationProperty) {
+				throw new Error(`Missing referencing navigation property for ${entityName}`);
+			}
+
+			if (shouldPersist) {
+				if (recordId) {
+					await updateRecord(entityName, recordId, dataToSave);
+				} else {
+					recordId = await createRecord(entityName, dataToSave);
+					if (!recordId) {
+						throw new Error(`Failed to create record for ${entityName}`);
+					}
+				}
+			}
+
+			if (recordId) {
+				formState.setRelatedRecord?.(entityName, recordId, referenceInfo?.referencingAttribute, navigationProperty);
+			}
+		} else if (node.type === "child") {
+			const parentId = parentNode?.recordId;
+			const navigationProperty = node.referencingNavigationProperty || node.referencingAttribute;
+
+			if (!navigationProperty) {
+				throw new Error(`Missing referencing navigation property for ${entityName}`);
+			}
+
+			if (!parentId) {
+				throw new Error(`Missing parent record for ${entityName}`);
+			}
+
+			const primaryIdAttribute = resolvePrimaryIdAttribute(entityName, entityMetadataMap);
+			if (node.id && isTempId(node.id) && dataToSave[primaryIdAttribute] === undefined) {
+				const sanitizedId = sanitizeGuid(node.id);
+				dataToSave[primaryIdAttribute] = sanitizedId;
+			}
+
+			dataToSave[navigationProperty] = {
+				id: parentId,
+				logicalName: parentNode?.logicalName,
+			};
+
+			if (shouldPersist) {
+				if (recordId && node.isPersisted) {
+					await updateRecord(entityName, recordId, dataToSave);
+				} else {
+					recordId = await createRecord(entityName, dataToSave);
+					if (!recordId) {
+						throw new Error(`Failed to create child record for ${entityName}`);
+					}
+				}
+			}
+
+			if (recordId) {
+				formState.upsertChildRecord?.(entityName, { id: recordId, ...dataToSave });
+			}
 		}
 
-		if (skipUploadIds?.has(upload.id)) {
-			return false;
+		if (recordId) {
+			formState.updateNodeRecordId?.(node.id, recordId, true);
+			if (node.type === "primary" || node.type === "secondary") {
+				recordIdsByEntity.set(entityName, recordId);
+			}
 		}
 
-		return !upload.childRecordId || !isTempId(upload.childRecordId);
-	});
+		if (Object.keys(serializedData || {}).length > 0) {
+			formState.resetNodeData?.(node.id);
+		}
 
-	if (uploadsForRecords.length === 0) {
-		return [];
-	}
-
-	const errors: SaveError[] = [];
-
-	const results = await Promise.allSettled(
-		uploadsForRecords.map(async (pending) => {
-			const progressId = buildProgressId("upload", pending.entityName, pending.id);
+		reportProgress(onProgress, { id: progressId, scope: node.type, entityName, status: "saved" });
+		return { recordId, errors };
+	} catch (error) {
+		if (!didReportFailure) {
 			reportProgress(onProgress, {
 				id: progressId,
-				scope: "upload",
-				entityName: pending.entityName,
-				label: pending.file?.name || pending.id,
-				status: "saving",
+				scope: node.type,
+				entityName,
+				status: "failed",
+				message: buildErrorMessage(error),
 			});
-
-			try {
-				const childId = pending.childRecordId && pending.childRecordId !== pending.recordId ? pending.childRecordId : undefined;
-				await uploadDocumentForRecord({
-					entityName: pending.entityName,
-					recordId: pending.recordId as string,
-					folderName: pending.folderName,
-					file: pending.file,
-					uploadDate: pending.uploadDate,
-					childId,
-				});
-
-				const key = `${pending.entityName}_${pending.id}`;
-				formState.deletePendingDocumentUpload(key);
-
-				reportProgress(onProgress, {
-					id: progressId,
-					scope: "upload",
-					entityName: pending.entityName,
-					status: "saved",
-				});
-			} catch (error) {
-				reportProgress(onProgress, {
-					id: progressId,
-					scope: "upload",
-					entityName: pending.entityName,
-					status: "failed",
-					message: buildErrorMessage(error),
-				});
-				throw error;
-			}
-		})
-	);
-
-	results.forEach((result, index) => {
-		if (result.status === "rejected") {
-			const pending = uploadsForRecords[index];
-			const message = buildErrorMessage(result.reason);
-			console.error("Failed to upload document:", result.reason);
-			errors.push(buildSaveError("upload", `Failed to upload document: ${message}`, pending.entityName));
+			didReportFailure = true;
 		}
-	});
-
-	return errors;
+		errors.push(buildSaveError(node.type, buildErrorMessage(error), entityName, node.id));
+		return { recordId: null, errors };
+	}
 };
 
 const ensureFormInstanceAndSession = async ({
@@ -607,393 +438,6 @@ const ensureFormInstanceAndSession = async ({
 	}
 };
 
-const savePrimaryRecord = async ({
-	formState,
-	primaryEntity,
-	primaryChanges,
-	shouldEnsurePrimaryExists,
-	config,
-	onProgress,
-}: {
-	formState: any;
-	primaryEntity?: string;
-	primaryChanges: any;
-	shouldEnsurePrimaryExists: boolean;
-	config: ReactFormConfiguration;
-	onProgress: SaveContext["onProgress"];
-}): Promise<string | null> => {
-	if (!primaryEntity) {
-		throw new Error("Missing primary entity name");
-	}
-
-	let primaryRecordId = formState.recordId;
-
-	if (primaryChanges && primaryChanges.data && Object.keys(primaryChanges.data).length > 0) {
-		const progressId = buildProgressId("primary", primaryEntity);
-		reportProgress(onProgress, { id: progressId, scope: "primary", entityName: primaryEntity, status: "saving" });
-		let didReportFailure = false;
-
-		try {
-			if (primaryRecordId) {
-				await updateRecord(primaryEntity, primaryRecordId, primaryChanges.data);
-			} else {
-				const defaults = buildDefaultOnCreateData(primaryEntity, config);
-				const dataToSave = mergeDefaultOnCreateData(primaryChanges.data, defaults);
-				primaryRecordId = await createRecord(primaryEntity, dataToSave);
-
-				if (!primaryRecordId) {
-					throw new Error("Failed to create primary record");
-				}
-
-				formState.setRecordId(primaryRecordId);
-			}
-
-			reportProgress(onProgress, { id: progressId, scope: "primary", entityName: primaryEntity, status: "saved" });
-		} catch (error) {
-			if (!didReportFailure) {
-				reportProgress(onProgress, {
-					id: progressId,
-					scope: "primary",
-					entityName: primaryEntity,
-					status: "failed",
-					message: buildErrorMessage(error),
-				});
-				didReportFailure = true;
-			}
-			throw error;
-		}
-	} else if (shouldEnsurePrimaryExists) {
-		const progressId = buildProgressId("primary", primaryEntity);
-		reportProgress(onProgress, { id: progressId, scope: "primary", entityName: primaryEntity, status: "saving" });
-		let didReportFailure = false;
-
-		try {
-			const defaults = buildDefaultOnCreateData(primaryEntity, config);
-			primaryRecordId = await createRecord(primaryEntity, defaults);
-
-			if (!primaryRecordId) {
-				throw new Error("Failed to create primary record");
-			}
-
-			formState.setRecordId(primaryRecordId);
-			reportProgress(onProgress, { id: progressId, scope: "primary", entityName: primaryEntity, status: "saved" });
-		} catch (error) {
-			if (!didReportFailure) {
-				reportProgress(onProgress, {
-					id: progressId,
-					scope: "primary",
-					entityName: primaryEntity,
-					status: "failed",
-					message: buildErrorMessage(error),
-				});
-				didReportFailure = true;
-			}
-			throw error;
-		}
-	}
-
-	return primaryRecordId;
-};
-
-const saveSecondaryRecord = async ({
-	change,
-	primaryEntity,
-	primaryRecordId,
-	formState,
-	recordIdsByEntity,
-	stepReferenceByEntity,
-	config,
-	onProgress,
-}: {
-	change: any;
-	primaryEntity?: string;
-	primaryRecordId: string | null;
-	formState: any;
-	recordIdsByEntity: Map<string, string>;
-	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
-	config: ReactFormConfiguration;
-	onProgress: SaveContext["onProgress"];
-}) => {
-	const progressId = buildProgressId("secondary", change.entityName);
-	reportProgress(onProgress, { id: progressId, scope: "secondary", entityName: change.entityName, status: "saving" });
-	let didReportFailure = false;
-
-	try {
-		const defaults = buildDefaultOnCreateData(change.entityName, config);
-		const dataToSave = mergeDefaultOnCreateData({ ...change.data }, defaults);
-		const referenceInfo = stepReferenceByEntity.get(change.entityName);
-		const navigationProperty = referenceInfo?.navigationProperty;
-		const existingRecordId = change.recordId || recordIdsByEntity.get(change.entityName) || formState.getRelatedRecord?.(change.entityName)?.recordId;
-
-		if (!existingRecordId && navigationProperty && primaryRecordId && dataToSave[navigationProperty] === undefined) {
-			dataToSave[navigationProperty] = {
-				id: primaryRecordId,
-				logicalName: primaryEntity,
-			};
-		}
-
-		if (!existingRecordId && !navigationProperty) {
-			reportProgress(onProgress, {
-				id: progressId,
-				scope: "secondary",
-				entityName: change.entityName,
-				status: "failed",
-				message: "Missing referencing navigation property",
-			});
-			didReportFailure = true;
-			throw new Error(`Missing referencing navigation property for ${change.entityName}`);
-		}
-
-		if (existingRecordId) {
-			await updateRecord(change.entityName, existingRecordId, dataToSave);
-			recordIdsByEntity.set(change.entityName, existingRecordId);
-			formState.setRelatedRecord?.(change.entityName, existingRecordId, referenceInfo?.referencingAttribute, navigationProperty);
-			reportProgress(onProgress, { id: progressId, scope: "secondary", entityName: change.entityName, status: "saved" });
-			return;
-		}
-
-		const childId = await createRecord(change.entityName, dataToSave);
-		if (!childId) {
-			throw new Error(`Failed to create record for ${change.entityName}`);
-		}
-
-		recordIdsByEntity.set(change.entityName, childId);
-		formState.setRelatedRecord?.(change.entityName, childId, referenceInfo?.referencingAttribute, navigationProperty);
-		reportProgress(onProgress, { id: progressId, scope: "secondary", entityName: change.entityName, status: "saved" });
-	} catch (error) {
-		if (!didReportFailure) {
-			reportProgress(onProgress, {
-				id: progressId,
-				scope: "secondary",
-				entityName: change.entityName,
-				status: "failed",
-				message: buildErrorMessage(error),
-			});
-			didReportFailure = true;
-		}
-		throw error;
-	}
-};
-
-const ensureSecondaryParentRecord = async ({
-	parentEntityName,
-	primaryEntity,
-	primaryRecordId,
-	formState,
-	recordIdsByEntity,
-	stepReferenceByEntity,
-	config,
-}: {
-	parentEntityName: string;
-	primaryEntity?: string;
-	primaryRecordId: string | null;
-	formState: any;
-	recordIdsByEntity: Map<string, string>;
-	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
-	config: ReactFormConfiguration;
-}) => {
-	let parentId: string | null = recordIdsByEntity.get(parentEntityName) ?? null;
-
-	if (!parentId && parentEntityName === primaryEntity && primaryRecordId) {
-		parentId = primaryRecordId;
-	}
-
-	if (!parentId && parentEntityName !== primaryEntity) {
-		const relatedRecord = formState.getRelatedRecord?.(parentEntityName);
-		if (relatedRecord?.recordId) {
-			parentId = relatedRecord.recordId;
-			recordIdsByEntity.set(parentEntityName, relatedRecord.recordId);
-		}
-	}
-
-	if (!parentId && parentEntityName !== primaryEntity) {
-		const referenceInfo = stepReferenceByEntity.get(parentEntityName);
-		const navigationProperty = referenceInfo?.navigationProperty;
-
-		if (!navigationProperty) {
-			throw new Error(`Missing referencing navigation property for ${parentEntityName}`);
-		}
-
-		const defaults = buildDefaultOnCreateData(parentEntityName, config);
-		const parentData = mergeDefaultOnCreateData({}, defaults);
-		if (primaryRecordId) {
-			parentData[navigationProperty] = {
-				id: primaryRecordId,
-				logicalName: primaryEntity,
-			};
-		}
-
-		parentId = await createRecord(parentEntityName, parentData);
-
-		if (!parentId) {
-			throw new Error(`Failed to create parent record for ${parentEntityName}`);
-		}
-
-		recordIdsByEntity.set(parentEntityName, parentId);
-		formState.setRelatedRecord?.(parentEntityName, parentId, referenceInfo?.referencingAttribute, navigationProperty);
-	}
-
-	return parentId;
-};
-
-const saveChildRecord = async ({
-	pending,
-	parentEntityName,
-	parentId,
-	formState,
-	config,
-	entityMetadataMap,
-	onProgress,
-}: {
-	pending: PendingChildRecord;
-	parentEntityName: string;
-	parentId: string;
-	formState: any;
-	config: ReactFormConfiguration;
-	entityMetadataMap: Map<string, TableMetadataEntry>;
-	onProgress: SaveContext["onProgress"];
-}): Promise<{ errors: SaveError[]; handledUploadIds: Set<string> }> => {
-	const progressId = buildProgressId("child", pending.entityName, pending.id);
-	reportProgress(onProgress, {
-		id: progressId,
-		scope: "child",
-		entityName: pending.entityName,
-		label: pending.id,
-		status: "saving",
-	});
-	let didReportFailure = false;
-	const errors: SaveError[] = [];
-	const handledUploadIds = new Set<string>();
-
-	try {
-		const defaults = buildDefaultOnCreateData(pending.entityName, config);
-		const childData = mergeDefaultOnCreateData({ ...pending.data }, defaults);
-
-		const primaryIdAttribute = resolvePrimaryIdAttribute(pending.entityName, entityMetadataMap);
-		if (pending.id) {
-			if (isTempId(pending.id) && childData[primaryIdAttribute] === undefined) {
-				const sanitizedId = sanitizeGuid(pending.id);
-				childData[primaryIdAttribute] = sanitizedId;
-			}
-
-			delete childData.id;
-		}
-
-		delete childData.id;
-		delete childData._isNew;
-		delete childData._isPending;
-
-		if (pending.referencingAttribute) {
-			delete childData[pending.referencingAttribute];
-		}
-
-		if (pending.referencingNavigationProperty) {
-			delete childData[pending.referencingNavigationProperty];
-		}
-
-		const navigationProperty = pending.referencingNavigationProperty || pending.referencingAttribute;
-
-		if (!navigationProperty) {
-			reportProgress(onProgress, {
-				id: progressId,
-				scope: "child",
-				entityName: pending.entityName,
-				status: "failed",
-				message: "Missing referencing navigation property",
-			});
-			didReportFailure = true;
-			throw new Error(`Missing referencing navigation property for ${pending.entityName}`);
-		}
-
-		childData[navigationProperty] = {
-			id: parentId,
-			logicalName: parentEntityName,
-		};
-
-		const childId = await createRecord(pending.entityName, childData);
-
-		if (!childId) {
-			throw new Error(`Failed to create child record for ${pending.entityName}`);
-		}
-
-		const key = `${pending.entityName}_${pending.id}`;
-		formState.deletePendingChildRecord(key);
-		formState.upsertChildRecord?.(pending.entityName, { id: childId, ...childData });
-
-		reportProgress(onProgress, {
-			id: progressId,
-			scope: "child",
-			entityName: pending.entityName,
-			status: "saved",
-		});
-
-		const pendingUploads = Object.values(formState.pendingDocumentUploads || {}) as PendingDocumentUpload[];
-		const uploadsForChild = pendingUploads.filter((upload) => upload.childRecordId === pending.id);
-
-		for (const upload of uploadsForChild) {
-			const updatedUpload = {
-				...upload,
-				recordId: childId,
-				childRecordId: childId,
-			};
-			formState.addPendingDocumentUpload?.(updatedUpload);
-
-			const uploadProgressId = buildProgressId("upload", pending.entityName, upload.id);
-			reportProgress(onProgress, {
-				id: uploadProgressId,
-				scope: "upload",
-				entityName: pending.entityName,
-				label: upload.file?.name || upload.id,
-				status: "saving",
-			});
-
-			try {
-				await uploadDocumentForRecord({
-					entityName: pending.entityName,
-					recordId: childId,
-					folderName: upload.folderName,
-					file: upload.file,
-					uploadDate: upload.uploadDate,
-				});
-
-				const uploadKey = `${upload.entityName}_${upload.id}`;
-				formState.deletePendingDocumentUpload(uploadKey);
-
-				reportProgress(onProgress, {
-					id: uploadProgressId,
-					scope: "upload",
-					entityName: pending.entityName,
-					status: "saved",
-				});
-				handledUploadIds.add(upload.id);
-			} catch (error) {
-				reportProgress(onProgress, {
-					id: uploadProgressId,
-					scope: "upload",
-					entityName: pending.entityName,
-					status: "failed",
-					message: buildErrorMessage(error),
-				});
-				errors.push(buildSaveError("upload", `Failed to upload document: ${buildErrorMessage(error)}`, pending.entityName, upload.id));
-				handledUploadIds.add(upload.id);
-			}
-		}
-	} catch (error) {
-		if (!didReportFailure) {
-			reportProgress(onProgress, {
-				id: progressId,
-				scope: "child",
-				entityName: pending.entityName,
-				status: "failed",
-				message: buildErrorMessage(error),
-			});
-			didReportFailure = true;
-		}
-		throw error;
-	}
-
-	return { errors, handledUploadIds };
-};
 
 /**
  * Execute save operation.
@@ -1010,68 +454,96 @@ export async function executeSave(context: SaveContext): Promise<SaveResult> {
 	try {
 		const primaryEntity = config.Form?.PrimaryApplicationTable?.TableLogicalName;
 		const stepReferenceByEntity = buildStepReferenceMap(config, primaryEntity);
-		const { entityChanges, primaryChanges, secondaryEntityChanges } = collectEntityChanges(formState, primaryEntity);
+		const saveTree: FormStateTreeNode | null = formState.getSaveTree?.();
 
-		if (entityChanges.length === 0 && !formState.hasPendingUploads) {
+		const hasWork = (node: FormStateTreeNode | null): boolean => {
+			if (!node) {
+				return false;
+			}
+
+			if (node.type === "upload" || shouldPersistEntityNode(node)) {
+				return true;
+			}
+
+			return node.children.some((child) => hasWork(child));
+		};
+
+		if (!saveTree || !hasWork(saveTree)) {
 			return {
 				success: true,
 				message: "No changes to save",
 			};
 		}
 
-		const shouldEnsurePrimaryExists = !formState.recordId && (formState.hasPendingUploads || secondaryEntityChanges.length > 0);
-		const primaryRecordId = await savePrimaryRecord({
-			formState,
-			primaryEntity,
-			primaryChanges,
-			shouldEnsurePrimaryExists,
-			config,
-			onProgress,
-		});
+		const recordIdsByEntity = new Map<string, string>();
+		const seedRecordIds = (node: FormStateTreeNode | null) => {
+			if (!node) {
+				return;
+			}
 
-		const recordIdsByEntity = buildRecordIdsByEntity({ formState, primaryEntity, primaryRecordId });
-		const secondaryErrors = await saveSecondaryEntityChanges({
-			secondaryEntityChanges,
-			primaryEntity,
-			primaryRecordId,
-			formState,
-			recordIdsByEntity,
-			stepReferenceByEntity,
-			config,
-			onProgress,
-		});
-		errors.push(...secondaryErrors);
+			if (node.type === "primary" && node.recordId && primaryEntity) {
+				recordIdsByEntity.set(primaryEntity, node.recordId);
+			}
 
-		const { errors: childErrors, handledUploadIds } = await savePendingChildRecords({
-			formState,
-			primaryEntity,
-			primaryRecordId,
-			recordIdsByEntity,
-			stepReferenceByEntity,
-			config,
-			entityMetadataMap,
-			onProgress,
-		});
-		errors.push(...childErrors);
+			if (node.type === "secondary" && node.logicalName && node.recordId) {
+				recordIdsByEntity.set(node.logicalName, node.recordId);
+			}
 
-		const recordDocumentErrors = await savePendingDocumentUploadsForRecords({
-			formState,
-			primaryEntity,
-			onProgress,
-			skipUploadIds: handledUploadIds,
-		});
-		errors.push(...recordDocumentErrors);
+			node.children.forEach((child) => seedRecordIds(child));
+		};
 
-		const documentErrors = await savePendingDocumentUploads({
-			formState,
-			primaryEntity,
-			primaryRecordId,
-			recordIdsByEntity,
-			stepReferenceByEntity,
-			config,
-			onProgress,
-		});
-		errors.push(...documentErrors);
+		seedRecordIds(saveTree);
+
+		const processNode = async (node: FormStateTreeNode, parentNode: FormStateTreeNode | null): Promise<SaveError[]> => {
+			if (node.type === "upload") {
+				return await saveUploadNode({ node, parentNode, onProgress, formState });
+			}
+
+			const nodeErrors: SaveError[] = [];
+			let resolvedRecordId = node.recordId ?? null;
+
+			if (shouldPersistEntityNode(node)) {
+				const nodeResult = await saveEntityNode({
+					node,
+					parentNode,
+					formState,
+					primaryEntity,
+					stepReferenceByEntity,
+					config,
+					entityMetadataMap,
+					recordIdsByEntity,
+					onProgress,
+				});
+				nodeErrors.push(...nodeResult.errors);
+				resolvedRecordId = nodeResult.recordId ?? resolvedRecordId;
+			}
+
+			if (!resolvedRecordId && node.children.length > 0) {
+				nodeErrors.push(buildSaveError(node.type, `Missing parent record for ${node.logicalName}`, node.logicalName, node.id));
+				return nodeErrors;
+			}
+
+			const updatedNode: FormStateTreeNode = {
+				...node,
+				recordId: resolvedRecordId,
+			};
+
+			const childResults = await Promise.allSettled(node.children.map((child) => processNode(child, updatedNode)));
+
+			childResults.forEach((result) => {
+				if (result.status === "fulfilled") {
+					nodeErrors.push(...result.value);
+				} else {
+					nodeErrors.push(buildSaveError("save", buildErrorMessage(result.reason), node.logicalName));
+				}
+			});
+
+			return nodeErrors;
+		};
+
+		errors.push(...(await processNode(saveTree, null)));
+
+		const primaryRecordId = recordIdsByEntity.get(primaryEntity || "") || formState.recordId;
 
 		if (errors.length === 0) {
 			await ensureFormInstanceAndSession({
