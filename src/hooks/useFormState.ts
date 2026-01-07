@@ -695,6 +695,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		// State
 		recordId: state.recordId,
 		primaryEntityName: state.primaryEntityName,
+		metadata: state.metadata,
 		formInstanceId: state.formInstanceId,
 		userFormSessionId: state.userFormSessionId,
 		relatedRecords: state.relatedRecords,
