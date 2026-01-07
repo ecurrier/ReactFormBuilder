@@ -745,3 +745,5 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		serializeForSubmission,
 	};
 };
+
+export type UseFormStateResult = ReturnType<typeof useFormState>;
