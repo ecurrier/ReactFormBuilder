@@ -470,7 +470,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		const recordId = editingRecord?.id;
 		const isNew = editingRecord?._isNew || !recordId;
 		const resolvedParentEntityName = parentEntityName || formState?.primaryEntityName;
-		const { id, _isNew, _isPending, ...cleanedFormData } = formData ?? {};
+		const { id, _isNew, _isPending, _nodeId, ...cleanedFormData } = formData ?? {};
 
 		// Check if this is a pending record (new or unsaved edit)
 		if (formState) {
