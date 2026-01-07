@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuItem } from "@components";
+import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuItem, Badge } from "@components";
 import { retrieveEygaConfiguration, generateTempId, isTempId, type DocumentMetadata } from "@utilities";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord, getSASUrlForDocument } from "@services/documentService";
 
@@ -151,7 +151,6 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 					uploadDate: formatUploadDate(new Date()),
 				});
 			});
-			setAlertState({ type: "success", message: "Files staged. They will be uploaded after saving the record." });
 			return;
 		}
 
@@ -347,7 +346,12 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 								<tr key={row.key}>
 									<td>
 										{row.isPending ? (
-											<span style={{ fontStyle: "italic", opacity: 0.8 }}>{row.name} (Pending)</span>
+											<>
+												<span style={{ fontStyle: "italic", opacity: 0.8 }}>{row.name}</span>
+												<span className="ml-2">
+													<Badge type="warning" content="Pending" />
+												</span>
+											</>
 										) : (
 											<span>{row.name}</span>
 										)}

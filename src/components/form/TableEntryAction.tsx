@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import TableEntry, { TableColumn, TableDataResponse, PaginationOptions, TableSortState } from "@components/form/TableEntry";
-import { TableEntryForm, LoadingIndicator, Sidepane, ConfirmationModal } from "@components";
+import { TableEntryForm, LoadingIndicator, Sidepane, ConfirmationModal, Badge } from "@components";
 import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu";
 import { ActionType, DataType } from "@constants/enums";
 import { retrieveRecord } from "@/services/api/Api";
@@ -283,8 +283,10 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		if (config.ChildViewSteps && config.ChildViewSteps.length > 0) {
 			const viewStep = config.ChildViewSteps[0];
 
-			viewStep.Actions.forEach((action) => {
+			// Add view columns
+			viewStep.Actions.forEach((action, actionIndex) => {
 				if (action.Type === ActionType.FieldInput) {
+					const isFirstColumn = cols.length === 0;
 					cols.push({
 						key: action.Properties.LogicalName,
 						label: action.Properties.Label,
@@ -294,7 +296,18 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 							const content = getDisplayValue(row, action.Properties.LogicalName);
 
 							if (isPending) {
-								return <span style={{ fontStyle: "italic", opacity: 0.8 }}>{content}</span>;
+								return (
+									<>
+										<span style={{ fontStyle: "italic", opacity: 0.8 }}>{content}</span>
+										{isFirstColumn && (
+											<>
+												<span className="ml-2">
+													<Badge type="warning" content="Pending" />
+												</span>
+											</>
+										)}
+									</>
+								);
 							}
 
 							return content;
@@ -315,23 +328,6 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					const rowId = resolveRecordId(row, config.ChildEntityLogicalName);
 					const isPending = row._isPending;
 					const menuItems: DropdownMenuItem[] = [];
-
-					// TO-DO: Add this to main stylesheet
-					// Add "Unsaved" badge for pending records
-					const badge = isPending ? (
-						<span
-							style={{
-								marginRight: "8px",
-								padding: "2px 6px",
-								backgroundColor: "#ffc107",
-								color: "#000",
-								fontSize: "0.75rem",
-								borderRadius: "3px",
-								fontWeight: "bold",
-							}}>
-							Unsaved
-						</span>
-					) : null;
 
 					if (config.EditEnabled) {
 						menuItems.push({
