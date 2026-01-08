@@ -41,11 +41,21 @@ interface TableEntryFormProps {
 	parentRecordId?: string;
 	parentEntityName?: string;
 	parentFormState?: any;
+	nodeId?: string;
 	onSave: (data: any) => void;
 	onCancel: () => void;
 }
 
-export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialData, parentRecordId, parentEntityName, parentFormState, onSave, onCancel }) => {
+export const TableEntryForm: React.FC<TableEntryFormProps> = ({
+	config,
+	initialData,
+	parentRecordId,
+	parentEntityName,
+	parentFormState,
+	nodeId,
+	onSave,
+	onCancel,
+}) => {
 	const [formData, setFormData] = useState<any>(initialData || {});
 	const metadataRef = React.useRef<Record<string, any>>({});
 	const recordId = initialData?.id;
@@ -86,37 +96,10 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 		[formData, getFieldKey]
 	);
 
-	const addPendingDocumentUpload = React.useCallback(
-		(upload: any) => {
-			parentFormState?.addPendingDocumentUpload?.(upload);
-		},
-		[parentFormState]
-	);
-
-	const deletePendingDocumentUpload = React.useCallback(
-		(key: string) => {
-			parentFormState?.deletePendingDocumentUpload?.(key);
-		},
-		[parentFormState]
-	);
-
-	const getPendingDocumentUploads = React.useCallback(
-		(entityName?: string, folderName?: string, childRecordId?: string) => {
-			return parentFormState?.getPendingDocumentUploads?.(entityName, folderName, childRecordId) ?? [];
-		},
-		[parentFormState]
-	);
-
-	const clearPendingDocumentUploads = React.useCallback(
-		(entityName?: string) => {
-			parentFormState?.clearPendingDocumentUploads?.(entityName);
-		},
-		[parentFormState]
-	);
-
 	const localFormState = React.useMemo(
 		() => ({
 			type: "tableEntry",
+			nodeId,
 			recordId,
 			primaryEntityName: config.ChildEntityLogicalName,
 			parentEntityName,
@@ -125,20 +108,20 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({ config, initialD
 			updateFieldValue,
 			getFieldValue,
 			getFieldMetadata: (path: string) => metadataRef.current[path],
-			addPendingDocumentUpload,
-			deletePendingDocumentUpload,
-			getPendingDocumentUploads,
-			clearPendingDocumentUploads,
+			addUploadNode: parentFormState?.addUploadNode,
+			getUploadNodes: parentFormState?.getUploadNodes,
+			deleteNode: parentFormState?.deleteNode,
+			getNodeById: parentFormState?.getNodeById,
+			findNodeByRecordId: parentFormState?.findNodeByRecordId,
+			getEntityNode: parentFormState?.getEntityNode,
 		}),
 		[
-			addPendingDocumentUpload,
-			clearPendingDocumentUploads,
 			config.ChildEntityLogicalName,
-			deletePendingDocumentUpload,
 			getFieldValue,
-			getPendingDocumentUploads,
+			nodeId,
 			parentEntityName,
 			parentRecordId,
+			parentFormState,
 			recordId,
 			registerField,
 			updateFieldValue,

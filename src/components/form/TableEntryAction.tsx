@@ -7,7 +7,6 @@ import { retrieveRecord } from "@/services/api/Api";
 import { buildFetchXmlForRecord, resolvePrimaryIdAttribute, generateTempId, isTempId } from "@utilities";
 
 const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-import { Alert } from "bootstrap";
 
 interface FieldAction {
 	Id: string;
@@ -204,19 +203,17 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	formState,
 	fetchData,
 	shouldLoadData = true,
-	onSave,
 	onDelete,
 	className,
 }) => {
 	const [sidepaneOpen, setSidepaneOpen] = useState(false);
 	const [editingRecord, setEditingRecord] = useState<any | null>(null);
 	const [isLoadingRecord, setIsLoadingRecord] = useState(false);
-	const [isSavingRecord, setIsSavingRecord] = useState(false);
 	const [deleteRecord, setDeleteRecord] = useState<any | null>(null);
 	// TO-DO: More robust validation/error handling
 	const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
 	const tableRef = useRef<any>(null);
-	const getPendingChildRecords = formState?.getPendingChildRecords;
+	const getChildNodes = formState?.getChildNodes;
 
 	const lookupFieldInfo = React.useMemo(() => {
 		const viewStep = config.ChildViewSteps?.[0];
@@ -246,7 +243,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			});
 
 			// Get pending records from formState
-			const pendingRecords = getPendingChildRecords ? getPendingChildRecords(config.ChildEntityLogicalName) : [];
+			const pendingRecords = getChildNodes ? getChildNodes(config.ChildEntityLogicalName).filter((node: any) => !node.isPersisted) : [];
 
 			// Convert pending records to table format
 			const pendingTableRecords = pendingRecords.map((pending: any) => ({
@@ -263,10 +260,10 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				totalRecordCount: (apiResponse.totalRecordCount || 0) + pendingRecords.length,
 			};
 		},
-		[fetchData, getPendingChildRecords, config.ChildEntityLogicalName, lookupFieldInfo, lookupFieldNames]
+		[fetchData, getChildNodes, config.ChildEntityLogicalName, lookupFieldInfo, lookupFieldNames]
 	);
 
-	const pendingCount = getPendingChildRecords ? getPendingChildRecords(config.ChildEntityLogicalName).length : 0;
+	const pendingCount = getChildNodes ? getChildNodes(config.ChildEntityLogicalName).filter((node: any) => !node.isPersisted).length : 0;
 
 	React.useEffect(() => {
 		if (!shouldLoadData) {
@@ -352,7 +349,17 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 
 	const handleCreate = () => {
 		const tempId = generateTempId();
-		setEditingRecord({ id: tempId, _isNew: true });
+		const resolvedParentEntityName = parentEntityName || formState?.primaryEntityName;
+		const nodeId = formState?.upsertChildNode?.({
+			parentEntityName: resolvedParentEntityName,
+			childEntityName: config.ChildEntityLogicalName,
+			data: {},
+			recordId: tempId,
+			referencingAttribute: config.ReferencingAttribute,
+			referencingNavigationProperty: config.ReferencingNavigationProperty || config.ReferencingAttribute,
+			isPersisted: false,
+		});
+		setEditingRecord({ id: tempId, _isNew: true, _nodeId: nodeId ?? tempId });
 		setSidepaneOpen(true);
 	};
 
@@ -367,12 +374,11 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		// Check if this is a pending record
 		if (isTempId(recordId)) {
 			// Load from pending state
-			const pendingRecords = formState?.getPendingChildRecords(config.ChildEntityLogicalName) || [];
-			const pendingRecord =
-				pendingRecords.find((p: any) => p.id === recordId) || Object.values(formState?.pendingChildRecords || {}).find((p: any) => p?.id === recordId);
+			const pendingRecords = formState?.getChildNodes?.(config.ChildEntityLogicalName) || [];
+			const pendingRecord = pendingRecords.find((p: any) => p.id === recordId);
 
 			if (pendingRecord) {
-				setEditingRecord({ id: recordId, ...pendingRecord.data, _isNew: false });
+				setEditingRecord({ id: recordId, ...pendingRecord.data, _isNew: false, _nodeId: pendingRecord.id });
 				setSidepaneOpen(true);
 			} else {
 				console.error("Pending record not found:", recordId);
@@ -380,7 +386,17 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		} else {
 			// Load from API - fetch full record with all fields
 			const normalizedRecord = normalizeLookupFields({ id: recordId, ...record }, lookupFormFieldInfo);
-			setEditingRecord({ ...normalizedRecord, _isNew: false });
+			const resolvedParentEntityName = parentEntityName || formState?.primaryEntityName;
+			const nodeId = formState?.upsertChildNode?.({
+				parentEntityName: resolvedParentEntityName,
+				childEntityName: config.ChildEntityLogicalName,
+				data: {},
+				recordId,
+				referencingAttribute: config.ReferencingAttribute,
+				referencingNavigationProperty: config.ReferencingNavigationProperty || config.ReferencingAttribute,
+				isPersisted: true,
+			});
+			setEditingRecord({ ...normalizedRecord, _isNew: false, _nodeId: nodeId ?? recordId });
 			setSidepaneOpen(true);
 			setIsLoadingRecord(true);
 			try {
@@ -405,7 +421,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 				if (fullRecord) {
 					const resolvedId = recordId || fullRecord[primaryKey];
 					const normalizedFullRecord = normalizeLookupFields({ id: resolvedId, ...fullRecord }, lookupFormFieldInfo);
-					setEditingRecord({ ...normalizedFullRecord, _isNew: false });
+					setEditingRecord({ ...normalizedFullRecord, _isNew: false, _nodeId: nodeId ?? recordId });
 				} else {
 					console.error("Failed to load record:", recordId);
 				}
@@ -437,8 +453,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		// Check if this is a pending record
 		if (isTempId(recordId)) {
 			// Delete from pending state
-			const key = `${config.ChildEntityLogicalName}_${recordId}`;
-			formState?.deletePendingChildRecord(key);
+			formState?.deleteNode?.(recordId);
 			tableRef.current?.refresh();
 		} else {
 			// Delete persisted record via API
@@ -455,57 +470,32 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		const recordId = editingRecord?.id;
 		const isNew = editingRecord?._isNew || !recordId;
 		const resolvedParentEntityName = parentEntityName || formState?.primaryEntityName;
-		const { id, _isNew, _isPending, ...cleanedFormData } = formData ?? {};
+		const { id, _isNew, _isPending, _nodeId, ...cleanedFormData } = formData ?? {};
 
 		// Check if this is a pending record (new or unsaved edit)
-		if (isTempId(recordId) || isNew) {
-			// Save to pending state
-			if (formState) {
-				const pendingRecordId = recordId || generateTempId();
-				const pendingRecord = {
-					id: pendingRecordId,
-					entityName: config.ChildEntityLogicalName,
-					referencingAttribute: config.ReferencingAttribute,
-					referencingNavigationProperty: config.ReferencingNavigationProperty || config.ReferencingAttribute,
-					parentEntityName: resolvedParentEntityName,
-					data: cleanedFormData,
-					isNew,
-				};
+		if (formState) {
+			formState.upsertChildNode?.({
+				parentEntityName: resolvedParentEntityName,
+				childEntityName: config.ChildEntityLogicalName,
+				data: cleanedFormData,
+				recordId,
+				referencingAttribute: config.ReferencingAttribute,
+				referencingNavigationProperty: config.ReferencingNavigationProperty || config.ReferencingAttribute,
+				isPersisted: !isTempId(recordId),
+			});
 
-				const key = `${config.ChildEntityLogicalName}_${pendingRecordId}`;
-
-				if (isNew) {
-					formState.addPendingChildRecord(pendingRecord);
-				} else {
-					formState.updatePendingChildRecord(key, cleanedFormData);
-				}
-
-				setSidepaneOpen(false);
-				setEditingRecord(null);
-				tableRef.current?.refresh();
-			} else {
-				console.error("formState not available");
-			}
+			setSidepaneOpen(false);
+			setEditingRecord(null);
+			tableRef.current?.refresh();
 		} else {
-			// Persisted record - save via API
-			if (onSave) {
-				setIsSavingRecord(true);
-				try {
-					await onSave(config.ChildEntityLogicalName, cleanedFormData, recordId, config.ReferencingAttribute, config.ReferencingNavigationProperty);
-					setSidepaneOpen(false);
-					setEditingRecord(null);
-					tableRef.current?.refresh();
-				} catch (error) {
-					console.error("Error saving record:", error);
-					// TO-DO: Show error to user
-				} finally {
-					setIsSavingRecord(false);
-				}
-			}
+			console.error("formState not available");
 		}
 	};
 
 	const handleFormCancel = () => {
+		if (editingRecord?._isNew && editingRecord?.id) {
+			formState?.deleteNode?.(editingRecord.id);
+		}
 		setSidepaneOpen(false);
 		setEditingRecord(null);
 	};
@@ -530,13 +520,14 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			/>
 
 			<Sidepane isOpen={sidepaneOpen} onClose={handleFormCancel} title={editingRecord?._isNew ? "Create Record" : "Edit Record"}>
-				<LoadingIndicator visible={isLoadingRecord || isSavingRecord} variant="contextual" message={isSavingRecord ? "Saving..." : "Loading..."} />
+				<LoadingIndicator visible={isLoadingRecord} variant="contextual" message="Loading..." />
 				<TableEntryForm
 					config={config}
 					initialData={editingRecord}
 					parentRecordId={parentRecordId}
 					parentEntityName={parentEntityName}
 					parentFormState={formState}
+					nodeId={editingRecord?._nodeId}
 					onSave={handleFormSave}
 					onCancel={handleFormCancel}
 				/>
