@@ -16,7 +16,15 @@ import { generateTempId, isTempId, resolveEntitySetName, resolvePrimaryIdAttribu
 /**
  * Initial form state.
  */
-const buildInitialFormState = ({ primaryEntityName, recordId, rootNodeId }: { primaryEntityName: string; recordId: string | null; rootNodeId: string }): FormState => {
+const buildInitialFormState = ({
+	primaryEntityName,
+	recordId,
+	rootNodeId,
+}: {
+	primaryEntityName: string;
+	recordId: string | null;
+	rootNodeId: string;
+}): FormState => {
 	const rootNode: FormStateNode = {
 		id: rootNodeId,
 		type: "primary",
@@ -424,53 +432,55 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
  */
 export const useFormState = (primaryEntityName: string, recordId: string | null = null) => {
 	const rootNodeId = useMemo(() => generateTempId(), []);
-	const [state, dispatch] = useReducer(
-		formStateReducer,
-		undefined,
-		() => buildInitialFormState({ primaryEntityName, recordId, rootNodeId })
-	);
+	const [state, dispatch] = useReducer(formStateReducer, undefined, () => buildInitialFormState({ primaryEntityName, recordId, rootNodeId }));
 
 	/**
 	 * Registers a field with the form state.
 	 * Should be called when a field component mounts.
 	 */
-	const registerField = useCallback((path: string, metadata: FieldMetadata, initialValue?: any) => {
-		dispatch({ type: "REGISTER_FIELD", path, metadata, initialValue });
+	const registerField = useCallback(
+		(path: string, metadata: FieldMetadata, initialValue?: any) => {
+			dispatch({ type: "REGISTER_FIELD", path, metadata, initialValue });
 
-		const existingNodeId = state.entityNodeIds[metadata.entityName];
-		if (!existingNodeId) {
-			const nodeId = generateTempId();
-			const isPrimary = metadata.entityName === state.primaryEntityName;
-			const node: FormStateNode = {
-				id: nodeId,
-				type: isPrimary ? "primary" : "secondary",
-				logicalName: metadata.entityName,
-				data: {},
-				recordId: isPrimary ? state.recordId : null,
-				isPersisted: isPrimary ? Boolean(state.recordId && !isTempId(state.recordId)) : false,
-				parentId: isPrimary ? null : state.rootNodeId,
-				children: [],
-			};
-			dispatch({ type: "ADD_NODE", node });
-			dispatch({ type: "SET_ENTITY_NODE", entityName: metadata.entityName, nodeId });
-		}
-	}, [state.entityNodeIds, state.primaryEntityName, state.recordId, state.rootNodeId]);
+			const existingNodeId = state.entityNodeIds[metadata.entityName];
+			if (!existingNodeId) {
+				const nodeId = generateTempId();
+				const isPrimary = metadata.entityName === state.primaryEntityName;
+				const node: FormStateNode = {
+					id: nodeId,
+					type: isPrimary ? "primary" : "secondary",
+					logicalName: metadata.entityName,
+					data: {},
+					recordId: isPrimary ? state.recordId : null,
+					isPersisted: isPrimary ? Boolean(state.recordId && !isTempId(state.recordId)) : false,
+					parentId: isPrimary ? null : state.rootNodeId,
+					children: [],
+				};
+				dispatch({ type: "ADD_NODE", node });
+				dispatch({ type: "SET_ENTITY_NODE", entityName: metadata.entityName, nodeId });
+			}
+		},
+		[state.entityNodeIds, state.primaryEntityName, state.recordId, state.rootNodeId]
+	);
 
 	/**
 	 * Updates a field value and marks it as dirty.
 	 */
-	const updateFieldValue = useCallback((path: string, value: any) => {
-		dispatch({ type: "UPDATE_FIELD", path, value });
-		const metadata = state.metadata[path];
-		if (!metadata) {
-			return;
-		}
+	const updateFieldValue = useCallback(
+		(path: string, value: any) => {
+			dispatch({ type: "UPDATE_FIELD", path, value });
+			const metadata = state.metadata[path];
+			if (!metadata) {
+				return;
+			}
 
-		const nodeId = state.entityNodeIds[metadata.entityName];
-		if (nodeId) {
-			dispatch({ type: "UPDATE_NODE_DATA", nodeId, data: { [metadata.logicalName]: value } });
-		}
-	}, [state.entityNodeIds, state.metadata]);
+			const nodeId = state.entityNodeIds[metadata.entityName];
+			if (nodeId) {
+				dispatch({ type: "UPDATE_NODE_DATA", nodeId, data: { [metadata.logicalName]: value } });
+			}
+		},
+		[state.entityNodeIds, state.metadata]
+	);
 
 	/**
 	 * Sets the record ID (useful when transitioning from create to update after save).
@@ -518,34 +528,37 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	/**
 	 * Tracks a related record ID for a secondary step entity.
 	 */
-	const setRelatedRecord = useCallback((entityName: string, recordId: string, referencingAttribute?: string, referencingNavigationProperty?: string) => {
-		const record: RelatedRecordInfo = {
-			recordId,
-			referencingAttribute,
-			referencingNavigationProperty,
-		};
-
-		dispatch({ type: "SET_RELATED_RECORD", entityName, record });
-
-		const nodeId = state.entityNodeIds[entityName];
-		if (nodeId) {
-			dispatch({ type: "UPDATE_NODE_RECORD_ID", nodeId, recordId, isPersisted: Boolean(recordId && !isTempId(recordId)) });
-		} else {
-			const newNodeId = generateTempId();
-			const node: FormStateNode = {
-				id: newNodeId,
-				type: entityName === state.primaryEntityName ? "primary" : "secondary",
-				logicalName: entityName,
-				data: {},
+	const setRelatedRecord = useCallback(
+		(entityName: string, recordId: string, referencingAttribute?: string, referencingNavigationProperty?: string) => {
+			const record: RelatedRecordInfo = {
 				recordId,
-				isPersisted: Boolean(recordId && !isTempId(recordId)),
-				parentId: entityName === state.primaryEntityName ? null : state.rootNodeId,
-				children: [],
+				referencingAttribute,
+				referencingNavigationProperty,
 			};
-			dispatch({ type: "ADD_NODE", node });
-			dispatch({ type: "SET_ENTITY_NODE", entityName, nodeId: newNodeId });
-		}
-	}, [state.entityNodeIds, state.primaryEntityName, state.recordId, state.rootNodeId]);
+
+			dispatch({ type: "SET_RELATED_RECORD", entityName, record });
+
+			const nodeId = state.entityNodeIds[entityName];
+			if (nodeId) {
+				dispatch({ type: "UPDATE_NODE_RECORD_ID", nodeId, recordId, isPersisted: Boolean(recordId && !isTempId(recordId)) });
+			} else {
+				const newNodeId = generateTempId();
+				const node: FormStateNode = {
+					id: newNodeId,
+					type: entityName === state.primaryEntityName ? "primary" : "secondary",
+					logicalName: entityName,
+					data: {},
+					recordId,
+					isPersisted: Boolean(recordId && !isTempId(recordId)),
+					parentId: entityName === state.primaryEntityName ? null : state.rootNodeId,
+					children: [],
+				};
+				dispatch({ type: "ADD_NODE", node });
+				dispatch({ type: "SET_ENTITY_NODE", entityName, nodeId: newNodeId });
+			}
+		},
+		[state.entityNodeIds, state.primaryEntityName, state.recordId, state.rootNodeId]
+	);
 
 	/**
 	 * Retrieves related record info for a secondary step entity.
@@ -900,9 +913,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 
 			return {
 				...node,
-				children: node.children
-					.map((childId) => buildTree(childId))
-					.filter((child): child is FormStateTreeNode => Boolean(child)),
+				children: node.children.map((childId) => buildTree(childId)).filter((child): child is FormStateTreeNode => Boolean(child)),
 			};
 		};
 

@@ -1,13 +1,35 @@
-import { createRecord, updateRecord } from "@/services/api";
-import type { Entity, EntityReference } from "@app-types/Entity";
-import type { FieldMetadata, FormStateTreeNode, UploadNodeData } from "@app-types/FormState";
-import type { ReactConfigurationIdentifierMetadata, ReactFormConfiguration } from "@app-types/config";
-import type { SaveError, SaveProgressEvent, SaveResult } from "@app-types/SaveOrchestrator";
-import { validateField } from "@services/validation/validators";
-import { createFormInstance, createUserFormSession } from "@services/formInstanceManagement";
-import { uploadDocumentForRecord } from "@services/documentService";
-import { loadChildRecords, loadRecordData } from "@services/dataLoader";
-import { isTempId, sanitizeGuid, buildEntityMetadataMap, resolvePrimaryIdAttribute, resolveRequestorId, serializeForApi, type TableMetadataEntry } from "@utilities";
+import type {
+	Entity,
+	EntityReference,
+	FieldMetadata,
+	FormStateTreeNode,
+	UploadNodeData,
+	ReactConfigurationIdentifierMetadata,
+	ReactFormConfiguration,
+	SaveError,
+	SaveProgressEvent,
+	SaveResult,
+} from "@app-types";
+import {
+	createRecord,
+	updateRecord,
+	validateField,
+	createFormInstance,
+	createUserFormSession,
+	uploadDocumentForRecord,
+	loadChildRecords,
+	loadRecordData,
+} from "@services";
+import {
+	isTempId,
+	sanitizeGuid,
+	buildEntityMetadataMap,
+	resolvePrimaryIdAttribute,
+	resolveRequestorId,
+	serializeForApi,
+	type TableMetadataEntry,
+} from "@utilities";
+import { ConfigurationIdentifiers } from "@/constants/configurationIdentifiers";
 
 export interface SaveContext {
 	formState: any;
@@ -78,14 +100,15 @@ const normalizeConfigurationIdentifierMetadata = (
 	return [metadata];
 };
 
+// TO-DO: Should probably do something to make this configurable within Dataverse
 const resolveDefaultLookupValue = (identifier: string, config: ReactFormConfiguration): EntityReference | null => {
 	switch (identifier) {
-		case "Form":
+		case ConfigurationIdentifiers.Form:
 			return config.Form?.Id ? { id: config.Form.Id, logicalName: "eyfrcc_form" } : null;
-		case "FundingOpportunity":
-		case "ApplicationType":
+		case ConfigurationIdentifiers.FundingOpportunity:
+		case ConfigurationIdentifiers.ApplicationType:
 			return config.FundingOpportunity?.Id ? { id: config.FundingOpportunity.Id, logicalName: "eyfrcc_applicationtype" } : null;
-		case "Requestor": {
+		case ConfigurationIdentifiers.Requestor: {
 			const contactId = resolveRequestorId();
 			return contactId ? { id: contactId, logicalName: "contact" } : null;
 		}
@@ -94,6 +117,7 @@ const resolveDefaultLookupValue = (identifier: string, config: ReactFormConfigur
 	}
 };
 
+// TO-DO: Should probably do something to make this configurable within Dataverse
 const buildDefaultOnCreateData = (entityName: string, config: ReactFormConfiguration): Partial<Entity> => {
 	const tableMetadata = config.Form?.TableMetadata?.[entityName] ?? config.TableMetadata?.[entityName];
 	const actions = tableMetadata?.DefaultOnCreateActions ?? [];
@@ -438,7 +462,6 @@ const ensureFormInstanceAndSession = async ({
 	}
 };
 
-
 /**
  * Execute save operation.
  * Saves only dirty fields without validation.
@@ -451,6 +474,7 @@ export async function executeSave(context: SaveContext): Promise<SaveResult> {
 	const errors: SaveError[] = [];
 	const entityMetadataMap = buildEntityMetadataMap(config);
 
+	// TO-DO: Add helper file for some of the methods in here like hasWork, seedRecordIds, processNode, etc.
 	try {
 		const primaryEntity = config.Form?.PrimaryApplicationTable?.TableLogicalName;
 		const stepReferenceByEntity = buildStepReferenceMap(config, primaryEntity);

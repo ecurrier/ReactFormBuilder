@@ -115,17 +115,7 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({
 			findNodeByRecordId: parentFormState?.findNodeByRecordId,
 			getEntityNode: parentFormState?.getEntityNode,
 		}),
-		[
-			config.ChildEntityLogicalName,
-			getFieldValue,
-			nodeId,
-			parentEntityName,
-			parentRecordId,
-			parentFormState,
-			recordId,
-			registerField,
-			updateFieldValue,
-		]
+		[config.ChildEntityLogicalName, getFieldValue, nodeId, parentEntityName, parentRecordId, parentFormState, recordId, registerField, updateFieldValue]
 	);
 
 	// Collect all actions from all steps
