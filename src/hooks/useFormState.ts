@@ -6,26 +6,45 @@ import type {
 	FieldValue,
 	FormState,
 	FormStateAction,
-	PendingChildRecord,
-	PendingDocumentUpload,
+	FormStateNode,
+	FormStateTreeNode,
 	RelatedRecordInfo,
+	UploadNodeData,
 } from "@app-types/FormState";
-import { resolveEntitySetName, resolvePrimaryIdAttribute, serializeForApi } from "@utilities";
+import { generateTempId, isTempId, resolveEntitySetName, resolvePrimaryIdAttribute, serializeForApi } from "@utilities";
 
 /**
  * Initial form state.
  */
-const initialFormState: FormState = {
-	fields: {},
-	metadata: {},
-	recordId: null,
-	primaryEntityName: "",
-	formInstanceId: null,
-	userFormSessionId: null,
-	relatedRecords: {},
-	childRecords: {},
-	pendingChildRecords: {},
-	pendingDocumentUploads: {},
+const buildInitialFormState = ({ primaryEntityName, recordId, rootNodeId }: { primaryEntityName: string; recordId: string | null; rootNodeId: string }): FormState => {
+	const rootNode: FormStateNode = {
+		id: rootNodeId,
+		type: "primary",
+		logicalName: primaryEntityName,
+		data: {},
+		recordId,
+		isPersisted: Boolean(recordId && !isTempId(recordId)),
+		parentId: null,
+		children: [],
+	};
+
+	return {
+		fields: {},
+		metadata: {},
+		recordId,
+		primaryEntityName,
+		formInstanceId: null,
+		userFormSessionId: null,
+		relatedRecords: {},
+		childRecords: {},
+		rootNodeId,
+		nodesById: {
+			[rootNodeId]: rootNode,
+		},
+		entityNodeIds: {
+			[primaryEntityName]: rootNodeId,
+		},
+	};
 };
 
 const resolveRecordId = (entityName: string, record: Entity): string | null => {
@@ -81,9 +100,20 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
 		}
 
 		case "SET_RECORD_ID": {
+			const rootNode = state.nodesById[state.rootNodeId];
 			return {
 				...state,
 				recordId: action.recordId,
+				nodesById: rootNode
+					? {
+							...state.nodesById,
+							[state.rootNodeId]: {
+								...rootNode,
+								recordId: action.recordId,
+								isPersisted: Boolean(action.recordId && !isTempId(action.recordId)),
+							},
+						}
+					: state.nodesById,
 			};
 		}
 
@@ -123,7 +153,8 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
 		}
 
 		case "RESET_FORM": {
-			return initialFormState;
+			const rootNodeId = generateTempId();
+			return buildInitialFormState({ primaryEntityName: state.primaryEntityName, recordId: null, rootNodeId });
 		}
 
 		case "INITIALIZE_FORM_DATA": {
@@ -226,108 +257,131 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
 			};
 		}
 
-		case "ADD_PENDING_CHILD": {
-			const { record } = action;
-			const key = `${record.entityName}_${record.id}`;
+		case "ADD_NODE": {
+			const { node } = action;
+			const parentId = node.parentId;
+			const parentNode = parentId ? state.nodesById[parentId] : null;
+
 			return {
 				...state,
-				pendingChildRecords: {
-					...state.pendingChildRecords,
-					[key]: record,
+				nodesById: {
+					...state.nodesById,
+					[node.id]: node,
+					...(parentNode
+						? {
+								[parentId!]: {
+									...parentNode,
+									children: parentNode.children.includes(node.id) ? parentNode.children : [...parentNode.children, node.id],
+								},
+							}
+						: {}),
 				},
 			};
 		}
 
-		case "UPDATE_PENDING_CHILD": {
-			const { key, data } = action;
-			const existing = state.pendingChildRecords[key];
-			if (!existing) return state;
+		case "UPDATE_NODE_DATA": {
+			const { nodeId, data } = action;
+			const node = state.nodesById[nodeId];
+			if (!node) {
+				return state;
+			}
 
 			return {
 				...state,
-				pendingChildRecords: {
-					...state.pendingChildRecords,
-					[key]: {
-						...existing,
-						data: { ...existing.data, ...data },
+				nodesById: {
+					...state.nodesById,
+					[nodeId]: {
+						...node,
+						data: { ...(node.data ?? {}), ...(data ?? {}) },
 					},
 				},
 			};
 		}
 
-		case "DELETE_PENDING_CHILD": {
-			const { key } = action;
-			const updatedPending = { ...state.pendingChildRecords };
-			delete updatedPending[key];
-			return {
-				...state,
-				pendingChildRecords: updatedPending,
-			};
-		}
-
-		case "CLEAR_PENDING_CHILDREN": {
-			const { entityName } = action;
-			if (!entityName) {
-				// Clear all
-				return {
-					...state,
-					pendingChildRecords: {},
-				};
-			} else {
-				// Clear specific entity
-				const updatedPending = { ...state.pendingChildRecords };
-				Object.keys(updatedPending).forEach((key) => {
-					if (key.startsWith(`${entityName}_`)) {
-						delete updatedPending[key];
-					}
-				});
-				return {
-					...state,
-					pendingChildRecords: updatedPending,
-				};
+		case "RESET_NODE_DATA": {
+			const { nodeId } = action;
+			const node = state.nodesById[nodeId];
+			if (!node) {
+				return state;
 			}
-		}
 
-		case "ADD_PENDING_DOCUMENT_UPLOAD": {
-			const { upload } = action;
-			const key = `${upload.entityName}_${upload.id}`;
 			return {
 				...state,
-				pendingDocumentUploads: {
-					...state.pendingDocumentUploads,
-					[key]: upload,
+				nodesById: {
+					...state.nodesById,
+					[nodeId]: {
+						...node,
+						data: {},
+					},
 				},
 			};
 		}
 
-		case "DELETE_PENDING_DOCUMENT_UPLOAD": {
-			const { key } = action;
-			const updatedPending = { ...state.pendingDocumentUploads };
-			delete updatedPending[key];
+		case "UPDATE_NODE_RECORD_ID": {
+			const { nodeId, recordId, isPersisted } = action;
+			const node = state.nodesById[nodeId];
+			if (!node) {
+				return state;
+			}
+
 			return {
 				...state,
-				pendingDocumentUploads: updatedPending,
+				nodesById: {
+					...state.nodesById,
+					[nodeId]: {
+						...node,
+						recordId,
+						isPersisted: isPersisted ?? Boolean(recordId && !isTempId(recordId)),
+					},
+				},
 			};
 		}
 
-		case "CLEAR_PENDING_DOCUMENT_UPLOADS": {
-			const { entityName } = action;
-			if (!entityName) {
-				return {
-					...state,
-					pendingDocumentUploads: {},
+		case "REMOVE_NODE": {
+			const { nodeId } = action;
+			const node = state.nodesById[nodeId];
+			if (!node) {
+				return state;
+			}
+
+			const updatedNodes = { ...state.nodesById };
+			const removeIds = new Set<string>();
+			const stack = [nodeId];
+			while (stack.length > 0) {
+				const currentId = stack.pop();
+				if (!currentId || removeIds.has(currentId)) {
+					continue;
+				}
+				removeIds.add(currentId);
+				const current = updatedNodes[currentId];
+				current?.children?.forEach((childId) => stack.push(childId));
+			}
+
+			removeIds.forEach((id) => {
+				delete updatedNodes[id];
+			});
+
+			if (node.parentId && updatedNodes[node.parentId]) {
+				updatedNodes[node.parentId] = {
+					...updatedNodes[node.parentId],
+					children: updatedNodes[node.parentId].children.filter((childId) => childId !== nodeId),
 				};
 			}
 
-			const updatedPending = { ...state.pendingDocumentUploads };
-			Object.keys(updatedPending).forEach((key) => {
-				if (key.startsWith(`${entityName}_`)) {
-					delete updatedPending[key];
-				}
-			});
 			return {
 				...state,
-				pendingDocumentUploads: updatedPending,
+				nodesById: updatedNodes,
+			};
+		}
+
+		case "SET_ENTITY_NODE": {
+			const { entityName, nodeId } = action;
+			return {
+				...state,
+				entityNodeIds: {
+					...state.entityNodeIds,
+					[entityName]: nodeId,
+				},
 			};
 		}
 
@@ -369,11 +423,12 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
  * ```
  */
 export const useFormState = (primaryEntityName: string, recordId: string | null = null) => {
-	const [state, dispatch] = useReducer(formStateReducer, {
-		...initialFormState,
-		primaryEntityName,
-		recordId,
-	});
+	const rootNodeId = useMemo(() => generateTempId(), []);
+	const [state, dispatch] = useReducer(
+		formStateReducer,
+		undefined,
+		() => buildInitialFormState({ primaryEntityName, recordId, rootNodeId })
+	);
 
 	/**
 	 * Registers a field with the form state.
@@ -381,14 +436,41 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	 */
 	const registerField = useCallback((path: string, metadata: FieldMetadata, initialValue?: any) => {
 		dispatch({ type: "REGISTER_FIELD", path, metadata, initialValue });
-	}, []);
+
+		const existingNodeId = state.entityNodeIds[metadata.entityName];
+		if (!existingNodeId) {
+			const nodeId = generateTempId();
+			const isPrimary = metadata.entityName === state.primaryEntityName;
+			const node: FormStateNode = {
+				id: nodeId,
+				type: isPrimary ? "primary" : "secondary",
+				logicalName: metadata.entityName,
+				data: {},
+				recordId: isPrimary ? state.recordId : null,
+				isPersisted: isPrimary ? Boolean(state.recordId && !isTempId(state.recordId)) : false,
+				parentId: isPrimary ? null : state.rootNodeId,
+				children: [],
+			};
+			dispatch({ type: "ADD_NODE", node });
+			dispatch({ type: "SET_ENTITY_NODE", entityName: metadata.entityName, nodeId });
+		}
+	}, [state.entityNodeIds, state.primaryEntityName, state.recordId, state.rootNodeId]);
 
 	/**
 	 * Updates a field value and marks it as dirty.
 	 */
 	const updateFieldValue = useCallback((path: string, value: any) => {
 		dispatch({ type: "UPDATE_FIELD", path, value });
-	}, []);
+		const metadata = state.metadata[path];
+		if (!metadata) {
+			return;
+		}
+
+		const nodeId = state.entityNodeIds[metadata.entityName];
+		if (nodeId) {
+			dispatch({ type: "UPDATE_NODE_DATA", nodeId, data: { [metadata.logicalName]: value } });
+		}
+	}, [state.entityNodeIds, state.metadata]);
 
 	/**
 	 * Sets the record ID (useful when transitioning from create to update after save).
@@ -444,7 +526,26 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		};
 
 		dispatch({ type: "SET_RELATED_RECORD", entityName, record });
-	}, []);
+
+		const nodeId = state.entityNodeIds[entityName];
+		if (nodeId) {
+			dispatch({ type: "UPDATE_NODE_RECORD_ID", nodeId, recordId, isPersisted: Boolean(recordId && !isTempId(recordId)) });
+		} else {
+			const newNodeId = generateTempId();
+			const node: FormStateNode = {
+				id: newNodeId,
+				type: entityName === state.primaryEntityName ? "primary" : "secondary",
+				logicalName: entityName,
+				data: {},
+				recordId,
+				isPersisted: Boolean(recordId && !isTempId(recordId)),
+				parentId: entityName === state.primaryEntityName ? null : state.rootNodeId,
+				children: [],
+			};
+			dispatch({ type: "ADD_NODE", node });
+			dispatch({ type: "SET_ENTITY_NODE", entityName, nodeId: newNodeId });
+		}
+	}, [state.entityNodeIds, state.primaryEntityName, state.recordId, state.rootNodeId]);
 
 	/**
 	 * Retrieves related record info for a secondary step entity.
@@ -495,86 +596,180 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	);
 
 	/**
-	 * Adds a pending child record (for new records before parent exists).
+	 * Adds or updates a child node under a parent entity node.
 	 */
-	const addPendingChildRecord = useCallback((record: PendingChildRecord) => {
-		dispatch({ type: "ADD_PENDING_CHILD", record });
-	}, []);
+	const upsertChildNode = useCallback(
+		({
+			parentEntityName,
+			childEntityName,
+			data,
+			recordId,
+			referencingAttribute,
+			referencingNavigationProperty,
+			isPersisted,
+		}: {
+			parentEntityName: string;
+			childEntityName: string;
+			data: Partial<Entity>;
+			recordId?: string;
+			referencingAttribute: string;
+			referencingNavigationProperty?: string;
+			isPersisted?: boolean;
+		}) => {
+			let parentNodeId = state.entityNodeIds[parentEntityName];
+			if (!parentNodeId) {
+				const newParentId = generateTempId();
+				const isPrimary = parentEntityName === state.primaryEntityName;
+				const parentNode: FormStateNode = {
+					id: newParentId,
+					type: isPrimary ? "primary" : "secondary",
+					logicalName: parentEntityName,
+					data: {},
+					recordId: isPrimary ? state.recordId : null,
+					isPersisted: isPrimary ? Boolean(state.recordId && !isTempId(state.recordId)) : false,
+					parentId: isPrimary ? null : state.rootNodeId,
+					children: [],
+				};
+				dispatch({ type: "ADD_NODE", node: parentNode });
+				dispatch({ type: "SET_ENTITY_NODE", entityName: parentEntityName, nodeId: newParentId });
+				parentNodeId = newParentId;
+			}
 
-	/**
-	 * Updates data for a pending child record.
-	 */
-	const updatePendingChildRecord = useCallback((key: string, data: Partial<Entity>) => {
-		dispatch({ type: "UPDATE_PENDING_CHILD", key, data });
-	}, []);
+			const existingNodeId = (Object.values(state.nodesById) as FormStateNode[]).find(
+				(node) => node.type === "child" && node.logicalName === childEntityName && node.recordId === recordId
+			)?.id;
 
-	/**
-	 * Deletes a pending child record.
-	 */
-	const deletePendingChildRecord = useCallback((key: string) => {
-		dispatch({ type: "DELETE_PENDING_CHILD", key });
-	}, []);
+			if (existingNodeId) {
+				dispatch({ type: "UPDATE_NODE_DATA", nodeId: existingNodeId, data });
+				return existingNodeId;
+			}
 
-	/**
-	 * Gets all pending child records for a specific entity.
-	 */
-	const getPendingChildRecords = useCallback(
-		(entityName: string): PendingChildRecord[] => {
-			const pendingEntries = Object.entries(state.pendingChildRecords) as Array<[string, PendingChildRecord]>;
-			return pendingEntries.filter(([key]) => key.startsWith(`${entityName}_`)).map(([_, record]) => record);
+			const nodeId = recordId || generateTempId();
+			const node: FormStateNode = {
+				id: nodeId,
+				type: "child",
+				logicalName: childEntityName,
+				data: { ...data },
+				recordId: recordId ?? null,
+				isPersisted: isPersisted ?? Boolean(recordId && !isTempId(recordId)),
+				referencingAttribute,
+				referencingNavigationProperty,
+				parentId: parentNodeId,
+				children: [],
+			};
+			dispatch({ type: "ADD_NODE", node });
+			return nodeId;
 		},
-		[state.pendingChildRecords]
+		[state.entityNodeIds, state.nodesById, state.primaryEntityName, state.recordId, state.rootNodeId]
 	);
 
-	/**
-	 * Clears pending child records, optionally filtered by entity name.
-	 */
-	const clearPendingChildRecords = useCallback((entityName?: string) => {
-		dispatch({ type: "CLEAR_PENDING_CHILDREN", entityName });
+	const updateNodeData = useCallback((nodeId: string, data: Partial<Entity>) => {
+		dispatch({ type: "UPDATE_NODE_DATA", nodeId, data });
 	}, []);
 
-	/**
-	 * Adds a pending document upload (for uploads before parent exists).
-	 */
-	const addPendingDocumentUpload = useCallback((upload: PendingDocumentUpload) => {
-		dispatch({ type: "ADD_PENDING_DOCUMENT_UPLOAD", upload });
+	const updateNodeRecordId = useCallback((nodeId: string, recordId: string | null, isPersisted?: boolean) => {
+		dispatch({ type: "UPDATE_NODE_RECORD_ID", nodeId, recordId, isPersisted });
 	}, []);
 
-	/**
-	 * Deletes a pending document upload.
-	 */
-	const deletePendingDocumentUpload = useCallback((key: string) => {
-		dispatch({ type: "DELETE_PENDING_DOCUMENT_UPLOAD", key });
+	const resetNodeData = useCallback((nodeId: string) => {
+		dispatch({ type: "RESET_NODE_DATA", nodeId });
 	}, []);
 
-	/**
-	 * Gets all pending document uploads for an entity/folder.
-	 */
-	const getPendingDocumentUploads = useCallback(
-		(entityName?: string, folderName?: string, childRecordId?: string): PendingDocumentUpload[] => {
-			const pendingUploads = Object.values(state.pendingDocumentUploads) as PendingDocumentUpload[];
-			return pendingUploads.filter((upload) => {
-				if (entityName && upload.entityName !== entityName) {
+	const deleteNode = useCallback((nodeId: string) => {
+		dispatch({ type: "REMOVE_NODE", nodeId });
+	}, []);
+
+	const getChildNodes = useCallback(
+		(entityName: string): FormStateNode[] => {
+			return (Object.values(state.nodesById) as FormStateNode[]).filter((node) => node.type === "child" && node.logicalName === entityName);
+		},
+		[state.nodesById]
+	);
+
+	const getNodeById = useCallback(
+		(nodeId: string): FormStateNode | undefined => {
+			return state.nodesById[nodeId];
+		},
+		[state.nodesById]
+	);
+
+	const getEntityNode = useCallback(
+		(entityName: string): FormStateNode | undefined => {
+			const nodeId = state.entityNodeIds[entityName];
+			return nodeId ? state.nodesById[nodeId] : undefined;
+		},
+		[state.entityNodeIds, state.nodesById]
+	);
+
+	const findNodeByRecordId = useCallback(
+		(entityName: string, recordId?: string | null): FormStateNode | undefined => {
+			if (!recordId) {
+				return undefined;
+			}
+			return (Object.values(state.nodesById) as FormStateNode[]).find(
+				(node) => node.logicalName === entityName && (node.recordId === recordId || node.id === recordId)
+			);
+		},
+		[state.nodesById]
+	);
+
+	const addUploadNode = useCallback(
+		({
+			parentNodeId,
+			entityName,
+			folderName,
+			file,
+			uploadDate,
+			childRecordId,
+		}: {
+			parentNodeId: string;
+			entityName: string;
+			folderName: string;
+			file: File;
+			uploadDate: string;
+			childRecordId?: string;
+		}) => {
+			const nodeId = generateTempId();
+			const node: FormStateNode = {
+				id: nodeId,
+				type: "upload",
+				logicalName: entityName,
+				data: {
+					folderName,
+					file,
+					uploadDate,
+					childRecordId,
+				} as UploadNodeData,
+				recordId: null,
+				isPersisted: false,
+				parentId: parentNodeId,
+				children: [],
+			};
+			dispatch({ type: "ADD_NODE", node });
+			return nodeId;
+		},
+		[]
+	);
+
+	const getUploadNodes = useCallback(
+		({ parentNodeId, entityName, folderName }: { parentNodeId?: string; entityName?: string; folderName?: string }) => {
+			const nodes = (Object.values(state.nodesById) as FormStateNode[]).filter((node) => node.type === "upload");
+			return nodes.filter((node) => {
+				if (parentNodeId && node.parentId !== parentNodeId) {
 					return false;
 				}
-				if (folderName && upload.folderName !== folderName) {
+				if (entityName && node.logicalName !== entityName) {
 					return false;
 				}
-				if (childRecordId && upload.childRecordId !== childRecordId) {
+				const data = node.data as UploadNodeData;
+				if (folderName && data.folderName !== folderName) {
 					return false;
 				}
 				return true;
 			});
 		},
-		[state.pendingDocumentUploads]
+		[state.nodesById]
 	);
-
-	/**
-	 * Clears pending document uploads, optionally filtered by entity name.
-	 */
-	const clearPendingDocumentUploads = useCallback((entityName?: string) => {
-		dispatch({ type: "CLEAR_PENDING_DOCUMENT_UPLOADS", entityName });
-	}, []);
 
 	/**
 	 * Gets all dirty field values grouped by entity.
@@ -679,16 +874,40 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	 * Checks if there are any pending child operations.
 	 */
 	const hasPendingChildren = useMemo(() => {
-		return Object.keys(state.pendingChildRecords).length > 0;
-	}, [state.pendingChildRecords]);
+		return (Object.values(state.nodesById) as FormStateNode[]).some((node) => {
+			if (node.type !== "child") {
+				return false;
+			}
+			const hasData = node.data && Object.keys(node.data).length > 0;
+			return !node.isPersisted || hasData;
+		});
+	}, [state.nodesById]);
 
 	const hasPendingDocumentUploads = useMemo(() => {
-		return Object.keys(state.pendingDocumentUploads).length > 0;
-	}, [state.pendingDocumentUploads]);
+		return (Object.values(state.nodesById) as FormStateNode[]).some((node) => node.type === "upload");
+	}, [state.nodesById]);
 
 	const hasPendingUploads = useMemo(() => {
 		return hasPendingChildren || hasPendingDocumentUploads;
 	}, [hasPendingChildren, hasPendingDocumentUploads]);
+
+	const getSaveTree = useCallback((): FormStateTreeNode | null => {
+		const buildTree = (nodeId: string): FormStateTreeNode | null => {
+			const node = state.nodesById[nodeId];
+			if (!node) {
+				return null;
+			}
+
+			return {
+				...node,
+				children: node.children
+					.map((childId) => buildTree(childId))
+					.filter((child): child is FormStateTreeNode => Boolean(child)),
+			};
+		};
+
+		return buildTree(state.rootNodeId);
+	}, [state.nodesById, state.rootNodeId]);
 
 	return {
 		type: "main",
@@ -699,8 +918,9 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		userFormSessionId: state.userFormSessionId,
 		relatedRecords: state.relatedRecords,
 		childRecords: state.childRecords,
-		pendingChildRecords: state.pendingChildRecords,
-		pendingDocumentUploads: state.pendingDocumentUploads,
+		rootNodeId: state.rootNodeId,
+		nodesById: state.nodesById,
+		entityNodeIds: state.entityNodeIds,
 		hasChanges,
 		hasPendingChildren,
 		hasPendingDocumentUploads,
@@ -724,18 +944,20 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		clearChildRecords,
 		getChildRecords,
 
-		// Pending child record operations
-		addPendingChildRecord,
-		updatePendingChildRecord,
-		deletePendingChildRecord,
-		getPendingChildRecords,
-		clearPendingChildRecords,
+		// Tree operations
+		upsertChildNode,
+		updateNodeData,
+		updateNodeRecordId,
+		resetNodeData,
+		deleteNode,
+		getChildNodes,
+		getNodeById,
+		getEntityNode,
+		findNodeByRecordId,
 
-		// Pending document upload operations
-		addPendingDocumentUpload,
-		deletePendingDocumentUpload,
-		getPendingDocumentUploads,
-		clearPendingDocumentUploads,
+		// Upload operations
+		addUploadNode,
+		getUploadNodes,
 
 		// Getters
 		getFieldValue,
@@ -743,5 +965,6 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		isFieldDirty,
 		getChangedData,
 		serializeForSubmission,
+		getSaveTree,
 	};
 };

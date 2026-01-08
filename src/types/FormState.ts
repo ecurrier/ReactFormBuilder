@@ -20,24 +20,30 @@ export interface RelatedRecordInfo {
 	referencingNavigationProperty?: string;
 }
 
-export interface PendingChildRecord {
-	id: string;
-	entityName: string;
-	referencingAttribute: string;
-	referencingNavigationProperty?: string;
-	parentEntityName?: string;
-	data: Partial<Entity>;
-	isNew: boolean;
-}
+export type FormNodeType = "primary" | "secondary" | "child" | "upload";
 
-export interface PendingDocumentUpload {
-	id: string;
-	entityName: string;
-	recordId?: string;
-	childRecordId?: string;
+export interface UploadNodeData {
 	folderName: string;
 	file: File;
 	uploadDate: string;
+	childRecordId?: string;
+}
+
+export interface FormStateNode {
+	id: string;
+	type: FormNodeType;
+	logicalName?: string;
+	data: Partial<Entity> | UploadNodeData;
+	recordId?: string | null;
+	isPersisted?: boolean;
+	referencingAttribute?: string;
+	referencingNavigationProperty?: string;
+	parentId?: string | null;
+	children: string[];
+}
+
+export interface FormStateTreeNode extends Omit<FormStateNode, "children"> {
+	children: FormStateTreeNode[];
 }
 
 export interface FormState {
@@ -49,8 +55,9 @@ export interface FormState {
 	userFormSessionId: string | null;
 	relatedRecords: Record<string, RelatedRecordInfo>;
 	childRecords: Record<string, Record<string, Entity>>;
-	pendingChildRecords: Record<string, PendingChildRecord>;
-	pendingDocumentUploads: Record<string, PendingDocumentUpload>;
+	rootNodeId: string;
+	nodesById: Record<string, FormStateNode>;
+	entityNodeIds: Record<string, string>;
 }
 
 export interface EntityChanges {
@@ -78,10 +85,9 @@ export type FormStateAction =
 	| { type: "SET_CHILD_RECORDS"; entityName: string; records: Entity[] }
 	| { type: "UPSERT_CHILD_RECORD"; entityName: string; record: Entity }
 	| { type: "CLEAR_CHILD_RECORDS"; entityName?: string }
-	| { type: "ADD_PENDING_CHILD"; record: PendingChildRecord }
-	| { type: "UPDATE_PENDING_CHILD"; key: string; data: Partial<Entity> }
-	| { type: "DELETE_PENDING_CHILD"; key: string }
-	| { type: "CLEAR_PENDING_CHILDREN"; entityName?: string }
-	| { type: "ADD_PENDING_DOCUMENT_UPLOAD"; upload: PendingDocumentUpload }
-	| { type: "DELETE_PENDING_DOCUMENT_UPLOAD"; key: string }
-	| { type: "CLEAR_PENDING_DOCUMENT_UPLOADS"; entityName?: string };
+	| { type: "ADD_NODE"; node: FormStateNode }
+	| { type: "UPDATE_NODE_DATA"; nodeId: string; data: Partial<Entity> | UploadNodeData }
+	| { type: "RESET_NODE_DATA"; nodeId: string }
+	| { type: "UPDATE_NODE_RECORD_ID"; nodeId: string; recordId: string | null; isPersisted?: boolean }
+	| { type: "REMOVE_NODE"; nodeId: string }
+	| { type: "SET_ENTITY_NODE"; entityName: string; nodeId: string };

@@ -1,6 +1,6 @@
 import React from "react";
 import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuItem, Badge } from "@components";
-import { retrieveEygaConfiguration, generateTempId, isTempId, type DocumentMetadata } from "@utilities";
+import { retrieveEygaConfiguration, isTempId, type DocumentMetadata } from "@utilities";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord, getSASUrlForDocument } from "@services/documentService";
 
 export interface DocumentUploadControlProps {
@@ -49,16 +49,19 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 
 	const primaryEntityName = formState?.primaryEntityName;
 	const resolvedEntityName = entityName || primaryEntityName || "";
-	const relatedRecord = resolvedEntityName && resolvedEntityName !== primaryEntityName ? formState?.getRelatedRecord?.(resolvedEntityName) : undefined;
-	const recordId = resolvedEntityName === primaryEntityName ? formState?.recordId : relatedRecord?.recordId;
 	const isTableEntry = formState?.type === "tableEntry";
-	const childRecordId = isTableEntry ? recordId : undefined;
+	const recordNode = isTableEntry
+		? formState?.nodeId
+			? formState?.getNodeById?.(formState.nodeId)
+			: formState?.findNodeByRecordId?.(resolvedEntityName, formState?.recordId)
+		: formState?.getEntityNode?.(resolvedEntityName);
+	const recordId = recordNode?.recordId ?? (isTableEntry ? formState?.recordId : formState?.recordId);
 	const contextEntityName = resolvedEntityName;
 	const contextRecordId = recordId;
 	const isPersistedRecord = Boolean(contextRecordId && !isTempId(contextRecordId));
 
-	const pendingUploads = formState?.getPendingDocumentUploads?.(contextEntityName, config.FolderName, childRecordId) ?? [];
-	const uploadChildId = childRecordId && contextRecordId !== childRecordId ? childRecordId : undefined;
+	const pendingUploads = formState?.getUploadNodes?.({ parentNodeId: recordNode?.id, entityName: contextEntityName, folderName: config.FolderName }) ?? [];
+	const uploadChildId = undefined;
 
 	const normalizedAllowedTypes = React.useMemo(() => {
 		if (!allowedFileTypes) {
@@ -140,15 +143,18 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 		setAlertState(null);
 
 		if (!contextRecordId || !isPersistedRecord) {
+			if (!recordNode?.id) {
+				setAlertState({ type: "danger", message: "Save the record before uploading files." });
+				return;
+			}
 			files.forEach((file) => {
-				formState?.addPendingDocumentUpload?.({
-					id: generateTempId(),
+				formState?.addUploadNode?.({
+					parentNodeId: recordNode.id,
 					entityName: contextEntityName,
-					recordId: isTableEntry && childRecordId ? undefined : contextRecordId,
-					childRecordId,
 					folderName: config.FolderName,
 					file,
 					uploadDate: formatUploadDate(new Date()),
+					childRecordId: undefined,
 				});
 			});
 			return;
@@ -200,8 +206,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 		}
 
 		if (deleteTarget.type === "pending") {
-			const key = `${resolvedEntityName}_${deleteTarget.id}`;
-			formState?.deletePendingDocumentUpload?.(key);
+			formState?.deleteNode?.(deleteTarget.id);
 			setAlertState({ type: "success", message: "Pending file removed." });
 			setDeleteTarget(null);
 			return;
@@ -292,7 +297,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	const rows = [
 		...pendingUploads.map((upload) => ({
 			key: `pending-${upload.id}`,
-			name: upload.file.name,
+			name: (upload.data as any)?.file?.name ?? "Pending upload",
 			isPending: true,
 			id: upload.id,
 		})),
