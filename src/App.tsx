@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import formConfig from "@/testing/formConfigs/formConfigv1.json";
-import { FormBuilder, ConfirmationModal, LoadingIndicator, Alert } from "@components";
+import { Alert, ConfirmationModal, FormBuilder, FormConfigSkeleton, LoadingIndicator } from "@components";
 import {
 	loadRecordData,
 	resolveFormVersion,
@@ -307,11 +307,13 @@ const App = () => {
 		loadConfig();
 	}, [loadConfig]);
 
-	const isLoading = isFormConfigurationLoading || isRecordDataLoading;
-	const loadingMessage = isFormConfigurationLoading ? "Loading form configuration..." : isRecordDataLoading ? "Loading record data..." : "";
+	const showInitialSkeleton = isFormConfigurationLoading && !config;
+	const showRecordLoading = isRecordDataLoading && !!config;
+	const loadingMessage = showRecordLoading ? "Loading record data..." : "";
 
 	return (
 		<main className="page-content">
+			{showInitialSkeleton ? <FormConfigSkeleton /> : null}
 			{config ? (
 				<>
 					<FormBuilder
@@ -328,7 +330,7 @@ const App = () => {
 					{errorMessage}
 				</Alert>
 			) : null}
-			<LoadingIndicator visible={isLoading} variant="full-screen" message={loadingMessage} />
+			<LoadingIndicator visible={showRecordLoading} variant="full-screen" message={loadingMessage} />
 			<ConfirmationModal
 				isOpen={modalState.isOpen}
 				title={modalState.title}
