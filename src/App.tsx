@@ -316,14 +316,14 @@ const App = () => {
 			{showInitialSkeleton ? <FormConfigSkeleton /> : null}
 			{config ? (
 				<>
-						<FormBuilder
-							config={config}
-							recordData={recordData}
-							recordDataByEntity={recordDataByEntity}
-							formSessionInfo={formSessionInfo}
-							urlParams={urlParams}
-							onUrlParamsChange={setUrlParams}
-						/>
+					<FormBuilder
+						config={config}
+						recordData={recordData}
+						recordDataByEntity={recordDataByEntity}
+						formSessionInfo={formSessionInfo}
+						urlParams={urlParams}
+						onUrlParamsChange={setUrlParams}
+					/>
 				</>
 			) : null}
 			{errorMessage ? (

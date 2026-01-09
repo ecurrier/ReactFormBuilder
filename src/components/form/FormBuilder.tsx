@@ -584,12 +584,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 							<h1>{config?.FundingOpportunity.FullName}</h1>
 						</div>
 						<div className="banner-details">
-							<p>
-								Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ipsam, incidunt quibusdam eius rerum harum ullam dicta asperiores
-								officiis temporibus tenetur, accusamus illo? Delectus soluta, maxime vero at officia aliquam molestiae. Lorem ipsum dolor, sit
-								amet consectetur adipisicing elit. Cum, maxime fugit explicabo aliquam iusto atque voluptatum sit dolorum officiis ad amet
-								dolor, nemo vero eius, maiores pariatur corrupti labore deleniti!
-							</p>
+							<p dangerouslySetInnerHTML={{ __html: config?.Form?.Introduction ?? "" }} />
 						</div>
 						<div className="banner-actions-primary">
 							<button

@@ -27,7 +27,7 @@
 			"Description": "This table represents the template \"child\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",
 			"Usage": 643260000
 		},
-		"Introduction": null,
+		"Introduction": "<p style=\"margin: 0;\">This is a testing form used to verify functionality, data behavior, and user experience. Information entered may be modified or removed as part of ongoing development and validation. Please use realistic test data when possible and document any issues you encounter, including screenshots or replication steps.</p>",
 		"Settings": {
 			"IncludeInApplicationPackage": true,
 			"ApplicationPackageTypesToIncludeOn": [643260000],
@@ -42,7 +42,7 @@
 				"EntityDisplayName": "Child Application Template",
 				"ReferencingAttribute": null,
 				"ReferencingNavigationProperty": null,
-				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This is the description of the Application Overview step.</p></div>",
+				"Description": "<p style=\"margin: 0;\">This is the description of the Application Overview step.</p>",
 				"Order": 1,
 				"Actions": [
 					{
@@ -78,7 +78,7 @@
 				"EntityDisplayName": "Child Application Template",
 				"ReferencingAttribute": null,
 				"ReferencingNavigationProperty": null,
-				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This step will store every variation of all controls.</p></div>",
+				"Description": "<p style=\"margin: 0;\">This step will store every variation of all controls.</p>",
 				"Order": 2,
 				"Actions": [
 					{
@@ -516,7 +516,7 @@
 						"Type": 203300001,
 						"Properties": {
 							"FolderName": "SupportingDocumentation",
-							"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Please upload any supporting documentation</p></div>",
+							"Description": "<p style=\"margin: 0;\">Please upload any supporting documentation</p>",
 							"validationType": 203300000,
 							"ValidationMessage": null
 						}
@@ -1007,7 +1007,7 @@
 											"Type": 203300001,
 											"Properties": {
 												"FolderName": "InformationUpload",
-												"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Please upload information</p></div>",
+												"Description": "<p style=\"margin: 0;\">Please upload information</p>",
 												"validationType": 203300000,
 												"ValidationMessage": null
 											}
@@ -1066,7 +1066,7 @@
 				"EntityDisplayName": "Standard Form 424",
 				"ReferencingAttribute": "eyfrcc_childapplication",
 				"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
-				"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">This form step resides on a different table than the form's primary table.</p></div>",
+				"Description": "<p style=\"margin: 0;\">This form step resides on a different table than the form's primary table.</p>",
 				"Order": 3,
 				"Actions": [
 					{
@@ -1377,7 +1377,7 @@
 						"Type": 203300001,
 						"Properties": {
 							"FolderName": "TaxDocuments",
-							"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Upload supporting tax documentation</p></div>",
+							"Description": "<p style=\"margin: 0;\">Upload supporting tax documentation</p>",
 							"validationType": 203300002,
 							"ValidationMessage": "Please upload at least one file"
 						}
@@ -1426,7 +1426,7 @@
 						"Type": 203300001,
 						"Properties": {
 							"FolderName": "SupportingDocuments",
-							"Description": "<div class=\"ck-content\" data-wrapper=\"true\" dir=\"ltr\" style=\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\"><p style=\"margin: 0;\">Please upload any supporting documentation</p></div>",
+							"Description": "<p style=\"margin: 0;\">Please upload any supporting documentation</p>",
 							"validationType": 203300000,
 							"ValidationMessage": null
 						}
