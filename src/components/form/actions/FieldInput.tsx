@@ -206,6 +206,7 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 	// Check if this is a YesNo field to use fieldset/legend instead of label
 	const isYesNo = properties.DataType === DataType.YesNo;
 
+	// TO-DO: Handle placement of description based on DescriptionType enum
 	return (
 		<div className={fieldClassNames.join(" ")}>
 			{isYesNo ? (

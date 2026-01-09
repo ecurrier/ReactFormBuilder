@@ -1,15 +1,16 @@
-/**
- * Action Type enumeration for form actions
- */
 export const ActionType = {
 	FieldInput: 203300000,
 	FileUpload: 203300001,
 	TableEntry: 203300002,
 };
 
-/**
- * Data Type enumeration for field inputs
- */
+export const DescriptionType = {
+	DontShow: 643260000,
+	ShowAboveField: 643260001,
+	ShowBelowField: 643260002,
+	ShowAboveLabel: 643260003,
+};
+
 export const DataType = {
 	SingleLineText: 643260000,
 	MultiLineText: 643260001,
@@ -27,34 +28,22 @@ export const DateTimeFormat = {
 	DateAndTime: 1,
 };
 
-/**
- * Validation Type enumeration
- */
 export const ValidationType = {
 	RegEx: 643260000,
 	MinMax: 643260001,
 };
 
-/**
- * Table Validation Type enumeration
- */
 export const TableValidationType = {
 	AtLeastOneRecord: 643260000,
 	NoValidation: 643260001,
 };
 
-/**
- * Document Validation Type enumeration
- */
 export const DocumentValidationType = {
 	NoValidation: 203300000,
 	OneFileOnly: 203300001,
 	AtLeastOneFile: 203300002,
 };
 
-/**
- * Condition Type enumeration
- */
 export const ConditionType = {
 	RequireFieldBasedOnCondition: 643260006,
 };
