@@ -9,7 +9,7 @@ import LoadingIndicator from "@components/common/LoadingIndicator";
 import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
 import type { SaveError, SaveProgressEvent } from "@app-types/SaveOrchestrator";
 
-const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams }) => {
+const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams, onUrlParamsChange }) => {
 	const orderedSteps = useMemo(() => {
 		if (!Array.isArray(config?.Form?.Steps)) {
 			return [];
@@ -337,6 +337,30 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			.join(", ");
 	};
 
+	const updateUrlAfterSave = (recordId: string) => {
+		if (!recordId) {
+			return;
+		}
+
+		const recordLogicalName = config?.Form?.PrimaryApplicationTable?.TableLogicalName;
+		if (!recordLogicalName) {
+			return;
+		}
+
+		const searchParams = new URLSearchParams(window.location.search);
+		searchParams.set("recordId", recordId);
+		searchParams.set("recordLogicalName", recordLogicalName);
+
+		const nextUrl = `${window.location.pathname}?${searchParams.toString()}`;
+		window.history.replaceState(null, "", nextUrl);
+
+		onUrlParamsChange?.((prev) => ({
+			...prev,
+			recordId,
+			recordLogicalName,
+		}));
+	};
+
 	const handleCloseSaveOverlay = () => {
 		setShowSaveOverlay(false);
 		setSavePhase("idle");
@@ -432,6 +456,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
 						formState.initializeFormData(fieldData);
 					}
+					updateUrlAfterSave(result.recordId);
 				}
 			} else {
 				setSaveErrors(result.errors || []);
@@ -471,6 +496,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
 						formState.initializeFormData(fieldData);
 					}
+					updateUrlAfterSave(result.recordId);
 				}
 			} else {
 				setSaveErrors(result.errors || []);
@@ -688,6 +714,7 @@ FormBuilder.propTypes = {
 		parentRecordId: PropTypes.string,
 		formId: PropTypes.string,
 	}),
+	onUrlParamsChange: PropTypes.func,
 };
 
 export default FormBuilder;
