@@ -24699,7 +24699,7 @@ body.disabled {
 	position: relative;
 	display: block;
 	width: 100%;
-	background-color: var(--gray-200);
+	background-color: var(--gray-350);
 	border-radius: 8px;
 	overflow: hidden;
 }
@@ -24728,12 +24728,12 @@ body.disabled {
 }
 
 .skeleton--text {
-	height: 12px;
+	height: 14px;
 	border-radius: 6px;
 }
 
 .skeleton--title {
-	height: 26px;
+	height: 48px;
 	border-radius: 8px;
 }
 
@@ -24749,11 +24749,18 @@ body.disabled {
 
 .skeleton--button {
 	height: 36px;
+	width: 96px;
+	border: none;
 	border-radius: 999px;
 }
 
 .skeleton--pill {
 	height: 28px;
+	border-radius: 999px;
+}
+
+.skeleton--pill--tall {
+	height: 56px;
 	border-radius: 999px;
 }
 
@@ -31785,118 +31792,120 @@ div.title p.dataNum {
 
 /* ------------------------------ COMPONENTS: Form Field - Lookup Control ------------------------------ */
 .lookup-control-container {
-  position: relative;
+	position: relative;
 }
 .lookup-control-container .lookup-control-input-wrapper {
-  flex-grow: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-  transition: all 0.2s ease;
+	flex-grow: 1;
+	position: relative;
+	display: flex;
+	align-items: center;
+	transition: all 0.2s ease;
 }
 .lookup-control-container .lookup-control-input-wrapper.has-value {
-  cursor: pointer;
+	cursor: pointer;
 }
 .lookup-control-container .lookup-control-input-wrapper.has-value input {
-  cursor: pointer;
-  padding-right: 30px; /* Make room for the clear icon */
+	cursor: pointer;
+	padding-right: 30px; /* Make room for the clear icon */
 }
 .lookup-control-container .lookup-control-input-wrapper .lookup-control-clear-icon {
-  position: absolute;
-  right: 10px;
-  color: #777;
-  cursor: pointer;
-  pointer-events: none; /* The wrapper will handle the click */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  transition: color 0.2s ease, transform 0.2s ease;
+	position: absolute;
+	right: 10px;
+	color: #777;
+	cursor: pointer;
+	pointer-events: none; /* The wrapper will handle the click */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	transition:
+		color 0.2s ease,
+		transform 0.2s ease;
 }
 
 .lookup-no-results {
-  text-align: center;
-  padding: 8px;
+	text-align: center;
+	padding: 8px;
 }
 
 .lookup-additional-fields {
-  font-size: 0.9em;
-  color: #666;
-  margin-top: 2px;
+	font-size: 0.9em;
+	color: #666;
+	margin-top: 2px;
 }
 
 .lookup-additional-field {
-  margin-top: 2px;
+	margin-top: 2px;
 }
 
 .lookup-target-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  border-bottom: 1px solid #ddd;
-  background-color: #f5f5f5;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	padding: 0.5rem;
+	border-bottom: 1px solid #ddd;
+	background-color: #f5f5f5;
 }
 
 .lookup-target-selector button {
-  flex: 0 0 auto;
-  min-width: 80px;
+	flex: 0 0 auto;
+	min-width: 80px;
 }
 
 .lookup-results {
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 0 0 4px 4px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-  background-color: #fff;
-  z-index: 1050;
-  position: absolute;
-  width: 100%;
-  top: 100%;
+	max-height: 300px;
+	overflow-y: auto;
+	border: 1px solid #ddd;
+	border-radius: 0 0 4px 4px;
+	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+	background-color: #fff;
+	z-index: 1050;
+	position: absolute;
+	width: 100%;
+	top: 100%;
 }
 
 .lookup-result-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
 }
 
 .lookup-result-name {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+	flex: 1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .lookup-entity-badge {
-  background-color: #f2f2f2;
-  color: #333;
-  font-size: 0.75rem;
-  font-weight: normal;
-  padding: 2px 8px;
-  margin-left: 8px;
-  border-radius: 10px;
+	background-color: #f2f2f2;
+	color: #333;
+	font-size: 0.75rem;
+	font-weight: normal;
+	padding: 2px 8px;
+	margin-left: 8px;
+	border-radius: 10px;
 }
 
 /* Adjust the overall suggestion item styles */
 .lookup-result-item {
-  padding: 8px 12px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
+	padding: 8px 12px;
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
 }
 
 .lookup-result-item:not(:last-child) {
-  border-bottom: 1px solid #eee;
+	border-bottom: 1px solid #eee;
 }
 
 .lookup-result-item:hover,
 .lookup-result-item.focused {
-  background-color: #f8f8f8;
+	background-color: #f8f8f8;
 }
 
 .lookup-result-item.focused .lookup-entity-badge {
-  background-color: #e6e6e6;
+	background-color: #e6e6e6;
 }

@@ -309,7 +309,7 @@ const App = () => {
 
 	const showInitialSkeleton = isFormConfigurationLoading && !config;
 	const showRecordLoading = isRecordDataLoading && !!config;
-	const loadingMessage = showRecordLoading ? "Loading record data..." : "";
+	const loadingMessage = showRecordLoading ? "Loading data..." : showInitialSkeleton ? "Loading form..." : "";
 
 	return (
 		<main className="page-content">
@@ -330,7 +330,7 @@ const App = () => {
 					{errorMessage}
 				</Alert>
 			) : null}
-			<LoadingIndicator visible={showRecordLoading} variant="full-screen" message={loadingMessage} />
+			<LoadingIndicator visible={showRecordLoading || showInitialSkeleton} variant="full-screen" message={loadingMessage} />
 			<ConfirmationModal
 				isOpen={modalState.isOpen}
 				title={modalState.title}
