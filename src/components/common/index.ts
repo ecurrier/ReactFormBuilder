@@ -6,3 +6,4 @@ export { default as Pagination } from "./Pagination";
 export { default as Sidepane } from "./Sidepane";
 export { default as Alert } from "./Alert";
 export { default as Badge } from "./Badge";
+export { default as FormConfigSkeleton } from "./FormConfigSkeleton";
