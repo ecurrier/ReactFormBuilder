@@ -13,6 +13,7 @@ export interface FieldInputProperties {
 	ValidationValue?: string;
 	ValidationMessage?: string;
 	Description?: string;
+	DescriptionType?: number;
 
 	// Choice/Picklist fields
 	CanSelectMultiple?: boolean;

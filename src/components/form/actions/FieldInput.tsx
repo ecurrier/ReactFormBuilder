@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { ActionType, DataType } from "@constants/enums";
+import { ActionType, DataType, DescriptionType } from "@constants/enums";
 import { ChoiceInput, CurrencyInput, DateTimeInput, LookupControl, MultiLineTextInput, NumberInput, SingleLineTextInput, YesNoInput } from "@components";
 
 const formatDescription = (description) => {
@@ -15,6 +15,18 @@ const formatDescription = (description) => {
 	}
 
 	return <span className="help-block">{trimmed}</span>;
+};
+
+const getDescriptionType = (descriptionType, hasLabel) => {
+	if (!descriptionType) {
+		return DescriptionType.ShowBelowField;
+	}
+
+	if (!hasLabel && descriptionType === DescriptionType.ShowAboveLabel) {
+		return DescriptionType.ShowAboveField;
+	}
+
+	return descriptionType;
 };
 
 const getPlaceholder = (dataType) => {
@@ -127,6 +139,9 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 		: [];
 	const hasChildFieldInputs = childFieldActions.length > 0;
 	const placeholder = hasChildFieldInputs ? undefined : getPlaceholder(properties.DataType);
+	const descriptionElement = formatDescription(properties.Description);
+	const resolvedDescriptionType = getDescriptionType(properties.DescriptionType, Boolean(label));
+	const renderDescription = (placement) => (descriptionElement && resolvedDescriptionType === placement ? descriptionElement : null);
 
 	// Get entity name from properties or default to primary entity
 	const entityName = properties.EntityName || stepEntityName || formState?.primaryEntityName || "";
@@ -179,13 +194,15 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 	if (hasChildFieldInputs) {
 		return (
 			<div className={`field-collection${properties.IsHidden ? " hidden-field" : ""}`} role="group" aria-label={label ?? "Nested fields"}>
+				{renderDescription(DescriptionType.ShowAboveLabel)}
 				{label ? <p className="field-collection-title">{label}</p> : null}
-				{formatDescription(properties.Description)}
+				{renderDescription(DescriptionType.ShowAboveField)}
 				<div className="child-action-group">
 					{childFieldActions.map((child) => (
 						<FieldInput key={child.Id ?? child.Name} action={child} formState={formState} entityName={entityName} />
 					))}
 				</div>
+				{renderDescription(DescriptionType.ShowBelowField)}
 			</div>
 		);
 	}
@@ -206,14 +223,15 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 	// Check if this is a YesNo field to use fieldset/legend instead of label
 	const isYesNo = properties.DataType === DataType.YesNo;
 
-	// TO-DO: Handle placement of description based on DescriptionType enum
 	return (
 		<div className={fieldClassNames.join(" ")}>
+			{renderDescription(DescriptionType.ShowAboveLabel)}
 			{isYesNo ? (
 				// For radio buttons, use legend instead of label
 				label && (
 					<fieldset required={properties.IsRequired} role="radiogroup">
 						<legend className={`legend--label ${labelClassNames.join(" ")}`}>{label}</legend>
+						{renderDescription(DescriptionType.ShowAboveField)}
 						{renderInput(properties, inputId, placeholder, fieldValue, handleChange, label)}
 					</fieldset>
 				)
@@ -224,10 +242,11 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 							{label}
 						</label>
 					)}
+					{renderDescription(DescriptionType.ShowAboveField)}
 					{renderInput(properties, inputId, placeholder, fieldValue, handleChange, label)}
 				</>
 			)}
-			{formatDescription(properties.Description)}
+			{renderDescription(DescriptionType.ShowBelowField)}
 			{properties.ValidationMessage ? (
 				<span className="help-block" role="alert">
 					{properties.ValidationMessage}
@@ -246,6 +265,7 @@ FieldInput.propTypes = {
 			Label: PropTypes.string,
 			DataType: PropTypes.number,
 			Description: PropTypes.string,
+			DescriptionType: PropTypes.number,
 			IsRequired: PropTypes.bool,
 			IsReadOnly: PropTypes.bool,
 			IsHidden: PropTypes.bool,
