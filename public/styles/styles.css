@@ -31801,6 +31801,11 @@ div.title p.dataNum {
 	align-items: center;
 	transition: all 0.2s ease;
 }
+.lookup-control-container .lookup-control-input-wrapper .lookup-input-container {
+	position: relative;
+	flex: 1 1 auto;
+	min-width: 0;
+}
 .lookup-control-container .lookup-control-input-wrapper.has-value {
 	cursor: pointer;
 }
@@ -31840,11 +31845,13 @@ div.title p.dataNum {
 
 .lookup-target-selector {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: 0.5rem;
 	padding: 0.5rem;
 	border-bottom: 1px solid #ddd;
 	background-color: #f5f5f5;
+	overflow-x: auto;
+	white-space: nowrap;
 }
 
 .lookup-target-selector button {
@@ -31863,6 +31870,15 @@ div.title p.dataNum {
 	position: absolute;
 	width: 100%;
 	top: 100%;
+}
+.lookup-skeleton-list {
+	padding: 0.25rem 0;
+}
+.lookup-skeleton-row {
+	padding: 8px 12px;
+}
+.lookup-skeleton-row .skeleton {
+	height: 14px;
 }
 
 .lookup-result-content {

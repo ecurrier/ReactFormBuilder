@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import TableEntry from "@components/form/TableEntry";
 import { advancedSearchLookup } from "@services/lookupService";
-import { resolvePrimaryNameAttributeDisplayName } from "@utilities/metadata";
+import { resolveEntityDisplayName, resolvePrimaryNameAttributeDisplayName } from "@utilities/metadata";
 
 // TO-DO: Need to handle display names better/Lookup columns in general
 const resolveDisplayName = (attributeName: string): string => {
@@ -84,18 +84,23 @@ export const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, 
 							</button>
 						</div>
 						<div className="modal-body">
-							<div className="toolbar-actions mb-3" style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+							<div className="toolbar-actions mb-3" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
 								{targets.length > 1 && (
-									<select
-										className="form-control"
-										value={selectedTarget?.EntityLogicalName || ""}
-										onChange={(event) => onTargetChange(event.target.value)}>
+									<div className="lookup-target-selector lookup-target-selector--modal">
 										{targets.map((target) => (
-											<option key={target.EntityLogicalName} value={target.EntityLogicalName}>
-												{resolveDisplayName(target.EntityLogicalName)}
-											</option>
+											<button
+												key={target.EntityLogicalName}
+												type="button"
+												className={`btn btn-sm ${
+													selectedTarget?.EntityLogicalName === target.EntityLogicalName ? "btn-primary" : "btn-default"
+												}`}
+												onClick={() => onTargetChange(target.EntityLogicalName)}
+												role="tab"
+												aria-selected={selectedTarget?.EntityLogicalName === target.EntityLogicalName}>
+												{resolveEntityDisplayName(target.EntityLogicalName)}
+											</button>
 										))}
-									</select>
+									</div>
 								)}
 								<div className="input-group entitylist-search" style={{ flex: 1 }}>
 									<input
