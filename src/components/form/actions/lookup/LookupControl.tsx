@@ -161,11 +161,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 								</ul>
 							)}
 							{results.length > 0 && (
-								<ul
-									className="list-unstyled mb-0"
-									role="listbox"
-									id={`${inputId}-lookup-results`}
-									aria-label={`Search results for ${label}`}>
+								<ul className="list-unstyled mb-0" role="listbox" id={`${inputId}-lookup-results`} aria-label={`Search results for ${label}`}>
 									{results.map((result) => (
 										<li
 											key={result.id}

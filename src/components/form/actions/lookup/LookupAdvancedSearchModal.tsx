@@ -84,24 +84,24 @@ export const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, 
 							</button>
 						</div>
 						<div className="modal-body">
+							{targets.length > 1 && (
+								<div className="lookup-target-selector lookup-target-selector--modal mb-3">
+									{targets.map((target) => (
+										<button
+											key={target.EntityLogicalName}
+											type="button"
+											className={`btn btn-sm ${
+												selectedTarget?.EntityLogicalName === target.EntityLogicalName ? "btn-primary" : "btn-default"
+											}`}
+											onClick={() => onTargetChange(target.EntityLogicalName)}
+											role="tab"
+											aria-selected={selectedTarget?.EntityLogicalName === target.EntityLogicalName}>
+											{resolveEntityDisplayName(target.EntityLogicalName)}
+										</button>
+									))}
+								</div>
+							)}
 							<div className="toolbar-actions mb-3" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-								{targets.length > 1 && (
-									<div className="lookup-target-selector lookup-target-selector--modal">
-										{targets.map((target) => (
-											<button
-												key={target.EntityLogicalName}
-												type="button"
-												className={`btn btn-sm ${
-													selectedTarget?.EntityLogicalName === target.EntityLogicalName ? "btn-primary" : "btn-default"
-												}`}
-												onClick={() => onTargetChange(target.EntityLogicalName)}
-												role="tab"
-												aria-selected={selectedTarget?.EntityLogicalName === target.EntityLogicalName}>
-												{resolveEntityDisplayName(target.EntityLogicalName)}
-											</button>
-										))}
-									</div>
-								)}
 								<div className="input-group entitylist-search" style={{ flex: 1 }}>
 									<input
 										type="text"
