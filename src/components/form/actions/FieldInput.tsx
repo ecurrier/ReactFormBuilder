@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { ActionType, DataType, DescriptionType } from "@constants/enums";
 import { ChoiceInput, CurrencyInput, DateTimeInput, LookupControl, MultiLineTextInput, NumberInput, SingleLineTextInput, YesNoInput } from "@components";
+import { getRealtimeValidationResult } from "@services/validation";
 
 const formatDescription = (description) => {
 	if (!description) {
@@ -142,6 +143,8 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 	const descriptionElement = formatDescription(properties.Description);
 	const resolvedDescriptionType = getDescriptionType(properties.DescriptionType, Boolean(label));
 	const renderDescription = (placement) => (descriptionElement && resolvedDescriptionType === placement ? descriptionElement : null);
+	const [hasBeenTouched, setHasBeenTouched] = useState(false);
+	const [realtimeValidationMessage, setRealtimeValidationMessage] = useState<string | null>(null);
 
 	// Get entity name from properties or default to primary entity
 	const entityName = properties.EntityName || stepEntityName || formState?.primaryEntityName || "";
@@ -149,6 +152,11 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 
 	// Get field value from formState
 	const fieldValue = formState?.getFieldValue(fieldPath);
+
+	useEffect(() => {
+		setHasBeenTouched(false);
+		setRealtimeValidationMessage(null);
+	}, [fieldPath]);
 
 	// Register field with formState on mount (only once)
 	useEffect(() => {
@@ -172,6 +180,10 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 	// Handle field value change
 	const handleChange = (newValue) => {
 		if (formState) {
+			if (!hasBeenTouched) {
+				setHasBeenTouched(true);
+			}
+
 			switch (properties.DataType) {
 				case DataType.Decimal:
 				case DataType.Currency:
@@ -186,6 +198,10 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 				default:
 					break;
 			}
+
+			const validationResult = getRealtimeValidationResult(newValue, properties);
+			const nextMessage = validationResult.isValid ? null : validationResult.message || null;
+			setRealtimeValidationMessage(nextMessage);
 
 			formState.updateFieldValue(fieldPath, newValue);
 		}
@@ -247,6 +263,11 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 				</>
 			)}
 			{renderDescription(DescriptionType.ShowBelowField)}
+			{hasBeenTouched && realtimeValidationMessage ? (
+				<span className="help-block" role="alert">
+					{realtimeValidationMessage}
+				</span>
+			) : null}
 			{properties.ValidationMessage ? (
 				<span className="help-block" role="alert">
 					{properties.ValidationMessage}
