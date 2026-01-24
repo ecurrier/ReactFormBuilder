@@ -36,6 +36,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	const [saveErrors, setSaveErrors] = useState<SaveError[]>([]);
 	const [savePhase, setSavePhase] = useState("idle");
 	const [showSaveOverlay, setShowSaveOverlay] = useState(false);
+	const [capturedSaveTree, setCapturedSaveTree] = useState<FormStateTreeNode | null>(null);
 	const [isBannerSticky, setIsBannerSticky] = useState(false);
 	const [metadataReady, setMetadataReady] = useState(false);
 	const bannerSentinelRef = useRef(null);
@@ -242,7 +243,8 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	}, [saveErrors]);
 
 	const saveDetailsTree = React.useMemo(() => {
-		const saveTree = formState.getSaveTree?.();
+		// Use captured tree if available (persists throughout save), otherwise fall back to live tree
+		const saveTree = capturedSaveTree || formState.getSaveTree?.();
 
 		const buildNode = (node: FormStateTreeNode | null) => {
 			if (!node) {
@@ -310,7 +312,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		}
 
 		return [];
-	}, [errorsByEntity, errorsByRecordId, formState, primaryEntity, saveProgress, saveProgressMap, shouldSaveNode]);
+	}, [capturedSaveTree, errorsByEntity, errorsByRecordId, formState, primaryEntity, saveProgress, saveProgressMap, shouldSaveNode]);
 
 	const renderItemStatus = (status?: SaveProgressEvent["status"]) => {
 		if (!status) {
@@ -330,22 +332,11 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 	const getEntityLabel = (entityName) => resolveEntityDisplayName(entityName, entityMetadata);
 
-	const formatScopeLabel = (scope) => {
-		if (scope === "primary") return "Primary";
-		if (scope === "secondary") return "Secondary";
-		if (scope === "child") return "Child";
-		if (scope === "upload") return "Upload";
-		return scope;
-	};
-
 	const renderSaveDetails = (nodes) => (
 		<ul className="list-unstyled" style={{ marginTop: "8px" }}>
 			{nodes.map((node) => {
 				const status = renderItemStatus(node.status);
-				const title =
-					node.scope === "upload"
-						? `${formatScopeLabel(node.scope)}: ${node.label || "Document"}`
-						: `${formatScopeLabel(node.scope)}: ${getEntityLabel(node.entityName)}`;
+				const title = node.scope === "upload" ? `${node.label || "Document"}` : `${getEntityLabel(node.entityName)}`;
 
 				return (
 					<li key={node.id} style={{ marginBottom: "8px" }}>
@@ -396,6 +387,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		setSavePhase("idle");
 		setSaveProgress([]);
 		setSaveErrors([]);
+		setCapturedSaveTree(null);
 	};
 
 	const stepErrorMap = React.useMemo(() => {
@@ -462,6 +454,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	const hasNext = activeStepIndex < visibleSteps.length - 1;
 	// Save handlers
 	const handleSave = async () => {
+		// Capture the save tree before any state changes
+		const currentSaveTree = formState.getSaveTree?.() || null;
+		setCapturedSaveTree(currentSaveTree);
 		setIsSaving(true);
 		setSaveProgress(buildInitialSaveProgress());
 		setSaveErrors([]);
@@ -505,6 +500,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	};
 
 	const handleValidateAndSubmit = async () => {
+		// Capture the save tree before any state changes
+		const currentSaveTree = formState.getSaveTree?.() || null;
+		setCapturedSaveTree(currentSaveTree);
 		setIsSaving(true);
 		setSaveProgress(buildInitialSaveProgress());
 		setSaveErrors([]);
@@ -579,7 +577,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 									))}
 								</ul>
 							) : (
-								<p style={{ marginTop: "8px" }}>No changes to save.</p>
+								<p>Nothing to see here</p>
 							)}
 						</div>
 					</details>
