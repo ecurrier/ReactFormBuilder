@@ -264,12 +264,12 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 			)}
 			{renderDescription(DescriptionType.ShowBelowField)}
 			{hasBeenTouched && realtimeValidationMessage ? (
-				<span className="help-block" role="alert">
+				<span className="help-block text-danger" role="alert">
 					{realtimeValidationMessage}
 				</span>
 			) : null}
 			{properties.ValidationMessage ? (
-				<span className="help-block" role="alert">
+				<span className="help-block text-danger" role="alert">
 					{properties.ValidationMessage}
 				</span>
 			) : null}

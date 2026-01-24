@@ -27,7 +27,7 @@
 			"Description": "This table represents the template \"child\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",
 			"Usage": 643260000
 		},
-		"Introduction": "<p style=\"margin: 0;\">This is a testing form used to verify functionality, data behavior, and user experience. Information entered may be modified or removed as part of ongoing development and validation. Please use realistic test data when possible and document any issues you encounter, including screenshots or replication steps.</p>",
+		"Introduction": "<p data-end=\"3195\" data-start=\"2871\" style=\"margin: 0;\">Welcome to the application. You’ll complete five guided steps to enter information and upload supporting documentation, with validation along the way to help prevent issues. At the end, you’ll review a full summary before submitting.</p>",
 		"Settings": {
 			"IncludeInApplicationPackage": true,
 			"ApplicationPackageTypesToIncludeOn": [643260000],
@@ -37,12 +37,12 @@
 		"Steps": [
 			{
 				"Id": "ce35df82-3fdd-f011-8544-6045bdd311df",
-				"Name": "Application Overview",
+				"Name": "Applicant Information",
 				"EntityLogicalName": "eyfrcc_childapplicationtest",
 				"EntityDisplayName": "Child Application Template",
 				"ReferencingAttribute": null,
 				"ReferencingNavigationProperty": null,
-				"Description": "<p style=\"margin: 0;\">This is the description of the Application Overview step.</p>",
+				"Description": "<p style=\"margin: 0;\">Collect the applicant’s basic identifying information, primary contacts, and communication details. This establishes who is submitting the application and how the agency can follow up if clarification is needed.</p>",
 				"Order": 1,
 				"Actions": [
 					{
@@ -67,24 +67,11 @@
 							"MaxLength": 100000,
 							"Format": null
 						}
-					}
-				],
-				"Conditions": []
-			},
-			{
-				"Id": "3eea7f25-40dd-f011-8544-6045bdd311df",
-				"Name": "Primary Record - All Controls",
-				"EntityLogicalName": "eyfrcc_childapplicationtest",
-				"EntityDisplayName": "Child Application Template",
-				"ReferencingAttribute": null,
-				"ReferencingNavigationProperty": null,
-				"Description": "<p style=\"margin: 0;\">This step will store every variation of all controls.</p>",
-				"Order": 2,
-				"Actions": [
+					},
 					{
-						"Id": "080e6365-0ce0-f011-8544-7ced8d21d821",
-						"Name": "Primary Record - All Controls - Field Input - Address",
-						"Order": 1,
+						"Id": "30458eca-5af9-f011-8406-7ced8d209320",
+						"Name": "Applicant Information - Field Input - Address Validation Test",
+						"Order": 2,
 						"ChildOrder": 0,
 						"Type": 203300000,
 						"Properties": {
@@ -101,15 +88,15 @@
 							"DescriptionType": 643260000,
 							"ChildActions": [
 								{
-									"Id": "180e6365-0ce0-f011-8544-7ced8d21d821",
-									"Name": " - Field Input - Address Test 123 - Street 1",
+									"Id": "32458eca-5af9-f011-8406-7ced8d209320",
+									"Name": " - Field Input - Address Validation - Street 1 (Child Application)",
 									"Order": 1,
 									"ChildOrder": 0,
 									"Type": 203300000,
 									"Properties": {
-										"LogicalName": "eyfrcc_addresstest123_street1",
-										"SchemaName": "eyfrcc_addresstest123_street1",
-										"Label": "Address Test 123 - Street 1",
+										"LogicalName": "eyfrcc_addressvalidationtest_addressvalidationstreet1",
+										"SchemaName": "eyfrcc_addressvalidationtest_addressvalidationstreet1",
+										"Label": "Address Validation - Street 1",
 										"DataType": 643260000,
 										"IsRequired": false,
 										"IsReadOnly": false,
@@ -117,22 +104,22 @@
 										"ValidationType": null,
 										"ValidationValue": null,
 										"ValidationMessage": null,
-										"Description": "Address Test 123 - Street 1",
+										"Description": "Address Validation - Street 1",
 										"DescriptionType": 643260000,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
 								},
 								{
-									"Id": "190e6365-0ce0-f011-8544-7ced8d21d821",
-									"Name": " - Field Input - Address Test 123 - Street 2",
+									"Id": "33458eca-5af9-f011-8406-7ced8d209320",
+									"Name": " - Field Input - Address Validation - Street 2 (Child Application)",
 									"Order": 2,
 									"ChildOrder": 0,
 									"Type": 203300000,
 									"Properties": {
-										"LogicalName": "eyfrcc_addresstest123_street2",
-										"SchemaName": "eyfrcc_addresstest123_street2",
-										"Label": "Address Test 123 - Street 2",
+										"LogicalName": "eyfrcc_addressvalidationtest_addressvalidationstreet2",
+										"SchemaName": "eyfrcc_addressvalidationtest_addressvalidationstreet2",
+										"Label": "Address Validation - Street 2",
 										"DataType": 643260000,
 										"IsRequired": false,
 										"IsReadOnly": false,
@@ -140,22 +127,22 @@
 										"ValidationType": null,
 										"ValidationValue": null,
 										"ValidationMessage": null,
-										"Description": "Address Test 123 - Street 2",
+										"Description": "Address Validation - Street 2",
 										"DescriptionType": 643260000,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
 								},
 								{
-									"Id": "1e0e6365-0ce0-f011-8544-7ced8d21d821",
-									"Name": " - Field Input - Address Test 123 - City",
+									"Id": "34458eca-5af9-f011-8406-7ced8d209320",
+									"Name": " - Field Input - Address Validation - City (Child Application)",
 									"Order": 3,
 									"ChildOrder": 0,
 									"Type": 203300000,
 									"Properties": {
-										"LogicalName": "eyfrcc_addresstest123_city",
-										"SchemaName": "eyfrcc_addresstest123_city",
-										"Label": "Address Test 123 - City",
+										"LogicalName": "eyfrcc_addressvalidationtest_addressvalidationcity",
+										"SchemaName": "eyfrcc_addressvalidationtest_addressvalidationcity",
+										"Label": "Address Validation - City",
 										"DataType": 643260000,
 										"IsRequired": false,
 										"IsReadOnly": false,
@@ -163,22 +150,22 @@
 										"ValidationType": null,
 										"ValidationValue": null,
 										"ValidationMessage": null,
-										"Description": "Address Test 123 - City",
+										"Description": "Address Validation - City",
 										"DescriptionType": 643260000,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
 								},
 								{
-									"Id": "1f0e6365-0ce0-f011-8544-7ced8d21d821",
-									"Name": " - Field Input - Address Test 123 - State",
+									"Id": "35458eca-5af9-f011-8406-7ced8d209320",
+									"Name": " - Field Input - Address Validation - State / Province (Child Application)",
 									"Order": 4,
 									"ChildOrder": 0,
 									"Type": 203300000,
 									"Properties": {
-										"LogicalName": "eyfrcc_addresstest123_state",
-										"SchemaName": "eyfrcc_addresstest123_state",
-										"Label": "Address Test 123 - State",
+										"LogicalName": "eyfrcc_addressvalidationtest_addressvalidationstateprovince",
+										"SchemaName": "eyfrcc_addressvalidationtest_addressvalidationstateprovince",
+										"Label": "Address Validation - State / Province",
 										"DataType": 643260000,
 										"IsRequired": false,
 										"IsReadOnly": false,
@@ -186,22 +173,22 @@
 										"ValidationType": null,
 										"ValidationValue": null,
 										"ValidationMessage": null,
-										"Description": "Address Test 123 - State",
+										"Description": "Address Validation - State / Province",
 										"DescriptionType": 643260000,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
 								},
 								{
-									"Id": "200e6365-0ce0-f011-8544-7ced8d21d821",
-									"Name": " - Field Input - Address Test 123 - ZIP",
+									"Id": "36458eca-5af9-f011-8406-7ced8d209320",
+									"Name": " - Field Input - Address Validation - Postal Code (Child Application)",
 									"Order": 5,
 									"ChildOrder": 0,
 									"Type": 203300000,
 									"Properties": {
-										"LogicalName": "eyfrcc_addresstest123_zip",
-										"SchemaName": "eyfrcc_addresstest123_zip",
-										"Label": "Address Test 123 - ZIP",
+										"LogicalName": "eyfrcc_addressvalidationtest_addressvalidationpostalcode",
+										"SchemaName": "eyfrcc_addressvalidationtest_addressvalidationpostalcode",
+										"Label": "Address Validation - Postal Code",
 										"DataType": 643260000,
 										"IsRequired": false,
 										"IsReadOnly": false,
@@ -209,7 +196,30 @@
 										"ValidationType": null,
 										"ValidationValue": null,
 										"ValidationMessage": null,
-										"Description": "Address Test 123 - ZIP",
+										"Description": "Address Validation - Postal Code",
+										"DescriptionType": 643260000,
+										"MaxLength": 1000,
+										"Format": "Text"
+									}
+								},
+								{
+									"Id": "37458eca-5af9-f011-8406-7ced8d209320",
+									"Name": " - Field Input - Address Validation - Country (Child Application)",
+									"Order": 6,
+									"ChildOrder": 0,
+									"Type": 203300000,
+									"Properties": {
+										"LogicalName": "eyfrcc_addressvalidationtest_addressvalidationcountry",
+										"SchemaName": "eyfrcc_addressvalidationtest_addressvalidationcountry",
+										"Label": "Address Validation - Country",
+										"DataType": 643260000,
+										"IsRequired": false,
+										"IsReadOnly": false,
+										"IsHidden": false,
+										"ValidationType": null,
+										"ValidationValue": null,
+										"ValidationMessage": null,
+										"Description": "Address Validation - Country",
 										"DescriptionType": 643260000,
 										"MaxLength": 1000,
 										"Format": "Text"
@@ -217,11 +227,85 @@
 								}
 							]
 						}
+					}
+				],
+				"Conditions": []
+			},
+			{
+				"Id": "3eea7f25-40dd-f011-8544-6045bdd311df",
+				"Name": "Eligibility & Program Selection",
+				"EntityLogicalName": "eyfrcc_childapplicationtest",
+				"EntityDisplayName": "Child Application Template",
+				"ReferencingAttribute": null,
+				"ReferencingNavigationProperty": null,
+				"Description": "<p style=\"margin: 0;\">Confirm eligibility requirements and identify the appropriate program, category, or funding opportunity based on responses. This step ensures applicants are routed correctly and helps prevent submissions that do not meet baseline criteria.</p>",
+				"Order": 2,
+				"Actions": [
+					{
+						"Id": "629bd6dd-59f9-f011-8406-7c1e524a2f52",
+						"Name": "Eligibility & Program Selection - Field Input - Type of Application (Child Application)",
+						"Order": 1,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_typeofapplication",
+							"SchemaName": "eyfrcc_TypeofApplication",
+							"Label": "Type of Application",
+							"DataType": 643260006,
+							"IsRequired": true,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "The type of application that should be applied (e.g., new, continuation, revision). If \"New\", the application is being submitted for the first time. If \"Continuation\", an extension is required for an additional funding/budget period for a project with a projected completion date. This can include renewals. If \"Revision\", a change in the Federal government's financial obligation or contingent liability from an existing obligation has occurred.",
+							"DescriptionType": 643260002,
+							"CanSelectMultiple": false,
+							"Choices": [
+								{
+									"Value": 643260000,
+									"Label": "New"
+								},
+								{
+									"Value": 643260001,
+									"Label": "Continuation"
+								},
+								{
+									"Value": 643260002,
+									"Label": "Revision"
+								}
+							],
+							"DefaultValue": -1
+						}
+					},
+					{
+						"Id": "94ccd2a7-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Approved Cost Share or Match (Child Application)",
+						"Order": 3,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_approvedcostshareormatch",
+							"SchemaName": "eyfrcc_approvedcostshareormatch",
+							"Label": "Approved Cost Share or Match",
+							"DataType": 643260002,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "An amount of approved cost sharing or matching, where applicable. This comes from the Federal Integrated Business Framework (FIBF) model.",
+							"DescriptionType": 643260000,
+							"MinValue": 0.0,
+							"MaxValue": 1000000000.0,
+							"Precision": 2
+						}
 					},
 					{
 						"Id": "45faca7d-0ce0-f011-8544-7ced8d21d821",
 						"Name": "Primary Record - All Controls - Field Input - Approved Indirect Cost Rate (Child Application)",
-						"Order": 2,
+						"Order": 4,
 						"ChildOrder": 0,
 						"Type": 203300000,
 						"Properties": {
@@ -243,9 +327,65 @@
 						}
 					},
 					{
+						"Id": "644639ae-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Risk Indicator (Child Application)",
+						"Order": 5,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_riskindicator2",
+							"SchemaName": "eyfrcc_riskindicator2",
+							"Label": "Risk Indicator",
+							"DataType": 643260004,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "A score that represents the risk level associated with this application and submitter. This is auto calculated based on the risk assessment configured by a Program Manager on the related funding opportunity. The higher the number, the greater the risk.",
+							"DescriptionType": 643260000,
+							"MinValue": -100000000000.0,
+							"MaxValue": 100000000000.0,
+							"Precision": 2
+						}
+					},
+					{
+						"Id": "cee0f4ba-0ce0-f011-8544-7ced8d21d821",
+						"Name": "Primary Record - All Controls - Field Input - Fully Disbursed (Child Application)",
+						"Order": 6,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_fullydisbursed",
+							"SchemaName": "eyfrcc_fullydisbursed",
+							"Label": "Fully Disbursed",
+							"DataType": 643260007,
+							"IsRequired": true,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "The indication of whether the application has been fully disbursed or not.",
+							"DescriptionType": 643260000,
+							"Choices": [
+								{
+									"Value": 1,
+									"Label": "Yes"
+								},
+								{
+									"Value": 0,
+									"Label": "No"
+								}
+							],
+							"DefaultValue": false
+						}
+					},
+					{
 						"Id": "c7e5d189-0ce0-f011-8544-7ced8d21d821",
 						"Name": "Primary Record - All Controls - Field Input - Areas Impacted (Child Application)",
-						"Order": 3,
+						"Order": 7,
 						"ChildOrder": 0,
 						"Type": 203300000,
 						"Properties": {
@@ -266,54 +406,9 @@
 						}
 					},
 					{
-						"Id": "0653c595-0ce0-f011-8544-7ced8d21d821",
-						"Name": "Primary Record - All Controls - Field Input - Budget Status (Child Application)",
-						"Order": 4,
-						"ChildOrder": 0,
-						"Type": 203300000,
-						"Properties": {
-							"LogicalName": "eyfrcc_budgetstatus",
-							"SchemaName": "eyfrcc_budgetstatus",
-							"Label": "Budget Status",
-							"DataType": 643260006,
-							"IsRequired": false,
-							"IsReadOnly": false,
-							"IsHidden": false,
-							"ValidationType": null,
-							"ValidationValue": null,
-							"ValidationMessage": null,
-							"Description": "A code denoting the current state of the Federal award project budget as proposed or approved status. This comes from the Federal Integrated Business Framework (FIBF) model.",
-							"DescriptionType": 643260000,
-							"CanSelectMultiple": false,
-							"Choices": [
-								{
-									"Value": 643260000,
-									"Label": "Approved"
-								},
-								{
-									"Value": 643260001,
-									"Label": "Proposed"
-								},
-								{
-									"Value": 643260002,
-									"Label": "Revision Approved"
-								},
-								{
-									"Value": 643260003,
-									"Label": "Revision Proposed"
-								},
-								{
-									"Value": 643260004,
-									"Label": "Rejected"
-								}
-							],
-							"DefaultValue": -1
-						}
-					},
-					{
 						"Id": "52e23263-40dd-f011-8544-6045bdd311df",
 						"Name": "Accessibility - Table Entry - Subapplicant",
-						"Order": 5,
+						"Order": 8,
 						"ChildOrder": 0,
 						"Type": 203300002,
 						"Properties": {
@@ -427,110 +522,30 @@
 								}
 							]
 						}
-					},
+					}
+				],
+				"Conditions": []
+			},
+			{
+				"Id": "21f1e432-57f9-f011-8406-7c1e524a2f52",
+				"Name": "Project or Request Details",
+				"EntityLogicalName": "eyfrcc_childapplicationtest",
+				"EntityDisplayName": "Child Application Template",
+				"ReferencingAttribute": null,
+				"ReferencingNavigationProperty": null,
+				"Description": "<p style=\"margin: 0;\">Capture the substantive information required for review, including the purpose, scope, timeline, and key details of the request. Structured questions support consistent evaluation and reduce the need for follow-up.</p>",
+				"Order": 3,
+				"Actions": [
 					{
-						"Id": "94ccd2a7-0ce0-f011-8544-7ced8d21d821",
-						"Name": "Primary Record - All Controls - Field Input - Approved Cost Share or Match (Child Application)",
-						"Order": 6,
-						"ChildOrder": 0,
-						"Type": 203300000,
-						"Properties": {
-							"LogicalName": "eyfrcc_approvedcostshareormatch",
-							"SchemaName": "eyfrcc_approvedcostshareormatch",
-							"Label": "Approved Cost Share or Match",
-							"DataType": 643260002,
-							"IsRequired": false,
-							"IsReadOnly": false,
-							"IsHidden": false,
-							"ValidationType": null,
-							"ValidationValue": null,
-							"ValidationMessage": null,
-							"Description": "An amount of approved cost sharing or matching, where applicable. This comes from the Federal Integrated Business Framework (FIBF) model.",
-							"DescriptionType": 643260000,
-							"MinValue": 0.0,
-							"MaxValue": 1000000000.0,
-							"Precision": 2
-						}
-					},
-					{
-						"Id": "644639ae-0ce0-f011-8544-7ced8d21d821",
-						"Name": "Primary Record - All Controls - Field Input - Risk Indicator (Child Application)",
-						"Order": 7,
-						"ChildOrder": 0,
-						"Type": 203300000,
-						"Properties": {
-							"LogicalName": "eyfrcc_riskindicator2",
-							"SchemaName": "eyfrcc_riskindicator2",
-							"Label": "Risk Indicator",
-							"DataType": 643260004,
-							"IsRequired": false,
-							"IsReadOnly": false,
-							"IsHidden": false,
-							"ValidationType": null,
-							"ValidationValue": null,
-							"ValidationMessage": null,
-							"Description": "A score that represents the risk level associated with this application and submitter. This is auto calculated based on the risk assessment configured by a Program Manager on the related funding opportunity. The higher the number, the greater the risk.",
-							"DescriptionType": 643260000,
-							"MinValue": -100000000000.0,
-							"MaxValue": 100000000000.0,
-							"Precision": 2
-						}
-					},
-					{
-						"Id": "cee0f4ba-0ce0-f011-8544-7ced8d21d821",
-						"Name": "Primary Record - All Controls - Field Input - Fully Disbursed (Child Application)",
-						"Order": 8,
-						"ChildOrder": 0,
-						"Type": 203300000,
-						"Properties": {
-							"LogicalName": "eyfrcc_fullydisbursed",
-							"SchemaName": "eyfrcc_fullydisbursed",
-							"Label": "Fully Disbursed",
-							"DataType": 643260007,
-							"IsRequired": true,
-							"IsReadOnly": false,
-							"IsHidden": false,
-							"ValidationType": null,
-							"ValidationValue": null,
-							"ValidationMessage": null,
-							"Description": "The indication of whether the application has been fully disbursed or not.",
-							"DescriptionType": 643260000,
-							"Choices": [
-								{
-									"Value": 1,
-									"Label": "Yes"
-								},
-								{
-									"Value": 0,
-									"Label": "No"
-								}
-							],
-							"DefaultValue": false
-						}
-					},
-					{
-						"Id": "6d57e7cd-0ce0-f011-8544-7ced8d21d821",
-						"Name": "Primary Record - All Controls - Document Upload - SupportingDocumentation",
-						"Order": 9,
-						"ChildOrder": 0,
-						"Type": 203300001,
-						"Properties": {
-							"FolderName": "SupportingDocumentation",
-							"Description": "<p style=\"margin: 0;\">Please upload any supporting documentation</p>",
-							"validationType": 203300000,
-							"ValidationMessage": null
-						}
-					},
-					{
-						"Id": "0eb5e738-40dd-f011-8544-6045bdd311df",
-						"Name": "Primary Record - All Controls - Field Input - Project (Child Application)",
-						"Order": 10,
+						"Id": "cf7f98ef-58f9-f011-8406-7c1e524a2f52",
+						"Name": "Project or Request Details - Field Input - Project (Child Application)",
+						"Order": 1,
 						"ChildOrder": 0,
 						"Type": 203300000,
 						"Properties": {
 							"LogicalName": "eyfrcc_applicationprojectid",
 							"SchemaName": "eyfrcc_applicationprojectid",
-							"Label": "Project",
+							"Label": "Existing Project",
 							"DataType": 643260009,
 							"IsRequired": false,
 							"IsReadOnly": false,
@@ -538,7 +553,7 @@
 							"ValidationType": null,
 							"ValidationValue": null,
 							"ValidationMessage": null,
-							"Description": "The project that the application is providing information for.",
+							"Description": "<p style=\"margin: 0;\">Select an existing project to associate with this application.</p>",
 							"DescriptionType": 643260002,
 							"Targets": [
 								{
@@ -553,109 +568,13 @@
 						}
 					},
 					{
-						"Id": "0f17c076-0de0-f011-8544-7ced8d21d821",
-						"Name": "Primary Record - All Controls - Quick View Form",
-						"Order": 11,
-						"ChildOrder": 0,
-						"Type": 643260003,
-						"Properties": {
-							"DisplayName": "State/Territory Quick View",
-							"ParentLookup": "eyfrcc_applicationprojectid",
-							"QuickViewEntityLogicalName": "eyfrcc_project",
-							"QuickViewSteps": [
-								{
-									"Id": "3b26873a-0de0-f011-8544-7ced8d21d821",
-									"Name": "Quick View Fields",
-									"EntityLogicalName": "eyfrcc_project",
-									"EntityDisplayName": "Project",
-									"ReferencingAttribute": null,
-									"ReferencingNavigationProperty": null,
-									"Description": null,
-									"Order": 1,
-									"Actions": [
-										{
-											"Id": "06b19e40-0de0-f011-8544-7ced8d21d821",
-											"Name": "Quick View Fields - Field Input - Description (Project)",
-											"Order": 1,
-											"ChildOrder": 0,
-											"Type": 203300000,
-											"Properties": {
-												"LogicalName": "eyfrcc_description",
-												"SchemaName": "eyfrcc_description",
-												"Label": "Description",
-												"DataType": 643260001,
-												"IsRequired": false,
-												"IsReadOnly": false,
-												"IsHidden": false,
-												"ValidationType": null,
-												"ValidationValue": null,
-												"ValidationMessage": null,
-												"Description": "The main description of this record that provides a brief, description of the project.",
-												"DescriptionType": 643260000,
-												"MaxLength": 100000,
-												"Format": null
-											}
-										},
-										{
-											"Id": "681c8652-0de0-f011-8544-7ced8d21d821",
-											"Name": "Quick View Fields - Field Input - Proposed Start Date",
-											"Order": 2,
-											"ChildOrder": 0,
-											"Type": 203300000,
-											"Properties": {
-												"LogicalName": "eyfrcc_proposedstartdate",
-												"SchemaName": "eyfrcc_proposedstartdate",
-												"Label": "Proposed Start Date",
-												"DataType": 643260008,
-												"IsRequired": false,
-												"IsReadOnly": false,
-												"IsHidden": false,
-												"ValidationType": null,
-												"ValidationValue": null,
-												"ValidationMessage": null,
-												"Description": "The proposed start date for this project.",
-												"DescriptionType": 643260000,
-												"DateTimeFormat": 0,
-												"DateTimeBehavior": "UserLocal"
-											}
-										},
-										{
-											"Id": "42f39858-0de0-f011-8544-7ced8d21d821",
-											"Name": "Quick View Fields - Field Input - Proposed End Date",
-											"Order": 3,
-											"ChildOrder": 0,
-											"Type": 203300000,
-											"Properties": {
-												"LogicalName": "eyfrcc_proposedenddate",
-												"SchemaName": "eyfrcc_proposedenddate",
-												"Label": "Proposed End Date",
-												"DataType": 643260008,
-												"IsRequired": false,
-												"IsReadOnly": false,
-												"IsHidden": false,
-												"ValidationType": null,
-												"ValidationValue": null,
-												"ValidationMessage": null,
-												"Description": "The proposed end date for this project.",
-												"DescriptionType": 643260000,
-												"DateTimeFormat": 0,
-												"DateTimeBehavior": "UserLocal"
-											}
-										}
-									],
-									"Conditions": []
-								}
-							]
-						}
-					},
-					{
-						"Id": "505965f7-3be4-f011-8544-7ced8d21d821",
-						"Name": "Primary Record - All Controls - Table Entry - Project",
-						"Order": 12,
+						"Id": "c804edbf-58f9-f011-8406-7c1e524a2f52",
+						"Name": "Project or Request Details - Table Entry - Project",
+						"Order": 2,
 						"ChildOrder": 0,
 						"Type": 203300002,
 						"Properties": {
-							"DisplayName": "Projects",
+							"DisplayName": "Proposed Projects",
 							"ChildEntityLogicalName": "eyfrcc_project",
 							"RelationshipName": "eyfrcc_project_eyfrcc_childapplication_eyfrcc_childapplicationtest",
 							"ValidationMessage": null,
@@ -667,128 +586,105 @@
 							"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
 							"ChildFormSteps": [
 								{
-									"Id": "5506c9e2-92b4-ee11-a569-0022482a96fe",
-									"Name": "Projects",
+									"Id": "e94939d6-57f9-f011-8406-7c1e524a2f52",
+									"Name": "Information",
 									"EntityLogicalName": "eyfrcc_project",
 									"EntityDisplayName": "Project",
 									"ReferencingAttribute": null,
 									"ReferencingNavigationProperty": null,
-									"Description": null,
+									"Description": "<p style=\"margin: 0;\">Capture and manage the core details for each proposed project associated with this application. Use this table to add, review, and update project entries such as title, location, period of performance, objectives, and key milestones. Each row represents a single project record that will be included in the final application package and used during federal review.</p>",
 									"Order": 1,
 									"Actions": [
 										{
-											"Id": "49ffe4f1-92b4-ee11-a569-0022482a96fe",
-											"Name": "Projects - Field Input - Name (Project)",
+											"Id": "7fed0013-58f9-f011-8406-7c1e524a2f52",
+											"Name": "Information - Field Input - Proposed Start Date",
 											"Order": 1,
 											"ChildOrder": 0,
 											"Type": 203300000,
 											"Properties": {
-												"LogicalName": "eyfrcc_name",
-												"SchemaName": "eyfrcc_Name",
-												"Label": "Project:",
-												"DataType": 643260000,
-												"IsRequired": false,
+												"LogicalName": "eyfrcc_proposedstartdate",
+												"SchemaName": "eyfrcc_proposedstartdate",
+												"Label": "Proposed Start Date",
+												"DataType": 643260008,
+												"IsRequired": true,
 												"IsReadOnly": false,
 												"IsHidden": false,
-												"ValidationType": 643260002,
+												"ValidationType": null,
 												"ValidationValue": null,
 												"ValidationMessage": null,
-												"Description": "The primary name of this record. Once saved, this name will appear at the top of the page.",
-												"DescriptionType": 643260000,
+												"Description": "<p style=\"margin: 0;\">The anticipated date the project work will begin, if awarded.</p>",
+												"DescriptionType": 643260002,
+												"DateTimeFormat": 0,
+												"DateTimeBehavior": "UserLocal"
+											}
+										},
+										{
+											"Id": "4f331d19-58f9-f011-8406-7c1e524a2f52",
+											"Name": "Information - Field Input - Proposed End Date",
+											"Order": 2,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_proposedenddate",
+												"SchemaName": "eyfrcc_proposedenddate",
+												"Label": "Proposed End Date",
+												"DataType": 643260008,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "<p style=\"margin: 0;\">The anticipated date the project work will be completed.</p>",
+												"DescriptionType": 643260002,
+												"DateTimeFormat": 0,
+												"DateTimeBehavior": "UserLocal"
+											}
+										},
+										{
+											"Id": "5b628e34-58f9-f011-8406-7c1e524a2f52",
+											"Name": "Information - Field Input - Congressional Districts of Program/Project (Project)",
+											"Order": 3,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_projectcongressionaldistrict",
+												"SchemaName": "eyfrcc_projectcongressionaldistrict",
+												"Label": "Congressional Districts of Program/Project",
+												"DataType": 643260000,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "<p style=\"margin: 0;\">The U.S. congressional district where the project will be performed (e.g., IL-07).</p>",
+												"DescriptionType": 643260002,
 												"MaxLength": 100,
 												"Format": "Text"
 											}
 										},
 										{
-											"Id": "d0edcb63-93b4-ee11-a569-0022482a96fe",
-											"Name": "Projects - Field Input - Description (Project)",
-											"Order": 3,
+											"Id": "2bdda9fa-57f9-f011-8406-7c1e524a2f52",
+											"Name": "Information - Field Input - Description (Project)",
+											"Order": 4,
 											"ChildOrder": 0,
 											"Type": 203300000,
 											"Properties": {
 												"LogicalName": "eyfrcc_description",
 												"SchemaName": "eyfrcc_description",
-												"Label": "Description of Applicant's Project:",
+												"Label": "Description",
 												"DataType": 643260001,
 												"IsRequired": true,
 												"IsReadOnly": false,
 												"IsHidden": false,
-												"ValidationType": 643260002,
+												"ValidationType": null,
 												"ValidationValue": null,
 												"ValidationMessage": null,
 												"Description": "The main description of this record that provides a brief, description of the project.",
 												"DescriptionType": 643260000,
 												"MaxLength": 100000,
 												"Format": null
-											}
-										},
-										{
-											"Id": "fe600bd0-09b7-ee11-a569-00224828012d",
-											"Name": "Projects - Field Input - Proposed Start Date",
-											"Order": 4,
-											"ChildOrder": 0,
-											"Type": 203300000,
-											"Properties": {
-												"LogicalName": "eyfrcc_proposedstartdate",
-												"SchemaName": "eyfrcc_proposedstartdate",
-												"Label": "Proposed Start Date:",
-												"DataType": 643260008,
-												"IsRequired": true,
-												"IsReadOnly": false,
-												"IsHidden": false,
-												"ValidationType": 643260002,
-												"ValidationValue": null,
-												"ValidationMessage": null,
-												"Description": "The proposed start date for this project.",
-												"DescriptionType": 643260000,
-												"DateTimeFormat": 0,
-												"DateTimeBehavior": "UserLocal"
-											}
-										},
-										{
-											"Id": "fb3886dc-09b7-ee11-a569-00224828012d",
-											"Name": "Projects - Field Input - Proposed End Date",
-											"Order": 5,
-											"ChildOrder": 0,
-											"Type": 203300000,
-											"Properties": {
-												"LogicalName": "eyfrcc_proposedenddate",
-												"SchemaName": "eyfrcc_proposedenddate",
-												"Label": "Proposed End Date:",
-												"DataType": 643260008,
-												"IsRequired": true,
-												"IsReadOnly": false,
-												"IsHidden": false,
-												"ValidationType": 643260002,
-												"ValidationValue": null,
-												"ValidationMessage": null,
-												"Description": "The proposed end date for this project.",
-												"DescriptionType": 643260000,
-												"DateTimeFormat": 0,
-												"DateTimeBehavior": "UserLocal"
-											}
-										},
-										{
-											"Id": "edfae4c9-95b4-ee11-a569-0022482a96fe",
-											"Name": "Projects - Field Input - Congressional Districts of Program/Project (Project)",
-											"Order": 7,
-											"ChildOrder": 0,
-											"Type": 203300000,
-											"Properties": {
-												"LogicalName": "eyfrcc_projectcongressionaldistrict",
-												"SchemaName": "eyfrcc_projectcongressionaldistrict",
-												"Label": "Congressional Districts of Program/Project:",
-												"DataType": 643260000,
-												"IsRequired": true,
-												"IsReadOnly": false,
-												"IsHidden": false,
-												"ValidationType": 643260002,
-												"ValidationValue": null,
-												"ValidationMessage": null,
-												"Description": "The list of congressional districts associated to this specified project.",
-												"DescriptionType": 643260000,
-												"MaxLength": 100,
-												"Format": "Text"
 											}
 										}
 									],
@@ -946,15 +842,96 @@
 								}
 							]
 						}
+					}
+				],
+				"Conditions": []
+			},
+			{
+				"Id": "cec3ea7a-57f9-f011-8406-7c1e524a2f52",
+				"Name": "Budget & Supporting Documentation",
+				"EntityLogicalName": "eyfrcc_childapplicationtest",
+				"EntityDisplayName": "Child Application Template",
+				"ReferencingAttribute": null,
+				"ReferencingNavigationProperty": null,
+				"Description": "<p style=\"margin: 0;\">Enter budget figures (if applicable) and upload required forms, certifications, and attachments. The system flags missing required documents and standardizes document types to support efficient review.</p>",
+				"Order": 4,
+				"Actions": [
+					{
+						"Id": "158b0caf-59f9-f011-8406-7c1e524a2f52",
+						"Name": "Budget & Supporting Documentation - Field Input - Budget Status (Child Application)",
+						"Order": 1,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_budgetstatus",
+							"SchemaName": "eyfrcc_budgetstatus",
+							"Label": "Budget Status",
+							"DataType": 643260006,
+							"IsRequired": true,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "<p style=\"margin: 0;\">Select the current stage of the budget review.</p>",
+							"DescriptionType": 643260002,
+							"CanSelectMultiple": false,
+							"Choices": [
+								{
+									"Value": 643260000,
+									"Label": "Approved"
+								},
+								{
+									"Value": 643260001,
+									"Label": "Proposed"
+								},
+								{
+									"Value": 643260002,
+									"Label": "Revision Approved"
+								},
+								{
+									"Value": 643260003,
+									"Label": "Revision Proposed"
+								},
+								{
+									"Value": 643260004,
+									"Label": "Rejected"
+								}
+							],
+							"DefaultValue": -1
+						}
+					},
+					{
+						"Id": "f047890f-59f9-f011-8406-7c1e524a2f52",
+						"Name": "Budget & Supporting Documentation - Field Input - Budget Review Notes (Child Application)",
+						"Order": 2,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_budgetreviewnotes",
+							"SchemaName": "eyfrcc_budgetreviewnotes",
+							"Label": "Budget Review Notes",
+							"DataType": 643260001,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "<p style=\"margin: 0;\">Internal notes to document budget questions, adjustments, or review decisions.</p>",
+							"DescriptionType": 643260002,
+							"MaxLength": 100000,
+							"Format": null
+						}
 					},
 					{
 						"Id": "1223e6ce-3ce4-f011-8544-7ced8d21d821",
-						"Name": "Primary Record - All Controls - Table Entry - Standard Form 424A",
-						"Order": 13,
+						"Name": "Budget & Supporting Documentation - Table Entry - Standard Form 424A",
+						"Order": 3,
 						"ChildOrder": 0,
 						"Type": 203300002,
 						"Properties": {
-							"DisplayName": "Standard Form 424A",
+							"DisplayName": "SF424-A (Budget Information)",
 							"ChildEntityLogicalName": "eyfrcc_standardform424a",
 							"RelationshipName": "eyfrcc_standardform424a_eyfrcc_childapplication_eyfrcc_childapplicationtest",
 							"ValidationMessage": "Please upload at least one record",
@@ -1055,19 +1032,45 @@
 								}
 							]
 						}
+					},
+					{
+						"Id": "11aca932-59f9-f011-8406-7c1e524a2f52",
+						"Name": "Budget & Supporting Documentation - Document Upload - BudgetNarrativeJustification",
+						"Order": 4,
+						"ChildOrder": 0,
+						"Type": 203300001,
+						"Properties": {
+							"FolderName": "BudgetNarrativeJustification",
+							"Description": "<p style=\"margin: 0;\">Budget Narrative / Justification</p>",
+							"validationType": null,
+							"ValidationMessage": null
+						}
+					},
+					{
+						"Id": "ecf79541-59f9-f011-8406-7c1e524a2f52",
+						"Name": "Budget & Supporting Documentation - Document Upload - LettersofSupportCommitment",
+						"Order": 5,
+						"ChildOrder": 0,
+						"Type": 203300001,
+						"Properties": {
+							"FolderName": "LettersofSupportCommitment",
+							"Description": "<p style=\"margin: 0;\">Letters of Support / Commitment</p>",
+							"validationType": null,
+							"ValidationMessage": null
+						}
 					}
 				],
 				"Conditions": []
 			},
 			{
 				"Id": "63755ce0-3fdd-f011-8544-6045bdd311df",
-				"Name": "SF424 (Secondary Table)",
+				"Name": "Standard Form 424",
 				"EntityLogicalName": "eyfrcc_standardform424",
 				"EntityDisplayName": "Standard Form 424",
 				"ReferencingAttribute": "eyfrcc_childapplication",
 				"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
-				"Description": "<p style=\"margin: 0;\">This form step resides on a different table than the form's primary table.</p>",
-				"Order": 3,
+				"Description": "<p style=\"margin: 0;\">Complete the SF-424 to provide the official federal application header information used for intake and tracking. This includes key applicant identifiers, the funding opportunity information, and high-level request details required for initial acceptance. The form ensures the submission aligns with federal standards and contains the baseline data needed to begin review.</p>",
+				"Order": 5,
 				"Actions": [
 					{
 						"Id": "89faad05-40dd-f011-8544-6045bdd311df",
@@ -1100,24 +1103,227 @@
 							],
 							"DefaultValue": false
 						}
+					},
+					{
+						"Id": "52a5c1fc-5af9-f011-8406-7ced8d209320",
+						"Name": "Standard Form 424 - Field Input - Estimated Funding: Applicant",
+						"Order": 2,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_estimatedfundingapplicant",
+							"SchemaName": "eyfrcc_estimatedfundingapplicant",
+							"Label": "Estimated Funding: Applicant",
+							"DataType": 643260002,
+							"IsRequired": true,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "The estimated amount to be requested, or to be contributed during the first funding/budget period by an applicant contributor.",
+							"DescriptionType": 643260002,
+							"MinValue": 0.0,
+							"MaxValue": 1000000000.0,
+							"Precision": 2
+						}
+					},
+					{
+						"Id": "94f01501-5bf9-f011-8406-7c1e526ae8b9",
+						"Name": "Standard Form 424 - Field Input - Estimated Funding: Other",
+						"Order": 3,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_estimatedfundingother",
+							"SchemaName": "eyfrcc_estimatedfundingother",
+							"Label": "Estimated Funding: Other",
+							"DataType": 643260002,
+							"IsRequired": true,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "The estimated amount to be requested, or to be contributed during the first funding/budget period by an other contributor.",
+							"DescriptionType": 643260002,
+							"MinValue": 0.0,
+							"MaxValue": 1000000000.0,
+							"Precision": 2
+						}
+					},
+					{
+						"Id": "ace17438-5bf9-f011-8406-7c1e526ae8b9",
+						"Name": "Standard Form 424 - Field Input - Organizational Affiliation",
+						"Order": 4,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_organizationalaffiliation",
+							"SchemaName": "eyfrcc_organizationalaffiliation",
+							"Label": "Organizational Affiliation",
+							"DataType": 643260000,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "<p style=\"margin: 0;\">Identify any affiliated organization relevant to this application (e.g., parent organization, partner, or sponsoring entity), if applicable.</p>",
+							"DescriptionType": 643260002,
+							"MaxLength": 1000,
+							"Format": "Text"
+						}
+					},
+					{
+						"Id": "299682b2-5bf9-f011-8406-7c1e526ae8b9",
+						"Name": "Standard Form 424 - Field Input - Child Secondary Report (Standard Form 424)",
+						"Order": 5,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_childsecondaryreport",
+							"SchemaName": "eyfrcc_childsecondaryreport",
+							"Label": "Polymorphic Field (Secondary Reports)",
+							"DataType": 643260009,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"ValidationType": null,
+							"ValidationValue": null,
+							"ValidationMessage": null,
+							"Description": "<p style=\"margin: 0;\">Test field for demonstration polymorphic lookup capabilities.</p>",
+							"DescriptionType": 643260002,
+							"Targets": [
+								{
+									"EntityLogicalName": "eyfrcc_appeal",
+									"EntitySetName": "eyfrcc_appeals",
+									"PrimaryIdAttribute": "eyfrcc_appealid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_appeal"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_expenditurereport",
+									"EntitySetName": "eyfrcc_expenditurereports",
+									"PrimaryIdAttribute": "eyfrcc_expenditurereportid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_expenditurereport"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_indirectcostrate",
+									"EntitySetName": "eyfrcc_indirectcostrates",
+									"PrimaryIdAttribute": "eyfrcc_indirectcostrateid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_indirectcostrate"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_loanmodification",
+									"EntitySetName": "eyfrcc_loanmodifications",
+									"PrimaryIdAttribute": "eyfrcc_loanmodificationid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_loanmodification"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_matchrelief",
+									"EntitySetName": "eyfrcc_matchreliefs",
+									"PrimaryIdAttribute": "eyfrcc_matchreliefid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_matchrelief"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_modification",
+									"EntitySetName": "eyfrcc_modifications",
+									"PrimaryIdAttribute": "eyfrcc_modificationid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_modification"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_monitoring",
+									"EntitySetName": "eyfrcc_monitorings",
+									"PrimaryIdAttribute": "eyfrcc_monitoringid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_monitoring"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_paymentrequest",
+									"EntitySetName": "eyfrcc_paymentrequests",
+									"PrimaryIdAttribute": "eyfrcc_paymentrequestid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_paymentrequest"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_performancereport",
+									"EntitySetName": "eyfrcc_performancereports",
+									"PrimaryIdAttribute": "eyfrcc_performancereportid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_performancereport"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_profilereport",
+									"EntitySetName": "eyfrcc_profilereports",
+									"PrimaryIdAttribute": "eyfrcc_profilereportid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_profilereport"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_progressreport",
+									"EntitySetName": "eyfrcc_progressreports",
+									"PrimaryIdAttribute": "eyfrcc_progressreportid",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_progressreport"
+								},
+								{
+									"EntityLogicalName": "eyfrcc_standardform425",
+									"EntitySetName": "eyfrcc_standardform425s",
+									"PrimaryIdAttribute": "eyfrcc_standardform425id",
+									"PrimaryNameAttribute": "eyfrcc_name",
+									"Columns": ["eyfrcc_name", "createdon"],
+									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_standardform425"
+								}
+							]
+						}
 					}
 				],
 				"Conditions": []
 			},
 			{
 				"Id": "ff7634e7-17e0-f011-8544-0022482dfe82",
-				"Name": "SF425 (Secondary Table)",
+				"Name": "Standard Form 425",
 				"EntityLogicalName": "eyfrcc_standardform425",
 				"EntityDisplayName": "Standard Form 425",
 				"ReferencingAttribute": "eyfrcc_childapplication",
 				"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
-				"Description": null,
-				"Order": 4,
+				"Description": "<p style=\"margin: 0;\">Complete the SF-425 to report financial information in the standardized federal format. This section captures required financial figures and supporting details that enable consistent review, monitoring, and audit readiness. Validations help ensure totals align and required fields are provided before submission.</p>",
+				"Order": 6,
 				"Actions": [
+					{
+						"Id": "45ba3fb4-3be4-f011-8544-7ced8d21d821",
+						"Name": "SF425 (Secondary Table) - Document Upload - TaxDocuments",
+						"Order": 1,
+						"ChildOrder": 0,
+						"Type": 203300001,
+						"Properties": {
+							"FolderName": "TaxDocuments",
+							"Description": "<p style=\"margin: 0;\">Upload supporting tax documentation</p>",
+							"validationType": 203300002,
+							"ValidationMessage": "Please upload at least one file"
+						}
+					},
 					{
 						"Id": "ad124460-18e0-f011-8544-0022482dfe82",
 						"Name": "SF425 (Secondary Table) - Table Entry - Expenditure",
-						"Order": 1,
+						"Order": 2,
 						"ChildOrder": 0,
 						"Type": 203300002,
 						"Properties": {
@@ -1368,65 +1574,66 @@
 								}
 							]
 						}
-					},
-					{
-						"Id": "45ba3fb4-3be4-f011-8544-7ced8d21d821",
-						"Name": "SF425 (Secondary Table) - Document Upload - TaxDocuments",
-						"Order": 2,
-						"ChildOrder": 0,
-						"Type": 203300001,
-						"Properties": {
-							"FolderName": "TaxDocuments",
-							"Description": "<p style=\"margin: 0;\">Upload supporting tax documentation</p>",
-							"validationType": 203300002,
-							"ValidationMessage": "Please upload at least one file"
-						}
 					}
 				],
 				"Conditions": []
 			},
 			{
 				"Id": "a7e5ff8e-18e0-f011-8544-0022482dfe82",
-				"Name": "Submission",
+				"Name": "Review, Certifications & Submit",
 				"EntityLogicalName": "eyfrcc_childapplicationtest",
 				"EntityDisplayName": "Child Application Template",
 				"ReferencingAttribute": null,
 				"ReferencingNavigationProperty": null,
-				"Description": null,
-				"Order": 5,
+				"Description": "<p style=\"margin: 0;\">Provide a complete summary of all entered information and uploaded files for confirmation. Applicants attest to required certifications and acknowledgements, then submit the finalized package for agency review.</p>",
+				"Order": 7,
 				"Actions": [
 					{
 						"Id": "eeff07c1-18e0-f011-8544-0022482dfe82",
-						"Name": "Submission - Field Input - Test Form Field",
+						"Name": "Review, Certifications & Submit - Field Input - Submission Type (Child Application)",
 						"Order": 1,
 						"ChildOrder": 0,
 						"Type": 203300000,
 						"Properties": {
-							"LogicalName": "eyfrcc_testformfield",
-							"SchemaName": "eyfrcc_testformfield",
-							"Label": "Test Form Field",
-							"DataType": 643260000,
+							"LogicalName": "eyfrcc_submissiontype",
+							"SchemaName": "eyfrcc_submissiontype",
+							"Label": "Submission Type",
+							"DataType": 643260006,
 							"IsRequired": true,
 							"IsReadOnly": false,
 							"IsHidden": false,
 							"ValidationType": null,
 							"ValidationValue": null,
 							"ValidationMessage": null,
-							"Description": "Test Form Field",
-							"DescriptionType": 643260000,
-							"MaxLength": 1000,
-							"Format": "Text"
+							"Description": "A code denoting the type of grant application submitted, e.g., initial application for a Federal award, pre-application, or revised application for a Federal award. This comes from the Federal Integrated Business Framework (FIBF) model.",
+							"DescriptionType": 643260002,
+							"CanSelectMultiple": false,
+							"Choices": [
+								{
+									"Value": 643260000,
+									"Label": "Application"
+								},
+								{
+									"Value": 643260001,
+									"Label": "Changed/Corrected Application"
+								},
+								{
+									"Value": 643260002,
+									"Label": "Preapplication"
+								}
+							],
+							"DefaultValue": -1
 						}
 					},
 					{
 						"Id": "7a5cc683-3be4-f011-8544-7ced8d21d821",
-						"Name": "Submission - Document Upload - SupportingDocuments",
+						"Name": "Review, Certifications & Submit - Document Upload - AdditionalDocuments",
 						"Order": 2,
 						"ChildOrder": 0,
 						"Type": 203300001,
 						"Properties": {
-							"FolderName": "SupportingDocuments",
-							"Description": "<p style=\"margin: 0;\">Please upload any supporting documentation</p>",
+							"FolderName": "AdditionalDocuments",
+							"Description": "<p style=\"margin: 0;\">Upload any supplemental documents needed to support the application (e.g., narratives, letters of support, certifications, or other requested materials).</p>",
 							"validationType": 203300000,
 							"ValidationMessage": null
 						}
@@ -1651,6 +1858,138 @@
 				"EntityDisplayName": "Fiscal Year",
 				"EntityDescription": "A fiscal year is used in accounting and for budget purposes. It is used to help perform financial reporting on important, key dates used throughout the system.",
 				"PrimaryIdAttribute": "eyfrcc_fiscalyearid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_appeal": {
+				"EntityLogicalName": "eyfrcc_appeal",
+				"EntitySchemaName": "eyfrcc_appeal",
+				"EntitySetName": "eyfrcc_appeals",
+				"EntityDisplayName": "Appeal",
+				"EntityDescription": "An appeal is a request that an applicant can submit in order to challenge the decision made on their application or report.",
+				"PrimaryIdAttribute": "eyfrcc_appealid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_expenditurereport": {
+				"EntityLogicalName": "eyfrcc_expenditurereport",
+				"EntitySchemaName": "eyfrcc_expenditurereport",
+				"EntitySetName": "eyfrcc_expenditurereports",
+				"EntityDisplayName": "Expenditure Report",
+				"EntityDescription": "Represents a formal submission by a grant recipient detailing how funds disbursed under an award have been spent. Each Expenditure Report groups one or more individual Expenditure records and includes key reporting metadata, such as the reporting period, submission date, total amount reported, and approval status. This table provides an auditable record of recipient financial reporting, supporting traceability from obligated funds to actual expenditures.",
+				"PrimaryIdAttribute": "eyfrcc_expenditurereportid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_indirectcostrate": {
+				"EntityLogicalName": "eyfrcc_indirectcostrate",
+				"EntitySchemaName": "eyfrcc_indirectcostrate",
+				"EntitySetName": "eyfrcc_indirectcostrates",
+				"EntityDisplayName": "Negotiated Indirect Cost Rate Agreement",
+				"EntityDescription": "A table used to capture the negotiated indirect cost rate agreement (NICRA) information associated with an organization.",
+				"PrimaryIdAttribute": "eyfrcc_indirectcostrateid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_loanmodification": {
+				"EntityLogicalName": "eyfrcc_loanmodification",
+				"EntitySchemaName": "eyfrcc_loanmodification",
+				"EntitySetName": "eyfrcc_loanmodifications",
+				"EntityDisplayName": "Loan Modification",
+				"EntityDescription": "A loan modification represents a request submitted from an applicant in order to modify their loan application. Multiple modification requests can be submitted over the lifecycle of the application in the event that the applicant requires a change.",
+				"PrimaryIdAttribute": "eyfrcc_loanmodificationid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_matchrelief": {
+				"EntityLogicalName": "eyfrcc_matchrelief",
+				"EntitySchemaName": "eyfrcc_matchrelief",
+				"EntitySetName": "eyfrcc_matchreliefs",
+				"EntityDisplayName": "Match Relief",
+				"EntityDescription": "Requests submitted by grant applicants/ recipients to reduce or waive their required non-federal cost share (match) contribution due to financial hardship, extenuating circumstances, or other justifiable reasons. The request typically includes supporting documentation and justification, and is subject to review and approval by the grantor in accordance with program regulations and policy.",
+				"PrimaryIdAttribute": "eyfrcc_matchreliefid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_modification": {
+				"EntityLogicalName": "eyfrcc_modification",
+				"EntitySchemaName": "eyfrcc_modification",
+				"EntitySetName": "eyfrcc_modifications",
+				"EntityDisplayName": "Grant Modification",
+				"EntityDescription": "A grant modification represents a request submitted from an applicant in order to modify their grant application. Multiple modification requests can be submitted over the lifecycle of the application in the event that the applicant requires a change.",
+				"PrimaryIdAttribute": "eyfrcc_modificationid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_monitoring": {
+				"EntityLogicalName": "eyfrcc_monitoring",
+				"EntitySchemaName": "eyfrcc_monitoring",
+				"EntitySetName": "eyfrcc_monitorings",
+				"EntityDisplayName": "Monitoring",
+				"EntityDescription": "Monitoring captures a type of desk review conducted on a selected recipient that could involve a summary of the results and observations around compliance, financials, and performance.",
+				"PrimaryIdAttribute": "eyfrcc_monitoringid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_paymentrequest": {
+				"EntityLogicalName": "eyfrcc_paymentrequest",
+				"EntitySchemaName": "eyfrcc_PaymentRequest",
+				"EntitySetName": "eyfrcc_paymentrequests",
+				"EntityDisplayName": "Disbursement Request",
+				"EntityDescription": "A disbursement request captures the specific request from a borrower or grantee that they would like to receive a disbursement from their award, if it hasn't been disbursed in full.",
+				"PrimaryIdAttribute": "eyfrcc_paymentrequestid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_performancereport": {
+				"EntityLogicalName": "eyfrcc_performancereport",
+				"EntitySchemaName": "eyfrcc_performancereport",
+				"EntitySetName": "eyfrcc_performancereports",
+				"EntityDisplayName": "Performance Report",
+				"EntityDescription": "A table to capture post-award performance reports; these are data-driven reports used to measure progress against specific performance indicators, objectives, or outcome metrics as defined in the grant agreement or Notice of Award. Performance reports typically include quantitative data, KPIs, and analysis to assess whether the project is meeting its intended impact. These are often required annually or at the end of the period of performance.",
+				"PrimaryIdAttribute": "eyfrcc_performancereportid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_profilereport": {
+				"EntityLogicalName": "eyfrcc_profilereport",
+				"EntitySchemaName": "eyfrcc_profilereport",
+				"EntitySetName": "eyfrcc_profilereports",
+				"EntityDisplayName": "Profile Report",
+				"EntityDescription": "A profile report is a type of report that an external user in the portal has uploaded on their profile page.",
+				"PrimaryIdAttribute": "eyfrcc_profilereportid",
+				"PrimaryNameAttribute": "eyfrcc_name",
+				"PrimaryNameAttributeDisplayName": null,
+				"ConfigurationIdentifierMetadata": [],
+				"DefaultOnCreateActions": []
+			},
+			"eyfrcc_progressreport": {
+				"EntityLogicalName": "eyfrcc_progressreport",
+				"EntitySchemaName": "eyfrcc_progressreport",
+				"EntitySetName": "eyfrcc_progressreports",
+				"EntityDisplayName": "Progress Report",
+				"EntityDescription": "A table to capture grantee Progress Reports, narrative-focused reports submitted by the recipient to describe milestones achieved, activities conducted, and updates on the overall progress of the grant project. Progress reports emphasize implementation status, timeline adherence, challenges encountered, and plans for the next reporting period. Reports are often submitted quarterly or semi-annually, and may precede a more formal performance evaluation.",
+				"PrimaryIdAttribute": "eyfrcc_progressreportid",
 				"PrimaryNameAttribute": "eyfrcc_name",
 				"PrimaryNameAttributeDisplayName": null,
 				"ConfigurationIdentifierMetadata": [],
