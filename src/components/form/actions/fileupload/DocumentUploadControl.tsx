@@ -50,6 +50,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	const primaryEntityName = formState?.primaryEntityName;
 	const resolvedEntityName = entityName || primaryEntityName || "";
 	const isTableEntry = formState?.type === "tableEntry";
+	const ensureEntityNode = formState?.ensureEntityNode;
 	const recordNode = isTableEntry
 		? formState?.nodeId
 			? formState?.getNodeById?.(formState.nodeId)
@@ -107,6 +108,12 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	React.useEffect(() => {
 		loadDocuments();
 	}, [loadDocuments]);
+
+	React.useEffect(() => {
+		if (!recordNode && !isTableEntry && resolvedEntityName && ensureEntityNode) {
+			ensureEntityNode(resolvedEntityName);
+		}
+	}, [ensureEntityNode, isTableEntry, recordNode, resolvedEntityName]);
 
 	const validateFiles = (files: File[]) => {
 		if (!files.length) {
