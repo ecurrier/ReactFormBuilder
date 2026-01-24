@@ -6,7 +6,9 @@ import { useFormState } from "@hooks/useFormState";
 import { populateFieldsFromData } from "@services/dataLoader";
 import { executeSave, executeValidateAndSubmit, reloadFormData } from "@services/saveOrchestrator";
 import LoadingIndicator from "@components/common/LoadingIndicator";
+import { ProgressBar } from "@components/common";
 import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
+import type { FormStateTreeNode, UploadNodeData } from "@app-types/FormState";
 import type { SaveError, SaveProgressEvent } from "@app-types/SaveOrchestrator";
 
 const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams, onUrlParamsChange }) => {
@@ -121,20 +123,20 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		return `${scope}:${entityName}`;
 	};
 
+	const shouldSaveNode = React.useCallback((node: FormStateTreeNode | null) => {
+		if (!node || node.type === "upload") {
+			return node?.type === "upload";
+		}
+
+		const hasData = node.data && Object.keys(node.data).length > 0;
+		const hasChildren = node.children && node.children.length > 0;
+		return hasData || (!node.isPersisted && hasChildren);
+	}, []);
+
 	const buildInitialSaveProgress = React.useCallback(() => {
 		const primaryEntityName = config?.Form?.PrimaryApplicationTable?.TableLogicalName;
 		const items: SaveProgressEvent[] = [];
 		const saveTree = formState.getSaveTree?.();
-
-		const shouldSaveNode = (node: any) => {
-			if (!node || node.type === "upload") {
-				return node?.type === "upload";
-			}
-
-			const hasData = node.data && Object.keys(node.data).length > 0;
-			const hasChildren = node.children && node.children.length > 0;
-			return hasData || (!node.isPersisted && hasChildren);
-		};
 
 		const walk = (node: any) => {
 			if (!node) {
@@ -166,7 +168,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		}
 
 		return items;
-	}, [config?.Form?.PrimaryApplicationTable?.TableLogicalName, formState]);
+	}, [config?.Form?.PrimaryApplicationTable?.TableLogicalName, formState, shouldSaveNode]);
 
 	const handleSaveProgress = React.useCallback((event: SaveProgressEvent) => {
 		setSaveProgress((prev) => {
@@ -181,133 +183,149 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		});
 	}, []);
 
-	const groupedErrorSummary = React.useMemo(() => {
-		const groups = new Map();
+	const saveProgressTotals = React.useMemo(() => {
+		const total = saveProgress.length;
+		const saved = saveProgress.filter((item) => item.status === "saved").length;
+		const failed = saveProgress.filter((item) => item.status === "failed").length;
+		const complete = saved + failed;
+		const percent = total === 0 ? (savePhase === "summary" ? 100 : 0) : Math.round((complete / total) * 100);
+
+		return {
+			total,
+			saved,
+			failed,
+			complete,
+			percent,
+		};
+	}, [savePhase, saveProgress]);
+
+	const saveProgressVariant = saveProgressTotals.failed > 0 ? "danger" : savePhase === "summary" ? "success" : "info";
+
+	const saveProgressLabel = saveProgressTotals.total
+		? `${saveProgressTotals.complete} of ${saveProgressTotals.total} items`
+		: savePhase === "summary"
+			? "No changes to save"
+			: "Preparing save...";
+
+	const saveProgressMap = React.useMemo(() => new Map(saveProgress.map((item) => [item.id, item])), [saveProgress]);
+
+	const errorsByRecordId = React.useMemo(() => {
+		const map = new Map<string, SaveError[]>();
+		saveErrors.forEach((error) => {
+			if (!error?.recordId) {
+				return;
+			}
+
+			const list = map.get(error.recordId) ?? [];
+			list.push(error);
+			map.set(error.recordId, list);
+		});
+		return map;
+	}, [saveErrors]);
+
+	const errorsByEntity = React.useMemo(() => {
+		const map = new Map<string, SaveError[]>();
 
 		saveErrors.forEach((error) => {
-			if (!error) {
+			if (!error?.entityName || error.recordId) {
 				return;
 			}
 
 			const scope = error.phase === "secondary" ? "secondary" : error.phase === "child" ? "child" : error.phase === "upload" ? "upload" : "primary";
-			const entityName = error.entityName || "Unknown";
-			const key = `${scope}:${entityName}`;
-
-			if (!groups.has(key)) {
-				groups.set(key, {
-					scope,
-					entityName,
-					errors: [],
-				});
-			}
-
-			groups.get(key).errors.push(error);
+			const key = `${scope}:${error.entityName}`;
+			const list = map.get(key) ?? [];
+			list.push(error);
+			map.set(key, list);
 		});
 
-		return Array.from(groups.values());
+		return map;
 	}, [saveErrors]);
 
-	const groupedSaveProgress = React.useMemo(() => {
-		const groups = new Map();
+	const saveDetailsTree = React.useMemo(() => {
+		const saveTree = formState.getSaveTree?.();
 
-		saveProgress.forEach((item) => {
-			const key = `${item.scope}:${item.entityName}`;
-			if (!groups.has(key)) {
-				groups.set(key, {
-					scope: item.scope,
-					entityName: item.entityName,
-					total: 0,
-					saved: 0,
-					failed: 0,
-				});
+		const buildNode = (node: FormStateTreeNode | null) => {
+			if (!node) {
+				return null;
 			}
 
-			const group = groups.get(key);
-			group.total += 1;
+			const childNodes = node.children
+				.map((child) => buildNode(child))
+				.filter((child): child is NonNullable<ReturnType<typeof buildNode>> => Boolean(child));
+			const includeNode = shouldSaveNode(node) || childNodes.length > 0;
 
-			if (item.status === "saved") {
-				group.saved += 1;
+			if (!includeNode) {
+				return null;
 			}
 
-			if (item.status === "failed") {
-				group.failed += 1;
-			}
-		});
+			const scope = node.type;
+			const entityName = node.logicalName || "upload";
+			const progressId = buildProgressId(scope, entityName, node.id);
+			const progress = saveProgressMap.get(progressId);
+			const errors = errorsByRecordId.get(node.id) ?? errorsByEntity.get(`${scope}:${entityName}`) ?? [];
 
-		return Array.from(groups.values());
-	}, [saveProgress]);
+			return {
+				id: progressId,
+				nodeId: node.id,
+				scope,
+				entityName,
+				label: node.type === "upload" ? (node.data as UploadNodeData)?.file?.name || node.id : undefined,
+				status: progress?.status,
+				errors,
+				children: childNodes,
+			};
+		};
 
-	const groupedSaveSummary = React.useMemo(() => {
-		const progressMap = new Map();
+		if (saveTree) {
+			const rootNode = buildNode(saveTree);
+			return rootNode ? [rootNode] : [];
+		}
 
-		groupedSaveProgress.forEach((group) => {
-			progressMap.set(`${group.scope}:${group.entityName}`, {
-				scope: group.scope,
-				entityName: group.entityName,
-				total: group.total,
-				saved: group.saved,
-				failed: group.failed,
-				errors: [],
-			});
-		});
+		if (saveProgress.length > 0) {
+			return saveProgress.map((item) => ({
+				id: item.id,
+				nodeId: item.id,
+				scope: item.scope,
+				entityName: item.entityName,
+				label: item.label,
+				status: item.status,
+				errors: errorsByEntity.get(`${item.scope}:${item.entityName}`) ?? [],
+				children: [],
+			}));
+		}
 
-		groupedErrorSummary.forEach((group) => {
-			const key = `${group.scope}:${group.entityName}`;
-			if (!progressMap.has(key)) {
-				progressMap.set(key, {
-					scope: group.scope,
-					entityName: group.entityName,
-					total: 0,
-					saved: 0,
-					failed: group.errors.length,
+		if (primaryEntity) {
+			return [
+				{
+					id: buildProgressId("primary", primaryEntity),
+					nodeId: primaryEntity,
+					scope: "primary",
+					entityName: primaryEntity,
+					label: undefined,
+					status: "saving",
 					errors: [],
-				});
-			}
+					children: [],
+				},
+			];
+		}
 
-			progressMap.get(key).errors = group.errors;
-		});
+		return [];
+	}, [errorsByEntity, errorsByRecordId, formState, primaryEntity, saveProgress, saveProgressMap, shouldSaveNode]);
 
-		return Array.from(progressMap.values());
-	}, [groupedSaveProgress, groupedErrorSummary]);
-
-	const renderGroupStatus = (group) => {
-		if (group.total === 0) {
+	const renderItemStatus = (status?: SaveProgressEvent["status"]) => {
+		if (!status) {
 			return { icon: "⏳", text: "Queued" };
 		}
 
-		if (group.saved === group.total) {
+		if (status === "saved") {
 			return { icon: "✅", text: "Saved" };
 		}
 
-		if (group.failed === group.total) {
+		if (status === "failed") {
 			return { icon: "❌", text: "Failed" };
 		}
 
-		if (group.failed > 0) {
-			return { icon: "⚠️", text: `${group.saved}/${group.total} saved` };
-		}
-
-		return { icon: "⏳", text: `${group.saved}/${group.total} saved` };
-	};
-
-	const renderSummaryStatus = (group) => {
-		if (group.total === 0 && group.failed > 0) {
-			return { icon: "❌", text: "Failed" };
-		}
-
-		if (group.total > 0 && group.saved === group.total) {
-			return { icon: "✅", text: "Saved" };
-		}
-
-		if (group.total > 0 && group.failed === group.total) {
-			return { icon: "❌", text: "Failed" };
-		}
-
-		if (group.failed > 0) {
-			return { icon: "⚠️", text: `${group.saved}/${group.total} saved` };
-		}
-
-		return { icon: "⏳", text: `${group.saved}/${group.total} saved` };
+		return { icon: "⏳", text: "Saving" };
 	};
 
 	const getEntityLabel = (entityName) => resolveEntityDisplayName(entityName, entityMetadata);
@@ -320,22 +338,34 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		return scope;
 	};
 
-	const formatSaveErrors = (errors) => {
-		if (!Array.isArray(errors) || errors.length === 0) {
-			return "An error occurred while saving";
-		}
+	const renderSaveDetails = (nodes) => (
+		<ul className="list-unstyled" style={{ marginTop: "8px" }}>
+			{nodes.map((node) => {
+				const status = renderItemStatus(node.status);
+				const title =
+					node.scope === "upload"
+						? `${formatScopeLabel(node.scope)}: ${node.label || "Document"}`
+						: `${formatScopeLabel(node.scope)}: ${getEntityLabel(node.entityName)}`;
 
-		return errors
-			.map((error) => {
-				if (!error) {
-					return "Unknown error";
-				}
-
-				const prefix = error.entityName ? `${error.entityName}: ` : "";
-				return `${prefix}${error.message || "Unknown error"}`;
-			})
-			.join(", ");
-	};
+				return (
+					<li key={node.id} style={{ marginBottom: "8px" }}>
+						<div>
+							<span style={{ marginRight: "6px" }}>{status.icon}</span>
+							{title} — {status.text}
+						</div>
+						{node.errors?.length > 0 && (
+							<ul className="list-unstyled" style={{ marginTop: "6px", paddingLeft: "18px" }}>
+								{node.errors.map((error, index) => (
+									<li key={`${node.id}-error-${index}`}>{error.message}</li>
+								))}
+							</ul>
+						)}
+						{node.children?.length > 0 && <div style={{ marginTop: "6px", paddingLeft: "18px" }}>{renderSaveDetails(node.children)}</div>}
+					</li>
+				);
+			})}
+		</ul>
+	);
 
 	const updateUrlAfterSave = (recordId: string) => {
 		if (!recordId) {
@@ -446,6 +476,10 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				onProgress: handleSaveProgress,
 			});
 
+			if (result.recordId) {
+				updateUrlAfterSave(result.recordId);
+			}
+
 			if (result.success) {
 				setSaveErrors([]);
 
@@ -456,7 +490,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
 						formState.initializeFormData(fieldData);
 					}
-					updateUrlAfterSave(result.recordId);
 				}
 			} else {
 				setSaveErrors(result.errors || []);
@@ -486,6 +519,10 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				onProgress: handleSaveProgress,
 			});
 
+			if (result.recordId) {
+				updateUrlAfterSave(result.recordId);
+			}
+
 			if (result.success) {
 				setSaveErrors([]);
 
@@ -496,7 +533,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
 						formState.initializeFormData(fieldData);
 					}
-					updateUrlAfterSave(result.recordId);
 				}
 			} else {
 				setSaveErrors(result.errors || []);
@@ -526,56 +562,35 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				variant="full-screen"
 				message={savePhase === "summary" ? "Save complete" : "Saving records..."}
 				showSpinner={savePhase !== "summary"}>
-				{groupedSaveProgress.length > 0 && savePhase === "saving" && (
-					<div style={{ textAlign: "left", maxWidth: "520px", margin: "16px auto 0" }}>
-						<strong>Saving status</strong>
-						<ul style={{ marginTop: "8px", paddingLeft: "20px" }}>
-							{groupedSaveProgress.map((group) => {
-								const status = renderGroupStatus(group);
-								return (
-									<li key={`${group.scope}-${group.entityName}`} style={{ marginBottom: "6px" }}>
-										<span style={{ marginRight: "6px" }}>{status.icon}</span>
-										{formatScopeLabel(group.scope)}: {group.entityName} — {status.text}
-									</li>
-								);
-							})}
-						</ul>
+				<div style={{ textAlign: "left", maxWidth: "640px", margin: "16px auto 0" }}>
+					<div style={{ textAlign: "center" }}>
+						<ProgressBar value={saveProgressTotals.percent} variant={saveProgressVariant} label={saveProgressLabel} />
+						<p style={{ marginTop: "8px", marginBottom: 0 }}>{saveProgressLabel}</p>
 					</div>
-				)}
-				{savePhase === "summary" && (
-					<div style={{ textAlign: "left", maxWidth: "640px", margin: "16px auto 0" }}>
-						<strong>Save summary</strong>
-						{groupedSaveSummary.length > 0 ? (
-							<ul style={{ marginTop: "8px", paddingLeft: "20px" }}>
-								{groupedSaveSummary.map((group) => {
-									const status = renderSummaryStatus(group);
-									return (
-										<li key={`${group.scope}-${group.entityName}`} style={{ marginBottom: "10px" }}>
-											<div>
-												<span style={{ marginRight: "6px" }}>{status.icon}</span>
-												{formatScopeLabel(group.scope)}: {getEntityLabel(group.entityName)} — {status.text}
-											</div>
-											{group.errors?.length > 0 && (
-												<ul style={{ marginTop: "6px", paddingLeft: "18px" }}>
-													{group.errors.map((error, index) => (
-														<li key={`${group.scope}-${group.entityName}-${index}`}>{error.message}</li>
-													))}
-												</ul>
-											)}
-										</li>
-									);
-								})}
-							</ul>
-						) : (
-							<p style={{ marginTop: "8px" }}>No changes to save.</p>
-						)}
+					<details style={{ marginTop: "16px" }}>
+						<summary>See Advanced Details...</summary>
+						<div style={{ marginTop: "10px" }}>
+							{saveDetailsTree.length > 0 ? (
+								renderSaveDetails(saveDetailsTree)
+							) : saveErrors.length > 0 ? (
+								<ul className="list-unstyled" style={{ marginTop: "8px" }}>
+									{saveErrors.map((error, index) => (
+										<li key={`save-error-${index}`}>{error.message}</li>
+									))}
+								</ul>
+							) : (
+								<p style={{ marginTop: "8px" }}>No changes to save.</p>
+							)}
+						</div>
+					</details>
+					{savePhase === "summary" && (
 						<div style={{ marginTop: "16px", textAlign: "center" }}>
 							<button type="button" className="btn btn-primary" onClick={handleCloseSaveOverlay}>
 								Close
 							</button>
 						</div>
-					</div>
-				)}
+					)}
+				</div>
 			</LoadingIndicator>
 			<div className={`banner${isBannerSticky ? " banner--sticky" : ""}`}>
 				<div className="container">
