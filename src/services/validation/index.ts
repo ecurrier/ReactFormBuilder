@@ -13,3 +13,4 @@ export {
 	validateUrl,
 	validateField,
 } from "./validators";
+export { getRealtimeValidationResult } from "./realtime";
