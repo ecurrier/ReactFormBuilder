@@ -45,9 +45,12 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 			return;
 		}
 
+		// Clear previous results and show loading state immediately
+		setResults([]);
+		setIsLoading(true);
+
 		// Debounce search input
 		const timer = setTimeout(async () => {
-			setIsLoading(true);
 			try {
 				const matches = await quickSearchLookup(selectedTarget, searchText.trim());
 				setResults(matches);
