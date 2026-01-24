@@ -24585,8 +24585,16 @@ ol ol {
 .loading-ui.visible {
 	display: flex;
 }
+.loading-ui-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+.loading-ui-header p {
+	margin: auto;
+}
 .loading-ui > div {
-	display: inline-flex;
 	-ms-flex-direction: row;
 	flex-direction: row;
 	-ms-flex-wrap: nowrap;
@@ -24604,10 +24612,6 @@ ol ol {
 }
 .loading-ui .spinner circle {
 	fill: var(--bg-primary);
-}
-.loading-ui p {
-	margin-top: 0;
-	margin-left: 20px;
 }
 
 .loading-ui.full-screen {
