@@ -569,15 +569,19 @@ export async function executeSave(context: SaveContext): Promise<SaveResult> {
 
 		const primaryRecordId = recordIdsByEntity.get(primaryEntity || "") || formState.recordId;
 
-		if (errors.length === 0) {
-			await ensureFormInstanceAndSession({
-				formState,
-				config,
-				urlParams: context.urlParams,
-				primaryEntity,
-				primaryRecordId,
-				recordIdsByEntity,
-			});
+		if (primaryRecordId) {
+			try {
+				await ensureFormInstanceAndSession({
+					formState,
+					config,
+					urlParams: context.urlParams,
+					primaryEntity,
+					primaryRecordId,
+					recordIdsByEntity,
+				});
+			} catch (error) {
+				errors.push(buildSaveError("save", buildErrorMessage(error), primaryEntity));
+			}
 		}
 
 		if (errors.length === 0) {

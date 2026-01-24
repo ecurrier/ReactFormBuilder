@@ -699,6 +699,32 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		[state.nodesById]
 	);
 
+	const ensureEntityNode = useCallback(
+		(entityName: string): FormStateNode | undefined => {
+			const nodeId = state.entityNodeIds[entityName];
+			if (nodeId) {
+				return state.nodesById[nodeId];
+			}
+
+			const newNodeId = generateTempId();
+			const isPrimary = entityName === state.primaryEntityName;
+			const node: FormStateNode = {
+				id: newNodeId,
+				type: isPrimary ? "primary" : "secondary",
+				logicalName: entityName,
+				data: {},
+				recordId: isPrimary ? state.recordId : null,
+				isPersisted: isPrimary ? Boolean(state.recordId && !isTempId(state.recordId)) : false,
+				parentId: isPrimary ? null : state.rootNodeId,
+				children: [],
+			};
+			dispatch({ type: "ADD_NODE", node });
+			dispatch({ type: "SET_ENTITY_NODE", entityName, nodeId: newNodeId });
+			return node;
+		},
+		[state.entityNodeIds, state.nodesById, state.primaryEntityName, state.recordId, state.rootNodeId]
+	);
+
 	const getNodeById = useCallback(
 		(nodeId: string): FormStateNode | undefined => {
 			return state.nodesById[nodeId];
@@ -962,6 +988,7 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		resetNodeData,
 		deleteNode,
 		getChildNodes,
+		ensureEntityNode,
 		getNodeById,
 		getEntityNode,
 		findNodeByRecordId,
