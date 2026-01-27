@@ -86,11 +86,22 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 		}
 	};
 
+	const resolveNavigationProperty = (result) => {
+		if (!targets || targets.length === 0) {
+			return undefined;
+		}
+
+		const targetMatch = targets.find((target) => target.EntityLogicalName === result.logicalName);
+		return targetMatch?.NavigationProperty;
+	};
+
 	const handleSelectResult = (result) => {
+		const navigationProperty = resolveNavigationProperty(result);
 		onChange?.({
 			id: result.id,
 			logicalName: result.logicalName,
 			name: result.name,
+			navigationProperty,
 		});
 		setSearchText(result.name);
 		setIsQuickSearchOpen(false);
@@ -222,6 +233,7 @@ LookupControl.propTypes = {
 			id: PropTypes.string,
 			logicalName: PropTypes.string,
 			name: PropTypes.string,
+			navigationProperty: PropTypes.string,
 		}),
 		PropTypes.string,
 	]),

@@ -4,6 +4,7 @@ export interface EntityReference {
 	id: string;
 	logicalName: string;
 	name?: string;
+	navigationProperty?: string;
 }
 
 export interface LookupValue {

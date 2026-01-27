@@ -32,7 +32,9 @@ export const serializeForApi = (data: Partial<Entity>, entityName: string): Reco
 			const ref = value as EntityReference;
 			const targetEntitySetName = resolveEntitySetName(ref.logicalName);
 			const normalizedId = sanitizeGuid(ref.id);
-			serialized[`${key}@odata.bind`] = `/${targetEntitySetName}(${normalizedId})`;
+			const navigationProperty = ref.navigationProperty?.trim();
+			const bindKey = navigationProperty ? `${navigationProperty}@odata.bind` : `${key}@odata.bind`;
+			serialized[bindKey] = `/${targetEntitySetName}(${normalizedId})`;
 			continue;
 		}
 
