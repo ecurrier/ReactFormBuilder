@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
 import { ActionType, DataType, DescriptionType } from "@constants/enums";
 import { ChoiceInput, CurrencyInput, DateTimeInput, LookupControl, MultiLineTextInput, NumberInput, SingleLineTextInput, YesNoInput } from "@components";
 import { getRealtimeValidationResult } from "@services/validation";
@@ -131,7 +130,9 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 	}
 };
 
-export const FieldInput = ({ action, formState, entityName: stepEntityName }: { action: any; formState: any; entityName?: string; key?: string | number }) => {
+type FieldInputProps = { action: any; formState: any; entityName?: string };
+
+export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entityName: stepEntityName }) => {
 	const properties = action?.Properties ?? {};
 	const inputId = properties.LogicalName ?? action.Id ?? action.Name ?? "field-input";
 	const label = properties.Label ?? action.Name ?? properties.LogicalName;
@@ -275,41 +276,6 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 			) : null}
 		</div>
 	);
-};
-
-FieldInput.propTypes = {
-	action: PropTypes.shape({
-		Id: PropTypes.string,
-		Name: PropTypes.string,
-		Properties: PropTypes.shape({
-			LogicalName: PropTypes.string,
-			Label: PropTypes.string,
-			DataType: PropTypes.number,
-			Description: PropTypes.string,
-			DescriptionType: PropTypes.number,
-			IsRequired: PropTypes.bool,
-			IsReadOnly: PropTypes.bool,
-			IsHidden: PropTypes.bool,
-			ValidationMessage: PropTypes.string,
-			ChildActions: PropTypes.arrayOf(PropTypes.object),
-			Targets: PropTypes.arrayOf(
-				PropTypes.shape({
-					EntityLogicalName: PropTypes.string,
-					Columns: PropTypes.arrayOf(PropTypes.string),
-					NavigationProperty: PropTypes.string,
-					ReferencingAttribute: PropTypes.string,
-				})
-			),
-			Choices: PropTypes.arrayOf(
-				PropTypes.shape({
-					Value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-					Label: PropTypes.string,
-				})
-			),
-			CanSelectMultiple: PropTypes.bool,
-		}),
-	}).isRequired,
-	entityName: PropTypes.string,
 };
 
 export default FieldInput;

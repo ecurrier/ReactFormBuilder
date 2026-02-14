@@ -1,7 +1,14 @@
 import React from "react";
-import PropTypes from "prop-types";
 
-export const CurrencyInput = ({ commonProps, minValue, maxValue }) => {
+type CommonInputProps = React.InputHTMLAttributes<HTMLInputElement>;
+
+type CurrencyInputProps = {
+	commonProps: CommonInputProps;
+	minValue?: number;
+	maxValue?: number;
+};
+
+export const CurrencyInput = ({ commonProps, minValue, maxValue }: CurrencyInputProps) => {
 	return (
 		<>
 			<div className="input-group input-group-md">
@@ -10,21 +17,6 @@ export const CurrencyInput = ({ commonProps, minValue, maxValue }) => {
 			</div>
 		</>
 	);
-};
-
-CurrencyInput.propTypes = {
-	commonProps: PropTypes.shape({
-		id: PropTypes.string,
-		name: PropTypes.string,
-		readOnly: PropTypes.bool,
-		required: PropTypes.bool,
-		className: PropTypes.string,
-		value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-		onChange: PropTypes.func,
-		placeholder: PropTypes.string,
-	}).isRequired,
-	minValue: PropTypes.number,
-	maxValue: PropTypes.number,
 };
 
 export default CurrencyInput;

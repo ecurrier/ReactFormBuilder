@@ -1,6 +1,11 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { DateTimeFormat } from "@constants/enums";
+
+type DateTimeInputProps = {
+	commonProps: React.InputHTMLAttributes<HTMLInputElement>;
+	dateTimeFormat?: string | number;
+	dateTimeBehavior?: string;
+};
 
 const pad = (value) => String(value).padStart(2, "0");
 
@@ -92,7 +97,7 @@ const formatForInput = (value, format, behavior) => {
 	return behavior === "TimeZoneIndependent" ? formatUtcDateTime(date) : formatLocalDateTime(date);
 };
 
-export const DateTimeInput = ({ commonProps, dateTimeFormat, dateTimeBehavior }) => {
+export const DateTimeInput = ({ commonProps, dateTimeFormat, dateTimeBehavior }: DateTimeInputProps) => {
 	const normalizedFormat = normalizeDateTimeFormat(dateTimeFormat);
 	const normalizedBehavior = normalizeDateTimeBehavior(dateTimeBehavior);
 	const formattedValue = formatForInput(commonProps.value, normalizedFormat, normalizedBehavior);
@@ -126,21 +131,6 @@ export const DateTimeInput = ({ commonProps, dateTimeFormat, dateTimeBehavior })
 	}
 
 	return <input {...inputProps} type="date" />;
-};
-
-DateTimeInput.propTypes = {
-	commonProps: PropTypes.shape({
-		id: PropTypes.string,
-		name: PropTypes.string,
-		readOnly: PropTypes.bool,
-		required: PropTypes.bool,
-		className: PropTypes.string,
-		value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-		onChange: PropTypes.func,
-		placeholder: PropTypes.string,
-	}).isRequired,
-	dateTimeFormat: PropTypes.string,
-	dateTimeBehavior: PropTypes.string,
 };
 
 export default DateTimeInput;

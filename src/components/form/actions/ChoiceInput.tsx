@@ -1,7 +1,21 @@
 import React from "react";
-import PropTypes from "prop-types";
 
-export const ChoiceInput = ({ commonProps, choices, value, canSelectMultiple, isReadOnly }) => {
+type Choice = {
+	Value?: string | number;
+	Label?: string;
+};
+
+type CommonSelectProps = React.SelectHTMLAttributes<HTMLSelectElement>;
+
+type ChoiceInputProps = {
+	commonProps: CommonSelectProps;
+	choices: Choice[];
+	value?: string | number | Array<string | number> | null;
+	canSelectMultiple?: boolean;
+	isReadOnly?: boolean;
+};
+
+export const ChoiceInput = ({ commonProps, choices, value, canSelectMultiple, isReadOnly }: ChoiceInputProps) => {
 	if (choices.length === 0) {
 		return (
 			<div className="choice-placeholder" role="note">
@@ -43,28 +57,6 @@ export const ChoiceInput = ({ commonProps, choices, value, canSelectMultiple, is
 			<span className="ui"></span>
 		</>
 	);
-};
-
-ChoiceInput.propTypes = {
-	commonProps: PropTypes.shape({
-		id: PropTypes.string,
-		name: PropTypes.string,
-		readOnly: PropTypes.bool,
-		required: PropTypes.bool,
-		className: PropTypes.string,
-		value: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.array]),
-		onChange: PropTypes.func,
-		placeholder: PropTypes.string,
-	}).isRequired,
-	choices: PropTypes.arrayOf(
-		PropTypes.shape({
-			Value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-			Label: PropTypes.string,
-		})
-	).isRequired,
-	value: PropTypes.any,
-	canSelectMultiple: PropTypes.bool,
-	isReadOnly: PropTypes.bool,
 };
 
 export default ChoiceInput;
