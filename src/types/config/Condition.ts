@@ -4,10 +4,13 @@ export interface ReactConditionConfiguration {
 	Type?: number;
 	IsOr: boolean;
 	Expressions: ReactConditionExpression[];
+	TargetActionId?: string;
+	Value?: any;
+	SetValue?: any;
 }
 
 export interface ReactConditionExpression {
 	FieldLogicalName: string;
-	Value: string;
+	Value: any;
 	Operator?: number;
 }

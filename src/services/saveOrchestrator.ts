@@ -618,18 +618,41 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 		// Step 1: Run all field validators
 		const allFields = Object.entries(formState.metadata || {}) as Array<[string, FieldMetadata]>;
 
+		const findFieldConfig = (actions: any[] | undefined, logicalName: string): any => {
+			if (!Array.isArray(actions)) {
+				return null;
+			}
+
+			for (const action of actions) {
+				if (action?.Properties?.LogicalName === logicalName) {
+					return action.Properties;
+				}
+
+				const nested = findFieldConfig(action?.Properties?.ChildActions, logicalName);
+				if (nested) {
+					return nested;
+				}
+			}
+
+			return null;
+		};
+
 		for (const [fieldPath, metadata] of allFields) {
 			const fieldValue = formState.getFieldValue(fieldPath);
 
 			// Find field configuration to get validation rules
 			let fieldConfig: any = null;
 			config.Form?.Steps?.forEach((step: any) => {
-				step.Actions?.forEach((action: any) => {
-					if (action.Properties?.LogicalName === metadata.logicalName) {
-						fieldConfig = action.Properties;
-					}
-				});
+				if (fieldConfig) {
+					return;
+				}
+
+				fieldConfig = findFieldConfig(step.Actions, metadata.logicalName);
 			});
+
+			if (fieldConfig?.IsHidden) {
+				continue;
+			}
 
 			if (fieldConfig) {
 				const validationResult = validateField(fieldValue, fieldConfig);
