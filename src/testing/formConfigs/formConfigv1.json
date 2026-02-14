@@ -27,7 +27,7 @@
 			"Description": "This table represents the template \"child\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",
 			"Usage": 643260000
 		},
-		"Introduction": "<p data-end=\"3195\" data-start=\"2871\" style=\"margin: 0;\">Welcome to the application. You’ll complete five guided steps to enter information and upload supporting documentation, with validation along the way to help prevent issues. At the end, you’ll review a full summary before submitting.</p>",
+		"Introduction": "<p style=\"margin: 0;\" data-start=\"2871\" data-end=\"3195\">Welcome to the application. You’ll complete five guided steps to enter information and upload supporting documentation, with validation along the way to help prevent issues. At the end, you’ll review a full summary before submitting.&nbsp;</p>",
 		"Settings": {
 			"IncludeInApplicationPackage": true,
 			"ApplicationPackageTypesToIncludeOn": [643260000],
@@ -524,7 +524,22 @@
 						}
 					}
 				],
-				"Conditions": []
+				"Conditions": [
+					{
+						"Id": "039c3caf-e909-f111-8406-7c1e527fbb74",
+						"Name": "Eligibility & Program Selection - Show Field Based on Condition - Lookup Test",
+						"Type": 643260000,
+						"IsOr": false,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_areasimpacted",
+								"Value": "condition test",
+								"Operator": 643260000
+							}
+						],
+						"TargetActionId": null
+					}
+				]
 			},
 			{
 				"Id": "21f1e432-57f9-f011-8406-7c1e524a2f52",
@@ -596,9 +611,32 @@
 									"Order": 1,
 									"Actions": [
 										{
+											"Id": "e1cc0d0a-2bfa-f011-8406-7c1e527fbb74",
+											"Name": "Information - Field Input - Name (Project)",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_name",
+												"SchemaName": "eyfrcc_Name",
+												"Label": "Name",
+												"DataType": 643260000,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The primary name of this record. Once saved, this name will appear at the top of the page.",
+												"DescriptionType": 643260000,
+												"MaxLength": 100,
+												"Format": "Text"
+											}
+										},
+										{
 											"Id": "7fed0013-58f9-f011-8406-7c1e524a2f52",
 											"Name": "Information - Field Input - Proposed Start Date",
-											"Order": 1,
+											"Order": 2,
 											"ChildOrder": 0,
 											"Type": 203300000,
 											"Properties": {
@@ -621,7 +659,7 @@
 										{
 											"Id": "4f331d19-58f9-f011-8406-7c1e524a2f52",
 											"Name": "Information - Field Input - Proposed End Date",
-											"Order": 2,
+											"Order": 3,
 											"ChildOrder": 0,
 											"Type": 203300000,
 											"Properties": {
@@ -644,7 +682,7 @@
 										{
 											"Id": "5b628e34-58f9-f011-8406-7c1e524a2f52",
 											"Name": "Information - Field Input - Congressional Districts of Program/Project (Project)",
-											"Order": 3,
+											"Order": 4,
 											"ChildOrder": 0,
 											"Type": 203300000,
 											"Properties": {
@@ -667,7 +705,7 @@
 										{
 											"Id": "2bdda9fa-57f9-f011-8406-7c1e524a2f52",
 											"Name": "Information - Field Input - Description (Project)",
-											"Order": 4,
+											"Order": 5,
 											"ChildOrder": 0,
 											"Type": 203300000,
 											"Properties": {
@@ -844,7 +882,22 @@
 						}
 					}
 				],
-				"Conditions": []
+				"Conditions": [
+					{
+						"Id": "40d4b31c-ea09-f111-8406-7c1e527fbb74",
+						"Name": "Project or Request Details - Show Table Entry Based on Condition",
+						"Type": 643260004,
+						"IsOr": false,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_applicationprojectid",
+								"Value": null,
+								"Operator": 643260008
+							}
+						],
+						"TargetActionId": "c804edbf-58f9-f011-8406-7c1e524a2f52"
+					}
+				]
 			},
 			{
 				"Id": "cec3ea7a-57f9-f011-8406-7c1e524a2f52",
