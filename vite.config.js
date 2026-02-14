@@ -2,34 +2,43 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-export default defineConfig({
-	plugins: [react()],
-	resolve: {
-		alias: {
-			"@": path.resolve(__dirname, "./src"),
-			"@api": path.resolve(__dirname, "./src/services/api"),
-			"@app-types": path.resolve(__dirname, "./src/types"),
-			"@utilities": path.resolve(__dirname, "./src/utilities"),
-			"@components": path.resolve(__dirname, "./src/components"),
-			"@hooks": path.resolve(__dirname, "./src/hooks"),
-			"@constants": path.resolve(__dirname, "./src/constants"),
-			"@services": path.resolve(__dirname, "./src/services"),
-			"@testing": path.resolve(__dirname, "./src/testing"),
-			"@public": path.resolve(__dirname, "./public"),
+export default defineConfig(({ mode }) => {
+	const isPowerPlatformBuild = mode === "power-platform";
+	const jsFileName = isPowerPlatformBuild ? "react-form-builder-power-platform.js" : "react-form-builder.js";
+	const cssFileName = isPowerPlatformBuild ? "react-form-builder-power-platform.css" : "react-form-builder.css";
+
+	return {
+		plugins: [react()],
+		base: "./",
+		resolve: {
+			alias: {
+				"@": path.resolve(__dirname, "./src"),
+				"@api": path.resolve(__dirname, "./src/services/api"),
+				"@app-types": path.resolve(__dirname, "./src/types"),
+				"@utilities": path.resolve(__dirname, "./src/utilities"),
+				"@components": path.resolve(__dirname, "./src/components"),
+				"@hooks": path.resolve(__dirname, "./src/hooks"),
+				"@constants": path.resolve(__dirname, "./src/constants"),
+				"@services": path.resolve(__dirname, "./src/services"),
+				"@testing": path.resolve(__dirname, "./src/testing"),
+				"@public": path.resolve(__dirname, "./public"),
+			},
 		},
-	},
-	build: {
-		rollupOptions: {
-			output: {
-				entryFileNames: "react-form-builder.js",
-				chunkFileNames: "react-form-builder.js",
-				assetFileNames: (assetInfo) => {
-					if (assetInfo.name === "style.css") {
-						return "react-form-builder.css";
-					}
-					return assetInfo.name;
+		build: {
+			outDir: isPowerPlatformBuild ? "dist-power-platform" : "dist",
+			assetsInlineLimit: isPowerPlatformBuild ? 0 : undefined,
+			rollupOptions: {
+				output: {
+					entryFileNames: jsFileName,
+					chunkFileNames: jsFileName,
+					assetFileNames: (assetInfo) => {
+						if (assetInfo.name === "style.css") {
+							return cssFileName;
+						}
+						return assetInfo.name;
+					},
 				},
 			},
 		},
-	},
+	};
 });

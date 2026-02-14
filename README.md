@@ -26,6 +26,21 @@ This project is a Vite-powered React application that turns a JSON-form configur
 - `src/testing/mocks/handlers.ts` – MSW handlers for local API mocks.
 - `public/styles/styles.css` – global styles loaded after Bootstrap.
 
+
+## Power Platform web resource build
+
+Use the dedicated build target when packaging the app as a Dataverse web resource hosted on an `eyfrcc_version` form:
+
+```bash
+npm run build:power-platform
+```
+
+This creates `dist-power-platform/` with deterministic asset names:
+- `react-form-builder-power-platform.js`
+- `react-form-builder-power-platform.css`
+
+In this build mode, the app reads the form configuration directly from the parent Model-driven form field `eyfrcc_formcontent` (instead of URL params/API fetch for version config), so opening the web resource from an `eyfrcc_version` record renders that record's JSON configuration for dev/testing.
+
 ## Local testing
 
 ### Mock API responses with MSW

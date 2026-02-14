@@ -6,3 +6,4 @@ export * from "./metadata";
 export * from "./eygaConfiguration";
 export * from "./eygaApi";
 export * from "./session";
+export * from "./powerPlatform";
