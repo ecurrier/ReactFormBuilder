@@ -1,17 +1,46 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import PropTypes from "prop-types";
 import { LookupAdvancedSearchModal } from "@components";
 import { quickSearchLookup } from "@services/lookupService";
 import { resolveEntityDisplayName } from "@/utilities/metadata";
+import type { LookupTargetConfig } from "@services/lookupService";
 
-export const LookupControl = ({ inputId, label, placeholder, value, onChange, targets, isReadOnly, isRequired }) => {
+type LookupTarget = LookupTargetConfig & { Columns?: string[] };
+
+type LookupSelection = {
+	id: string;
+	logicalName: string;
+	name?: string;
+	navigationProperty?: string;
+};
+
+type LookupControlProps = {
+	inputId: string;
+	label?: string;
+	placeholder?: string;
+	value?: LookupSelection | null;
+	onChange?: (nextValue: LookupSelection | null) => void;
+	targets?: LookupTarget[];
+	isReadOnly?: boolean;
+	isRequired?: boolean;
+};
+
+export const LookupControl = ({
+	inputId,
+	label = "",
+	placeholder = "",
+	value = null,
+	onChange,
+	targets = [],
+	isReadOnly = false,
+	isRequired = false,
+}: LookupControlProps) => {
 	const [searchText, setSearchText] = useState("");
-	const [results, setResults] = useState([]);
+	const [results, setResults] = useState<LookupSelection[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isQuickSearchOpen, setIsQuickSearchOpen] = useState(false);
 	const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 	const [selectedTargetName, setSelectedTargetName] = useState(targets?.[0]?.EntityLogicalName || "");
-	const containerRef = useRef(null);
+	const containerRef = useRef<HTMLDivElement | null>(null);
 
 	const selectedTarget = useMemo(() => {
 		if (!targets || targets.length === 0) {
@@ -52,7 +81,16 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 		// Debounce search input
 		const timer = setTimeout(async () => {
 			try {
-				const matches = await quickSearchLookup(selectedTarget, searchText.trim());
+				const lookupTarget = {
+					...selectedTarget,
+					...(selectedTarget.Attributes
+						? { Attributes: selectedTarget.Attributes }
+						: selectedTarget.Columns && selectedTarget.Columns.length > 0
+							? { Attributes: selectedTarget.Columns }
+							: {}),
+				};
+
+				const matches = await quickSearchLookup(lookupTarget, searchText.trim());
 				setResults(matches);
 			} catch (error) {
 				console.error("Failed to fetch lookup results:", error);
@@ -66,7 +104,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 	}, [searchText, selectedTarget, isQuickSearchOpen, isReadOnly]);
 
 	useEffect(() => {
-		const handleClickOutside = (event) => {
+		const handleClickOutside = (event: MouseEvent) => {
 			if (containerRef.current && !containerRef.current.contains(event.target)) {
 				setIsQuickSearchOpen(false);
 			}
@@ -76,7 +114,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 		return () => document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
 
-	const handleInputChange = (event) => {
+	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchText(event.target.value);
 		if (!isQuickSearchOpen) {
 			setIsQuickSearchOpen(true);
@@ -86,7 +124,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 		}
 	};
 
-	const resolveNavigationProperty = (result) => {
+	const resolveNavigationProperty = (result: LookupSelection) => {
 		if (!targets || targets.length === 0) {
 			return undefined;
 		}
@@ -95,7 +133,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 		return targetMatch?.NavigationProperty;
 	};
 
-	const handleSelectResult = (result) => {
+	const handleSelectResult = (result: LookupSelection) => {
 		const navigationProperty = resolveNavigationProperty(result);
 		onChange?.({
 			id: result.id,
@@ -118,7 +156,7 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 		setIsQuickSearchOpen(false);
 	};
 
-	const handleAdvancedSelect = (result) => {
+	const handleAdvancedSelect = (result?: LookupSelection) => {
 		if (!result) {
 			return;
 		}
@@ -222,42 +260,6 @@ export const LookupControl = ({ inputId, label, placeholder, value, onChange, ta
 			/>
 		</div>
 	);
-};
-
-LookupControl.propTypes = {
-	inputId: PropTypes.string.isRequired,
-	label: PropTypes.string,
-	placeholder: PropTypes.string,
-	value: PropTypes.oneOfType([
-		PropTypes.shape({
-			id: PropTypes.string,
-			logicalName: PropTypes.string,
-			name: PropTypes.string,
-			navigationProperty: PropTypes.string,
-		}),
-		PropTypes.string,
-	]),
-	onChange: PropTypes.func,
-	targets: PropTypes.arrayOf(
-		PropTypes.shape({
-			EntityLogicalName: PropTypes.string.isRequired,
-			Columns: PropTypes.arrayOf(PropTypes.string),
-			NavigationProperty: PropTypes.string,
-			ReferencingAttribute: PropTypes.string,
-		})
-	),
-	isReadOnly: PropTypes.bool,
-	isRequired: PropTypes.bool,
-};
-
-LookupControl.defaultProps = {
-	label: "",
-	placeholder: "",
-	value: null,
-	onChange: null,
-	targets: [],
-	isReadOnly: false,
-	isRequired: false,
 };
 
 export default LookupControl;

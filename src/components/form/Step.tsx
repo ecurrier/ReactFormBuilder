@@ -1,19 +1,19 @@
 import React, { useCallback, useMemo } from "react";
-import PropTypes from "prop-types";
 import StepActions from "@components/form/StepActions";
 import { ActionType } from "@constants/enums";
 import { createRecord, deleteRecord, retrieveMultipleRecords, updateRecord } from "@/services/api/Api";
 import { buildFetchXmlForChildRecords } from "@utilities/fetchXml";
 import { resolvePrimaryIdAttribute } from "@utilities/metadata";
+import type { ReactFormStep } from "@app-types";
 
 type StepProps = {
-	step: any;
+	step: ReactFormStep;
 	isActive: boolean;
 	hasBeenVisited: boolean;
 	positionLabel?: string;
 	recordId?: string;
 	formState: any;
-	urlParams?: any;
+	urlParams?: Record<string, string | undefined>;
 };
 
 const Step: React.FC<StepProps> = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formState, urlParams }) => {
@@ -168,29 +168,6 @@ const Step: React.FC<StepProps> = ({ step, isActive, hasBeenVisited, positionLab
 			</div>
 		</div>
 	);
-};
-Step.propTypes = {
-	step: PropTypes.shape({
-		Id: PropTypes.string,
-		Name: PropTypes.string,
-		Description: PropTypes.string,
-		EntityLogicalName: PropTypes.string,
-		ReferencingAttributeLogicalName: PropTypes.string,
-		Order: PropTypes.number,
-		Actions: PropTypes.arrayOf(PropTypes.object),
-	}).isRequired,
-	isActive: PropTypes.bool.isRequired,
-	hasBeenVisited: PropTypes.bool.isRequired,
-	positionLabel: PropTypes.string,
-	recordId: PropTypes.string,
-	formState: PropTypes.object.isRequired,
-	urlParams: PropTypes.object,
-};
-
-Step.defaultProps = {
-	positionLabel: undefined,
-	recordId: undefined,
-	urlParams: undefined,
 };
 
 export default Step;

@@ -1,7 +1,15 @@
 import React from "react";
-import PropTypes from "prop-types";
 
-export const YesNoInput = ({ inputId, name, value, isRequired, isReadOnly, onChange }) => (
+type YesNoInputProps = {
+	inputId: string;
+	name: string;
+	value?: string | boolean | null;
+	isRequired?: boolean;
+	isReadOnly?: boolean;
+	onChange: (nextValue: boolean) => void;
+};
+
+export const YesNoInput = ({ inputId, name, value, isRequired, isReadOnly, onChange }: YesNoInputProps) => (
 	<fieldset required={isRequired} role="radiogroup">
 		<div className="radio-inline">
 			<label>
@@ -37,14 +45,5 @@ export const YesNoInput = ({ inputId, name, value, isRequired, isReadOnly, onCha
 		</div>
 	</fieldset>
 );
-
-YesNoInput.propTypes = {
-	inputId: PropTypes.string.isRequired,
-	name: PropTypes.string.isRequired,
-	value: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
-	isRequired: PropTypes.bool,
-	isReadOnly: PropTypes.bool,
-	onChange: PropTypes.func.isRequired,
-};
 
 export default YesNoInput;

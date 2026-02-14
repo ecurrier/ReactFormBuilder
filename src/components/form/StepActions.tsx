@@ -1,10 +1,10 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { FieldInput, TableEntryAction, DocumentUploadControl } from "@components";
 import { ActionType } from "@constants/enums";
+import type { ReactActionConfiguration } from "@app-types";
 
 type StepActionsProps = {
-	actionItems?: Array<{ action: any; entityName?: string }>;
+	actionItems?: Array<{ action: ReactActionConfiguration; entityName?: string }>;
 	formState: any;
 	tableEntryOptions?: {
 		fetchFunctions?: Map<string, any>;
@@ -18,7 +18,7 @@ type StepActionsProps = {
 };
 
 const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, tableEntryOptions }) => {
-	const normalizedActionItems = (actionItems ?? []) as Array<{ action: any; entityName?: string }>;
+	const normalizedActionItems = (actionItems ?? []) as Array<{ action: ReactActionConfiguration; entityName?: string }>;
 
 	if (!Array.isArray(normalizedActionItems) || normalizedActionItems.length === 0) {
 		return null;
@@ -38,7 +38,7 @@ const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, 
 				}
 
 				if (action.Type === ActionType.TableEntry) {
-					if (action.Properties?.__conditionHidden) {
+					if ((action.Properties as any)?.__conditionHidden) {
 						return null;
 					}
 
@@ -65,7 +65,7 @@ const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, 
 				}
 
 				if (action.Type === ActionType.FileUpload) {
-					if (action.Properties?.__conditionHidden) {
+					if ((action.Properties as any)?.__conditionHidden) {
 						return null;
 					}
 
@@ -76,30 +76,6 @@ const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, 
 			})}
 		</>
 	);
-};
-
-StepActions.propTypes = {
-	actionItems: PropTypes.arrayOf(
-		PropTypes.shape({
-			action: PropTypes.object,
-			entityName: PropTypes.string,
-		})
-	),
-	formState: PropTypes.object.isRequired,
-	tableEntryOptions: PropTypes.shape({
-		fetchFunctions: PropTypes.instanceOf(Map),
-		fallbackFetch: PropTypes.func,
-		shouldLoadData: PropTypes.bool,
-		parentRecordId: PropTypes.string,
-		parentEntityName: PropTypes.string,
-		onSave: PropTypes.func,
-		onDelete: PropTypes.func,
-	}),
-};
-
-StepActions.defaultProps = {
-	actionItems: [],
-	tableEntryOptions: undefined,
 };
 
 export default StepActions;

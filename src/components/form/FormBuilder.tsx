@@ -1,5 +1,4 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import PropTypes from "prop-types";
 import Step from "@components/form/Step";
 import { ActionType } from "@constants/enums";
 import { useFormState } from "@hooks/useFormState";
@@ -10,9 +9,27 @@ import LoadingIndicator from "@components/common/LoadingIndicator";
 import { ProgressBar } from "@components/common";
 import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
 import type { FormStateTreeNode, UploadNodeData } from "@app-types/FormState";
+import type { ReactFormConfiguration } from "@app-types";
 import type { SaveError, SaveProgressEvent } from "@app-types/SaveOrchestrator";
 
-const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams, onUrlParamsChange }) => {
+type FormBuilderProps = {
+	config: ReactFormConfiguration;
+	recordData?: Record<string, any>;
+	recordDataByEntity?: Record<string, Record<string, any>>;
+	formSessionInfo?: { formInstanceId?: string | null; userFormSessionId?: string | null };
+	urlParams?: {
+		recordId?: string;
+		versionId?: string;
+		recordLogicalName?: string;
+		parentRecordLogicalName?: string;
+		parentRecordFieldLogicalName?: string;
+		parentRecordId?: string;
+		formId?: string;
+	};
+	onUrlParamsChange?: (params: any) => void;
+};
+
+const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, urlParams, onUrlParamsChange }: FormBuilderProps) => {
 	const orderedSteps = useMemo(() => {
 		if (!Array.isArray(config?.Form?.Steps)) {
 			return [];
@@ -728,36 +745,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			</div>
 		</div>
 	);
-};
-
-FormBuilder.propTypes = {
-	config: PropTypes.shape({
-		Form: PropTypes.shape({
-			Steps: PropTypes.arrayOf(PropTypes.object),
-			PrimaryApplicationTable: PropTypes.shape({
-				TableLogicalName: PropTypes.string,
-			}),
-		}),
-		Regarding: PropTypes.shape({
-			id: PropTypes.string,
-		}),
-	}).isRequired,
-	recordData: PropTypes.object,
-	recordDataByEntity: PropTypes.object,
-	formSessionInfo: PropTypes.shape({
-		formInstanceId: PropTypes.string,
-		userFormSessionId: PropTypes.string,
-	}),
-	urlParams: PropTypes.shape({
-		recordId: PropTypes.string,
-		versionId: PropTypes.string,
-		recordLogicalName: PropTypes.string,
-		parentRecordLogicalName: PropTypes.string,
-		parentRecordFieldLogicalName: PropTypes.string,
-		parentRecordId: PropTypes.string,
-		formId: PropTypes.string,
-	}),
-	onUrlParamsChange: PropTypes.func,
 };
 
 export default FormBuilder;

@@ -1,8 +1,28 @@
 import React, { useEffect, useMemo, useState } from "react";
-import PropTypes from "prop-types";
 import TableEntry from "@components/form/TableEntry";
 import { advancedSearchLookup } from "@services/lookupService";
 import { resolveEntityDisplayName, resolvePrimaryNameAttributeDisplayName } from "@utilities/metadata";
+import type { LookupTargetConfig } from "@services/lookupService";
+
+type LookupTarget = LookupTargetConfig & { Columns?: string[] };
+
+type LookupSelection = {
+	id: string;
+	logicalName: string;
+	name?: string;
+	navigationProperty?: string;
+	attributes?: Record<string, any>;
+};
+
+type LookupAdvancedSearchModalProps = {
+	isOpen: boolean;
+	onClose: () => void;
+	onSelect: (selected: LookupSelection) => void;
+	targets: LookupTarget[];
+	selectedTarget?: LookupTarget | null;
+	onTargetChange: (entityLogicalName: string) => void;
+	searchPlaceholder?: string;
+};
 
 // TO-DO: Need to handle display names better/Lookup columns in general
 const resolveDisplayName = (attributeName: string): string => {
@@ -17,7 +37,15 @@ const resolveDisplayName = (attributeName: string): string => {
 	return resolvePrimaryNameAttributeDisplayName(attributeName);
 };
 
-export const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, selectedTarget, onTargetChange, searchPlaceholder }) => {
+export const LookupAdvancedSearchModal = ({
+	isOpen,
+	onClose,
+	onSelect,
+	targets,
+	selectedTarget,
+	onTargetChange,
+	searchPlaceholder = "Search across the view columns...",
+}: LookupAdvancedSearchModalProps) => {
 	const [query, setQuery] = useState("");
 
 	useEffect(() => {
@@ -54,7 +82,16 @@ export const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, 
 			return { results: [], totalRecordCount: 0 };
 		}
 
-		const response = await advancedSearchLookup(selectedTarget, query, pagination, sort?.key);
+		const lookupTarget = {
+			...selectedTarget,
+			...(selectedTarget.Attributes
+				? { Attributes: selectedTarget.Attributes }
+				: selectedTarget.Columns && selectedTarget.Columns.length > 0
+					? { Attributes: selectedTarget.Columns }
+					: {}),
+		};
+
+		const response = await advancedSearchLookup(lookupTarget, query, pagination, sort?.key);
 		const rows = response.results.map((result) => ({
 			id: result.id,
 			...(result.attributes ?? {}),
@@ -138,28 +175,6 @@ export const LookupAdvancedSearchModal = ({ isOpen, onClose, onSelect, targets, 
 			</div>
 		</>
 	);
-};
-
-LookupAdvancedSearchModal.propTypes = {
-	isOpen: PropTypes.bool.isRequired,
-	onClose: PropTypes.func.isRequired,
-	onSelect: PropTypes.func.isRequired,
-	targets: PropTypes.arrayOf(
-		PropTypes.shape({
-			EntityLogicalName: PropTypes.string.isRequired,
-			Columns: PropTypes.arrayOf(PropTypes.string),
-		})
-	).isRequired,
-	selectedTarget: PropTypes.shape({
-		EntityLogicalName: PropTypes.string.isRequired,
-		Columns: PropTypes.arrayOf(PropTypes.string),
-	}),
-	onTargetChange: PropTypes.func.isRequired,
-	searchPlaceholder: PropTypes.string,
-};
-
-LookupAdvancedSearchModal.defaultProps = {
-	searchPlaceholder: "Search across the view columns...",
 };
 
 export default LookupAdvancedSearchModal;
