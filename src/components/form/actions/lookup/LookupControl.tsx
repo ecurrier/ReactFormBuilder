@@ -81,13 +81,16 @@ export const LookupControl = ({
 		// Debounce search input
 		const timer = setTimeout(async () => {
 			try {
-				const matches = await quickSearchLookup(
-					{
-						...selectedTarget,
-						Attributes: selectedTarget.Attributes ?? selectedTarget.Columns ?? [],
-					},
-					searchText.trim()
-				);
+				const lookupTarget = {
+					...selectedTarget,
+					...(selectedTarget.Attributes
+						? { Attributes: selectedTarget.Attributes }
+						: selectedTarget.Columns && selectedTarget.Columns.length > 0
+							? { Attributes: selectedTarget.Columns }
+							: {}),
+				};
+
+				const matches = await quickSearchLookup(lookupTarget, searchText.trim());
 				setResults(matches);
 			} catch (error) {
 				console.error("Failed to fetch lookup results:", error);

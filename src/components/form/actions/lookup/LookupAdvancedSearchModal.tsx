@@ -82,15 +82,16 @@ export const LookupAdvancedSearchModal = ({
 			return { results: [], totalRecordCount: 0 };
 		}
 
-		const response = await advancedSearchLookup(
-			{
-				...selectedTarget,
-				Attributes: selectedTarget.Attributes ?? selectedTarget.Columns ?? [],
-			},
-			query,
-			pagination,
-			sort?.key
-		);
+		const lookupTarget = {
+			...selectedTarget,
+			...(selectedTarget.Attributes
+				? { Attributes: selectedTarget.Attributes }
+				: selectedTarget.Columns && selectedTarget.Columns.length > 0
+					? { Attributes: selectedTarget.Columns }
+					: {}),
+		};
+
+		const response = await advancedSearchLookup(lookupTarget, query, pagination, sort?.key);
 		const rows = response.results.map((result) => ({
 			id: result.id,
 			...(result.attributes ?? {}),
