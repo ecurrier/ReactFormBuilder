@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import StepActions from "@components/form/StepActions";
 import { ActionType } from "@constants/enums";
+import { applyConditions } from "@services/conditions";
 
 interface FieldAction {
 	Id: string;
@@ -118,17 +119,32 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({
 		[config.ChildEntityLogicalName, getFieldValue, nodeId, parentEntityName, parentRecordId, parentFormState, recordId, registerField, updateFieldValue]
 	);
 
+	const childConditionRuntime = React.useMemo(() => {
+		return applyConditions((config.ChildFormSteps || []) as any, {
+			getFieldValue: (path: string) => getFieldValue(path),
+		});
+	}, [config.ChildFormSteps, getFieldValue]);
+
+	React.useEffect(() => {
+		childConditionRuntime.fieldUpdates.forEach(({ path, value }) => {
+			const key = getFieldKey(path);
+			setFormData((prev) => (prev?.[key] === value ? prev : { ...prev, [key]: value }));
+		});
+	}, [childConditionRuntime.fieldUpdates, getFieldKey]);
+
+	const conditionedChildSteps = childConditionRuntime.steps;
+
 	// Collect all actions from all steps
 	const actionItems = React.useMemo(() => {
 		const items: Array<{ action: FieldAction; entityName?: string }> = [];
-		(config.ChildFormSteps || []).forEach((step) => {
-			(step.Actions || []).forEach((action) => {
+		(conditionedChildSteps || []).forEach((step: any) => {
+			(step.Actions || []).forEach((action: FieldAction) => {
 				items.push({ action, entityName: step.EntityLogicalName });
 			});
 		});
 
 		return items.sort((a, b) => (a.action.Order ?? 0) - (b.action.Order ?? 0));
-	}, [config.ChildFormSteps]);
+	}, [conditionedChildSteps]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();

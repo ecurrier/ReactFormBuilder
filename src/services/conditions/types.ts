@@ -16,6 +16,6 @@ export enum ConditionOperator {
 	LessThanOrEqual = 643260005,
 	Contains = 643260006,
 	DoesNotContain = 643260007,
-	IsNull = 643260008,
-	IsNotNull = 643260009,
+	ContainsData = 643260008,
+	DoesNotContainData = 643260009,
 }

@@ -5,6 +5,7 @@ import { ActionType } from "@constants/enums";
 import { useFormState } from "@hooks/useFormState";
 import { populateFieldsFromData } from "@services/dataLoader";
 import { executeSave, executeValidateAndSubmit, reloadFormData } from "@services/saveOrchestrator";
+import { applyConditions } from "@services/conditions";
 import LoadingIndicator from "@components/common/LoadingIndicator";
 import { ProgressBar } from "@components/common";
 import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
@@ -19,14 +20,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 		return [...config.Form.Steps].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0));
 	}, [config]);
-
-	const visibleSteps = useMemo(
-		() =>
-			orderedSteps.filter((step) =>
-				step.Actions?.some((action) => [ActionType.FieldInput, ActionType.TableEntry, ActionType.FileUpload].includes(action.Type))
-			),
-		[orderedSteps]
-	);
 
 	const [activeStepIndex, setActiveStepIndex] = useState(0);
 	// Track which steps have been visited for lazy loading
@@ -48,6 +41,48 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 	// Initialize form state with primary entity and record ID
 	const formState = useFormState(primaryEntity, primaryRecordId);
+
+	const conditionRuntime = useMemo(() => {
+		if (!orderedSteps.length) {
+			return { steps: [], fieldUpdates: [] as Array<{ path: string; value: any }> };
+		}
+
+		return applyConditions(orderedSteps, {
+			getFieldValue: (path: string) => formState.getFieldValue(path),
+		});
+	}, [formState.dirtyFields, formState.getFieldValue, orderedSteps]);
+
+	useEffect(() => {
+		conditionRuntime.fieldUpdates.forEach(({ path, value }) => {
+			if (formState.getFieldValue(path) !== value) {
+				formState.updateFieldValue(path, value);
+			}
+		});
+	}, [conditionRuntime.fieldUpdates, formState]);
+
+	const conditionedSteps = conditionRuntime.steps;
+
+	const runtimeConfig = useMemo(() => {
+		if (!config?.Form) {
+			return config;
+		}
+
+		return {
+			...config,
+			Form: {
+				...config.Form,
+				Steps: conditionedSteps,
+			},
+		};
+	}, [conditionedSteps, config]);
+
+	const visibleSteps = useMemo(
+		() =>
+			conditionedSteps.filter((step) =>
+				step.Actions?.some((action) => [ActionType.FieldInput, ActionType.TableEntry, ActionType.FileUpload].includes(action.Type))
+			),
+		[conditionedSteps]
+	);
 
 	// Load record data into form state when recordData is provided
 	useEffect(() => {
@@ -466,7 +501,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		try {
 			const result = await executeSave({
 				formState,
-				config,
+				config: runtimeConfig,
 				urlParams,
 				onProgress: handleSaveProgress,
 			});
@@ -480,9 +515,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 				// Reload form data after save (plugins or other processes may have modified data)
 				if (result.recordId) {
-					const reloadedData = await reloadFormData({ formState, config, urlParams }, result.recordId);
+					const reloadedData = await reloadFormData({ formState, config: runtimeConfig, urlParams }, result.recordId);
 					if (reloadedData) {
-						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
+						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, runtimeConfig);
 						formState.initializeFormData(fieldData);
 					}
 				}
@@ -512,7 +547,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		try {
 			const result = await executeValidateAndSubmit({
 				formState,
-				config,
+				config: runtimeConfig,
 				urlParams,
 				onProgress: handleSaveProgress,
 			});
@@ -526,9 +561,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 				// Reload form data after submission (plugins or other processes may have modified data)
 				if (result.recordId) {
-					const reloadedData = await reloadFormData({ formState, config, urlParams }, result.recordId);
+					const reloadedData = await reloadFormData({ formState, config: runtimeConfig, urlParams }, result.recordId);
 					if (reloadedData) {
-						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, config);
+						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, runtimeConfig);
 						formState.initializeFormData(fieldData);
 					}
 				}

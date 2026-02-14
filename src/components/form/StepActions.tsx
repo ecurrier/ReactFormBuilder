@@ -38,6 +38,10 @@ const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, 
 				}
 
 				if (action.Type === ActionType.TableEntry) {
+					if (action.Properties?.__conditionHidden) {
+						return null;
+					}
+
 					const fetchFunc = tableEntryOptions?.fetchFunctions?.get(actionKey);
 					const fetchData = fetchFunc ?? tableEntryOptions?.fallbackFetch;
 
@@ -61,6 +65,10 @@ const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, 
 				}
 
 				if (action.Type === ActionType.FileUpload) {
+					if (action.Properties?.__conditionHidden) {
+						return null;
+					}
+
 					return <DocumentUploadControl key={actionKey} config={action.Properties} formState={formState} entityName={entityName} />;
 				}
 
