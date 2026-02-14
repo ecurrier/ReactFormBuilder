@@ -209,7 +209,7 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 
 	if (hasChildFieldInputs) {
 		return (
-			<div className={`field-collection${properties.IsHidden ? " hidden-field" : ""}`} role="group" aria-label={label ?? "Nested fields"}>
+			<div className={`field-collection${properties.IsHidden ? " hidden" : ""}`} role="group" aria-label={label ?? "Nested fields"}>
 				{renderDescription(DescriptionType.ShowAboveLabel)}
 				{label ? <p className="field-collection-title">{label}</p> : null}
 				{renderDescription(DescriptionType.ShowAboveField)}
@@ -225,10 +225,10 @@ export const FieldInput = ({ action, formState, entityName: stepEntityName }: { 
 
 	const fieldClassNames = ["field", "form-group"];
 	if (properties.IsHidden) {
-		fieldClassNames.push("hidden-field");
+		fieldClassNames.push("hidden");
 	}
 	if (properties.IsReadOnly) {
-		fieldClassNames.push("readonly-field");
+		fieldClassNames.push("readonly");
 	}
 
 	const labelClassNames = ["control-label"];

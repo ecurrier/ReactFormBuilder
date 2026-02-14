@@ -527,17 +527,64 @@
 				"Conditions": [
 					{
 						"Id": "039c3caf-e909-f111-8406-7c1e527fbb74",
-						"Name": "Eligibility & Program Selection - Show Field Based on Condition - Lookup Test",
+						"Name": "Show 'Approved Cost Share' when Type of Application = Revision",
 						"Type": 643260000,
 						"IsOr": false,
 						"Expressions": [
 							{
-								"FieldLogicalName": "eyfrcc_areasimpacted",
-								"Value": "condition test",
+								"FieldLogicalName": "eyfrcc_typeofapplication",
+								"Value": 643260002,
 								"Operator": 643260000
 							}
 						],
-						"TargetActionId": null
+						"TargetActionId": "94ccd2a7-0ce0-f011-8544-7ced8d21d821"
+					},
+					{
+						"Id": "a1b2c3d4-0001-0001-0001-000000000001",
+						"Name": "Enable 'Risk Indicator' when Fully Disbursed = Yes",
+						"Type": 643260001,
+						"IsOr": false,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_fullydisbursed",
+								"Value": true,
+								"Operator": 643260000
+							}
+						],
+						"TargetActionId": "644639ae-0ce0-f011-8544-7ced8d21d821"
+					},
+					{
+						"Id": "a1b2c3d4-0001-0001-0001-000000000002",
+						"Name": "Require 'Areas Impacted' when Indirect Cost Rate has data",
+						"Type": 643260006,
+						"IsOr": false,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_totalapprovedindirectcostrate",
+								"Value": null,
+								"Operator": 643260008
+							}
+						],
+						"TargetActionId": "c7e5d189-0ce0-f011-8544-7ced8d21d821"
+					},
+					{
+						"Id": "a1b2c3d4-0001-0001-0001-000000000003",
+						"Name": "Show 'Subapplicant' table when Type of Application = New OR Continuation",
+						"Type": 643260004,
+						"IsOr": true,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_typeofapplication",
+								"Value": 643260000,
+								"Operator": 643260000
+							},
+							{
+								"FieldLogicalName": "eyfrcc_typeofapplication",
+								"Value": 643260001,
+								"Operator": 643260000
+							}
+						],
+						"TargetActionId": "52e23263-40dd-f011-8544-6045bdd311df"
 					}
 				]
 			},
@@ -1113,7 +1160,55 @@
 						}
 					}
 				],
-				"Conditions": []
+				"Conditions": [
+					{
+						"Id": "a1b2c3d4-0002-0002-0002-000000000001",
+						"Name": "Show 'Budget Review Notes' when Budget Status has data",
+						"Type": 643260000,
+						"IsOr": false,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_budgetstatus",
+								"Value": null,
+								"Operator": 643260008
+							}
+						],
+						"TargetActionId": "f047890f-59f9-f011-8406-7c1e524a2f52"
+					},
+					{
+						"Id": "a1b2c3d4-0002-0002-0002-000000000002",
+						"Name": "Require 'Letters of Support' when Budget Status = Approved",
+						"Type": 643260005,
+						"IsOr": false,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_budgetstatus",
+								"Value": 643260000,
+								"Operator": 643260000
+							}
+						],
+						"TargetActionId": "ecf79541-59f9-f011-8406-7c1e524a2f52"
+					},
+					{
+						"Id": "a1b2c3d4-0002-0002-0002-000000000003",
+						"Name": "Show 'SF424-A' table when Budget Status = Approved or Revision Approved",
+						"Type": 643260004,
+						"IsOr": true,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_budgetstatus",
+								"Value": 643260000,
+								"Operator": 643260000
+							},
+							{
+								"FieldLogicalName": "eyfrcc_budgetstatus",
+								"Value": 643260002,
+								"Operator": 643260000
+							}
+						],
+						"TargetActionId": "1223e6ce-3ce4-f011-8544-7ced8d21d821"
+					}
+				]
 			},
 			{
 				"Id": "63755ce0-3fdd-f011-8544-6045bdd311df",
@@ -1348,7 +1443,50 @@
 						}
 					}
 				],
-				"Conditions": []
+				"Conditions": [
+					{
+						"Id": "a1b2c3d4-0003-0003-0003-000000000001",
+						"Name": "Enable 'Estimated Funding: Applicant' when Attestation = Yes",
+						"Type": 643260001,
+						"IsOr": false,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_attestation",
+								"Value": true,
+								"Operator": 643260000
+							}
+						],
+						"TargetActionId": "52a5c1fc-5af9-f011-8406-7ced8d209320"
+					},
+					{
+						"Id": "a1b2c3d4-0003-0003-0003-000000000002",
+						"Name": "Enable 'Estimated Funding: Other' when Attestation = Yes",
+						"Type": 643260001,
+						"IsOr": false,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_attestation",
+								"Value": true,
+								"Operator": 643260000
+							}
+						],
+						"TargetActionId": "94f01501-5bf9-f011-8406-7c1e526ae8b9"
+					},
+					{
+						"Id": "a1b2c3d4-0003-0003-0003-000000000003",
+						"Name": "Show 'Organizational Affiliation' when Attestation = Yes",
+						"Type": 643260000,
+						"IsOr": false,
+						"Expressions": [
+							{
+								"FieldLogicalName": "eyfrcc_attestation",
+								"Value": true,
+								"Operator": 643260000
+							}
+						],
+						"TargetActionId": "ace17438-5bf9-f011-8406-7c1e526ae8b9"
+					}
+				]
 			},
 			{
 				"Id": "ff7634e7-17e0-f011-8544-0022482dfe82",

@@ -60,12 +60,10 @@ export const compareValues = (fieldValue: any, conditionValue: any, operator: Co
 				.includes(String(conditionValue ?? "").toLowerCase());
 
 		case ConditionOperator.ContainsData:
-		case ConditionOperator.IsNull:
-			return !hasData(fieldValue);
+			return hasData(fieldValue);
 
 		case ConditionOperator.DoesNotContainData:
-		case ConditionOperator.IsNotNull:
-			return hasData(fieldValue);
+			return !hasData(fieldValue);
 
 		default:
 			console.warn(`Unknown condition operator: ${operator}`);
