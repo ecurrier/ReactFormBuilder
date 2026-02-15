@@ -10,6 +10,7 @@ import {
 	retrieveUserFormSessions,
 	createUserFormSession,
 } from "@services";
+import { isPowerPlatformBuild, resolveEmbeddedVersionFormContent, resolveEmbeddedVersionId } from "@utilities";
 import { resolveRequestorId } from "@utilities/session";
 
 interface ConfirmationModalState {
@@ -218,6 +219,20 @@ const App = () => {
 		}
 	};
 
+	const loadEmbeddedPowerPlatformConfig = () => {
+		const rawFormContent = resolveEmbeddedVersionFormContent();
+		if (!rawFormContent || typeof rawFormContent !== "string") {
+			throw new Error("Unable to read eyfrcc_formcontent from the parent Power Platform form.");
+		}
+
+		try {
+			return JSON.parse(rawFormContent);
+		} catch (error) {
+			console.error("Failed to parse eyfrcc_formcontent", error);
+			throw new Error("The eyfrcc_formcontent field does not contain valid JSON.");
+		}
+	};
+
 	const toErrorMessage = (error: unknown) => {
 		if (error instanceof Error) {
 			return error.message;
@@ -234,6 +249,27 @@ const App = () => {
 		resetStateForNewLoad();
 
 		try {
+			if (isPowerPlatformBuild()) {
+				const embeddedVersionId = resolveEmbeddedVersionId();
+				const formConfiguration = loadEmbeddedPowerPlatformConfig();
+
+				setConfig(formConfiguration);
+				setRecordData(null);
+				setRecordDataByEntity({});
+				setUrlParams({
+					recordId: null,
+					versionId: embeddedVersionId,
+					recordLogicalName: null,
+					parentRecordLogicalName: null,
+					parentRecordFieldLogicalName: null,
+					parentRecordId: null,
+				});
+				setIsDebugData(false);
+				setIsFormConfigurationLoading(false);
+				setIsRecordDataLoading(false);
+				return;
+			}
+
 			const { recordId, versionId, recordLogicalName, parentRecordLogicalName, parentRecordFieldLogicalName, parentRecordId, isDebugMode } =
 				parseUrlParams();
 
