@@ -2,6 +2,8 @@ node_modules
 package-lock.json
 dist
 .dist
+dist-power-platform
+.dist-power-platform
 .vite
 .DS_Store
 .env

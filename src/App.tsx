@@ -219,7 +219,6 @@ const App = () => {
 		}
 	};
 
-
 	const loadEmbeddedPowerPlatformConfig = () => {
 		const rawFormContent = resolveEmbeddedVersionFormContent();
 		if (!rawFormContent || typeof rawFormContent !== "string") {
