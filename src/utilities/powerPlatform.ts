@@ -82,11 +82,6 @@ export const resolveEmbeddedRecordLogicalName = (): string | null => {
 	return xrm?.Page?.data?.entity?.getEntityName?.() ?? null;
 };
 
-export const isEmbeddedCreateForm = (): boolean => {
-	const xrm = resolveXrmContext();
-	return xrm?.Page?.ui?.getFormType?.() === 1;
-};
-
 const resolveFormLookupAttributeNameFromMetadata = async (entityLogicalName: string): Promise<string | null> => {
 	const xrm = resolveXrmContext();
 	const entityMetadata = await xrm?.Utility?.getEntityMetadata?.(entityLogicalName);
@@ -117,4 +112,8 @@ export const resolveEmbeddedFormIdForCreate = async (): Promise<string | null> =
 	return typeof formId === "string" && formId.length > 0 ? formId.replace(/[{}]/g, "") : null;
 };
 
-export const isPowerPlatformBuild = (): boolean => import.meta.env.MODE === "power-platform";
+export const isPowerPlatformVersionBuild = (): boolean => import.meta.env.MODE === "power-platform-version";
+
+export const isPowerPlatformFormBuild = (): boolean => import.meta.env.MODE === "power-platform-form";
+
+export const isPowerPlatformBuild = (): boolean => isPowerPlatformVersionBuild() || isPowerPlatformFormBuild();

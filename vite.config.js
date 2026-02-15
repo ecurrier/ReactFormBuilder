@@ -11,8 +11,7 @@ import path from "path";
  * web resource URL is "/WebResources/eyfrcc_Styles/version-previewer.css" (no slash
  * between the prefix and "Styles"). This plugin injects the correct absolute path.
  */
-function powerPlatformCssPathPlugin() {
-	const absoluteCssPath = "/WebResources/eyfrcc_Styles/version-previewer.css";
+function powerPlatformCssPathPlugin(absoluteCssPath) {
 	return {
 		name: "power-platform-css-path",
 		enforce: "post",
@@ -20,16 +19,10 @@ function powerPlatformCssPathPlugin() {
 			for (const [fileName, chunk] of Object.entries(bundle)) {
 				if (chunk.type === "chunk" && fileName.endsWith(".js")) {
 					// Match the m.f=["...css..."] pattern inside __vite__mapDeps
-					chunk.code = chunk.code.replace(
-						/(m\.f\|\|\(m\.f=\[)([^\]]+)(\]\)\))/,
-						(match, before, deps, after) => {
-							const rewritten = deps.replace(
-								/["'][^"']*\.css["']/g,
-								`"${absoluteCssPath}"`,
-							);
-							return before + rewritten + after;
-						},
-					);
+					chunk.code = chunk.code.replace(/(m\.f\|\|\(m\.f=\[)([^\]]+)(\]\)\))/, (match, before, deps, after) => {
+						const rewritten = deps.replace(/["'][^"']*\.css["']/g, `"${absoluteCssPath}"`);
+						return before + rewritten + after;
+					});
 				}
 			}
 		},
@@ -37,12 +30,17 @@ function powerPlatformCssPathPlugin() {
 }
 
 export default defineConfig(({ mode }) => {
-	const isPowerPlatformBuild = mode === "power-platform";
-	const jsFileName = isPowerPlatformBuild ? "Scripts/Pages/version-previewer.js" : "react-form-builder.js";
-	const cssFileName = isPowerPlatformBuild ? "Styles/version-previewer.css" : "react-form-builder.css";
+	const isPowerPlatformVersionBuild = mode === "power-platform-version";
+	const isPowerPlatformFormBuild = mode === "power-platform-form";
+	const isPowerPlatformBuild = isPowerPlatformVersionBuild || isPowerPlatformFormBuild;
+
+	const powerPlatformArtifactName = isPowerPlatformVersionBuild ? "version-previewer" : "form-renderer";
+	const jsFileName = isPowerPlatformBuild ? `Scripts/Pages/${powerPlatformArtifactName}.js` : "react-form-builder.js";
+	const cssFileName = isPowerPlatformBuild ? `Styles/${powerPlatformArtifactName}.css` : "react-form-builder.css";
+	const absolutePowerPlatformCssPath = isPowerPlatformBuild ? `/WebResources/eyfrcc_Styles/${powerPlatformArtifactName}.css` : "";
 
 	return {
-		plugins: [react(), ...(isPowerPlatformBuild ? [powerPlatformCssPathPlugin()] : [])],
+		plugins: [react(), ...(isPowerPlatformBuild ? [powerPlatformCssPathPlugin(absolutePowerPlatformCssPath)] : [])],
 		base: isPowerPlatformBuild ? "/WebResources/eyfrcc_/" : "./",
 		resolve: {
 			alias: {

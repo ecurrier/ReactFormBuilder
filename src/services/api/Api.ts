@@ -42,7 +42,8 @@ export interface ApiResponse<T extends Entity> {
 	totalRecordCount?: number;
 }
 
-const baseUrl = import.meta.env.MODE === "power-platform" ? "/api/data/v9.2/" : "/_api/";
+const isPowerPlatformMode = import.meta.env.MODE === "power-platform-version" || import.meta.env.MODE === "power-platform-form";
+const baseUrl = isPowerPlatformMode ? "/api/data/v9.2/" : "/_api/";
 
 export const retrieveRecord = async <T extends Entity>(entityName: string, fetchXmlTemplate: string, options?: QueryOptions): Promise<T | null> => {
 	try {

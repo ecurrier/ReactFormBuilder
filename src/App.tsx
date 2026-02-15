@@ -12,8 +12,8 @@ import {
 	createUserFormSession,
 } from "@services";
 import {
-	isEmbeddedCreateForm,
-	isPowerPlatformBuild,
+	isPowerPlatformFormBuild,
+	isPowerPlatformVersionBuild,
 	resolveEmbeddedFormIdForCreate,
 	resolveEmbeddedRecordId,
 	resolveEmbeddedRecordLogicalName,
@@ -258,94 +258,92 @@ const App = () => {
 		resetStateForNewLoad();
 
 		try {
-			if (isPowerPlatformBuild()) {
+			if (isPowerPlatformVersionBuild()) {
 				const embeddedVersionId = resolveEmbeddedVersionId();
+				const formConfiguration = loadEmbeddedPowerPlatformConfig();
+
+				setConfig(formConfiguration);
+				setRecordData(null);
+				setRecordDataByEntity({});
+				setUrlParams({
+					recordId: null,
+					versionId: embeddedVersionId,
+					recordLogicalName: null,
+					parentRecordLogicalName: null,
+					parentRecordFieldLogicalName: null,
+					parentRecordId: null,
+				});
+				setIsDebugData(false);
+				setIsFormConfigurationLoading(false);
+				setIsRecordDataLoading(false);
+				return;
+			}
+
+			if (isPowerPlatformFormBuild()) {
 				const embeddedRecordId = resolveEmbeddedRecordId();
 				const embeddedRecordLogicalName = resolveEmbeddedRecordLogicalName();
-				const embeddedFormContent = resolveEmbeddedVersionFormContent();
-
-				if (typeof embeddedFormContent === "string" && embeddedFormContent.length > 0) {
-					const formConfiguration = loadEmbeddedPowerPlatformConfig();
-
-					setConfig(formConfiguration);
-					setRecordData(null);
-					setRecordDataByEntity({});
-					setUrlParams({
-						recordId: null,
-						versionId: embeddedVersionId,
-						recordLogicalName: null,
-						parentRecordLogicalName: null,
-						parentRecordFieldLogicalName: null,
-						parentRecordId: null,
-					});
-					setIsDebugData(false);
-					setIsFormConfigurationLoading(false);
-					setIsRecordDataLoading(false);
-					return;
+				if (!embeddedRecordLogicalName) {
+					throw new Error("Unable to resolve record logical name from the parent Power Platform form.");
 				}
 
-				if (isEmbeddedCreateForm()) {
-					const formId = await resolveEmbeddedFormIdForCreate();
-					if (!formId) {
-						throw new Error("Unable to resolve the form lookup on the parent record.");
+				if (embeddedRecordId) {
+					const formInstance = await retrieveOrCreateFormInstanceForLatestVersion(embeddedRecordId, embeddedRecordLogicalName);
+					if (!formInstance) {
+						throw new Error("No active form versions found");
 					}
 
-					const latestVersion = await resolveLatestActiveVersionForForm(formId);
-					if (!latestVersion) {
-						throw new Error(`No active form version found for form ${formId}.`);
-					}
-
-					setConfig(latestVersion.FormContent);
-					setRecordData(null);
-					setRecordDataByEntity({});
+					const formConfiguration = formInstance.Version.FormContent;
+					setConfig(formConfiguration);
+					setIsFormConfigurationLoading(false);
+					setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
 					setUrlParams({
-						recordId: null,
-						versionId: latestVersion.Id,
+						recordId: embeddedRecordId,
+						versionId: formInstance.Version.Id,
 						recordLogicalName: embeddedRecordLogicalName,
 						parentRecordLogicalName: null,
 						parentRecordFieldLogicalName: null,
 						parentRecordId: null,
 					});
-					setIsDebugData(false);
-					setIsFormConfigurationLoading(false);
+
+					const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(
+						formInstance,
+						embeddedRecordId,
+						embeddedRecordLogicalName,
+						formConfiguration
+					);
+					setRecordData(primaryData);
+					setRecordDataByEntity(secondaryDataMap);
 					setIsRecordDataLoading(false);
+					setIsDebugData(false);
+
+					await ensureUserFormSession(formInstance.Id);
 					return;
 				}
 
-				if (!embeddedRecordId || !embeddedRecordLogicalName) {
-					throw new Error("Unable to resolve record context from the parent Power Platform form.");
+				const formId = await resolveEmbeddedFormIdForCreate();
+				if (!formId) {
+					throw new Error("Unable to resolve the form lookup on the parent record.");
 				}
 
-				const formInstance = await retrieveOrCreateFormInstanceForLatestVersion(embeddedRecordId, embeddedRecordLogicalName);
-				if (!formInstance) {
-					throw new Error("No active form versions found");
+				const latestVersion = await resolveLatestActiveVersionForForm(formId);
+				if (!latestVersion) {
+					throw new Error(`No active form version found for form ${formId}.`);
 				}
 
-				const formConfiguration = formInstance.Version.FormContent;
-				setConfig(formConfiguration);
-				setIsFormConfigurationLoading(false);
-				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
+				setConfig(latestVersion.FormContent);
+				setRecordData(null);
+				setRecordDataByEntity({});
 				setUrlParams({
-					recordId: embeddedRecordId,
-					versionId: formInstance.Version.Id,
+					recordId: null,
+					versionId: latestVersion.Id,
 					recordLogicalName: embeddedRecordLogicalName,
 					parentRecordLogicalName: null,
 					parentRecordFieldLogicalName: null,
 					parentRecordId: null,
 				});
-
-				const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(
-					formInstance,
-					embeddedRecordId,
-					embeddedRecordLogicalName,
-					formConfiguration
-				);
-				setRecordData(primaryData);
-				setRecordDataByEntity(secondaryDataMap);
-				setIsRecordDataLoading(false);
 				setIsDebugData(false);
-
-				await ensureUserFormSession(formInstance.Id);
+				setIsFormConfigurationLoading(false);
+				setIsRecordDataLoading(false);
 				return;
 			}
 

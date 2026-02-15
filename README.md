@@ -28,25 +28,28 @@ This project is a Vite-powered React application that turns a JSON-form configur
 
 ## Power Platform web resource build
 
-Use the dedicated build target when packaging the app as a Dataverse web resource hosted on an `eyfrcc_version` form:
+Use dedicated build targets when packaging the app as Dataverse web resources:
 
 ```bash
-npm run build:power-platform
+npm run build:power-platform-version
+npm run build:power-platform-form
 ```
 
-This creates `dist-power-platform/` with deterministic web resource paths:
+Both builds create deterministic web resource paths under `dist-power-platform/`:
 
-- `/WebResources/eyfrcc_/Scripts/Pages/version-previewer.js`
-- `/WebResources/eyfrcc_/Styles/version-previewer.css`
+- **Version mode** (`power-platform-version`):
+    - `/WebResources/eyfrcc_/Scripts/Pages/version-previewer.js`
+    - `/WebResources/eyfrcc_/Styles/version-previewer.css`
+- **Form mode** (`power-platform-form`):
+    - `/WebResources/eyfrcc_/Scripts/Pages/form-renderer.js`
+    - `/WebResources/eyfrcc_/Styles/form-renderer.css`
 
-In this build mode, the app supports two embedding contexts:
+Runtime behavior by mode:
 
-- **`eyfrcc_version` form embed**: reads `eyfrcc_formcontent` directly from the parent form and renders it.
-- **`eyfrcc_childapplicationtest` form embed**:
-    - **Create form**: resolves the form lookup field name from Dataverse metadata, reads the selected `eyfrcc_form`, and loads the most recent active version for that form.
-    - **Update form**: resolves `recordLogicalName` and `recordId` from `Xrm.Page.data.entity`, then loads the latest/linked form instance and full record data.
+- **`power-platform-version`**: intended for embedding on `eyfrcc_version` forms; reads `eyfrcc_formcontent` and the current `versionId` directly from parent form context.
+- **`power-platform-form`**: intended for embedding on application table forms (for example, `eyfrcc_childapplicationtest`); resolves `recordLogicalName` and `recordId` from `Xrm.Page.data.entity`, then follows the normal record/version flow. If no persisted `recordId` exists yet, it resolves the `eyfrcc_form` lookup via metadata and loads the latest active version for that form.
 
-For Power Platform mode, API requests use Dataverse Web API base path `/api/data/v9.2/`.
+For both Power Platform modes, API requests use Dataverse Web API base path `/api/data/v9.2/`.
 
 Mocking is also enabled in this mode to avoid portal-only API calls while running inside the model-driven app context.
 
