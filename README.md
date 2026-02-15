@@ -5,13 +5,13 @@ This project is a Vite-powered React application that turns a JSON-form configur
 ## Getting started
 
 1. Install dependencies (a recent Node.js LTS release is recommended):
-   ```bash
-   npm install
-   ```
+    ```bash
+    npm install
+    ```
 2. Start the development server:
-   ```bash
-   npm run dev
-   ```
+    ```bash
+    npm run dev
+    ```
 3. Open the printed local URL in your browser to view the rendered form.
 
 > **Note:** The automated environment used to build this repository cannot reach npm, so `npm install` may fail there. Run the command locally where network access is available.
@@ -26,7 +26,6 @@ This project is a Vite-powered React application that turns a JSON-form configur
 - `src/testing/mocks/handlers.ts` – MSW handlers for local API mocks.
 - `public/styles/styles.css` – global styles loaded after Bootstrap.
 
-
 ## Power Platform web resource build
 
 Use the dedicated build target when packaging the app as a Dataverse web resource hosted on an `eyfrcc_version` form:
@@ -36,10 +35,18 @@ npm run build:power-platform
 ```
 
 This creates `dist-power-platform/` with deterministic web resource paths:
+
 - `/WebResources/eyfrcc_/Scripts/Pages/version-previewer.js`
 - `/WebResources/eyfrcc_/Styles/version-previewer.css`
 
-In this build mode, the app reads the form configuration directly from the parent Model-driven form field `eyfrcc_formcontent` (instead of URL params/API fetch for version config), so opening the web resource from an `eyfrcc_version` record renders that record's JSON configuration for dev/testing.
+In this build mode, the app supports two embedding contexts:
+
+- **`eyfrcc_version` form embed**: reads `eyfrcc_formcontent` directly from the parent form and renders it.
+- **`eyfrcc_childapplicationtest` form embed**:
+    - **Create form**: resolves the form lookup field name from Dataverse metadata, reads the selected `eyfrcc_form`, and loads the most recent active version for that form.
+    - **Update form**: resolves `recordLogicalName` and `recordId` from `Xrm.Page.data.entity`, then loads the latest/linked form instance and full record data.
+
+For Power Platform mode, API requests use Dataverse Web API base path `/api/data/v9.2/`.
 
 Mocking is also enabled in this mode to avoid portal-only API calls while running inside the model-driven app context.
 
@@ -64,18 +71,18 @@ When `debug` is present, the app loads the form configuration from `src/testing/
 Playwright runs against the Vite dev server and uses debug mode for deterministic data.
 
 1. Install Playwright browsers (one-time):
-   ```bash
-   npx playwright install
-   ```
+    ```bash
+    npx playwright install
+    ```
 2. Run the tests:
-   ```bash
-   npm run test:e2e
-   ```
-   For interactive or headed runs:
-   ```bash
-   npm run test:e2e:ui
-   npm run test:e2e:headed
-   ```
+    ```bash
+    npm run test:e2e
+    ```
+    For interactive or headed runs:
+    ```bash
+    npm run test:e2e:ui
+    npm run test:e2e:headed
+    ```
 
 ## Type checking
 

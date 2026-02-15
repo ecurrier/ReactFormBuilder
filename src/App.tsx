@@ -5,12 +5,21 @@ import {
 	loadRecordData,
 	resolveFormVersion,
 	resolveFormVersionFromExistingVersion,
+	resolveLatestActiveVersionForForm,
 	retrieveOrCreateFormInstanceForLatestVersion,
 	retrieveFormInstance,
 	retrieveUserFormSessions,
 	createUserFormSession,
 } from "@services";
-import { isPowerPlatformBuild, resolveEmbeddedVersionFormContent, resolveEmbeddedVersionId } from "@utilities";
+import {
+	isEmbeddedCreateForm,
+	isPowerPlatformBuild,
+	resolveEmbeddedFormIdForCreate,
+	resolveEmbeddedRecordId,
+	resolveEmbeddedRecordLogicalName,
+	resolveEmbeddedVersionFormContent,
+	resolveEmbeddedVersionId,
+} from "@utilities";
 import { resolveRequestorId } from "@utilities/session";
 
 interface ConfirmationModalState {
@@ -251,22 +260,92 @@ const App = () => {
 		try {
 			if (isPowerPlatformBuild()) {
 				const embeddedVersionId = resolveEmbeddedVersionId();
-				const formConfiguration = loadEmbeddedPowerPlatformConfig();
+				const embeddedRecordId = resolveEmbeddedRecordId();
+				const embeddedRecordLogicalName = resolveEmbeddedRecordLogicalName();
+				const embeddedFormContent = resolveEmbeddedVersionFormContent();
 
+				if (typeof embeddedFormContent === "string" && embeddedFormContent.length > 0) {
+					const formConfiguration = loadEmbeddedPowerPlatformConfig();
+
+					setConfig(formConfiguration);
+					setRecordData(null);
+					setRecordDataByEntity({});
+					setUrlParams({
+						recordId: null,
+						versionId: embeddedVersionId,
+						recordLogicalName: null,
+						parentRecordLogicalName: null,
+						parentRecordFieldLogicalName: null,
+						parentRecordId: null,
+					});
+					setIsDebugData(false);
+					setIsFormConfigurationLoading(false);
+					setIsRecordDataLoading(false);
+					return;
+				}
+
+				if (isEmbeddedCreateForm()) {
+					const formId = await resolveEmbeddedFormIdForCreate();
+					if (!formId) {
+						throw new Error("Unable to resolve the form lookup on the parent record.");
+					}
+
+					const latestVersion = await resolveLatestActiveVersionForForm(formId);
+					if (!latestVersion) {
+						throw new Error(`No active form version found for form ${formId}.`);
+					}
+
+					setConfig(latestVersion.FormContent);
+					setRecordData(null);
+					setRecordDataByEntity({});
+					setUrlParams({
+						recordId: null,
+						versionId: latestVersion.Id,
+						recordLogicalName: embeddedRecordLogicalName,
+						parentRecordLogicalName: null,
+						parentRecordFieldLogicalName: null,
+						parentRecordId: null,
+					});
+					setIsDebugData(false);
+					setIsFormConfigurationLoading(false);
+					setIsRecordDataLoading(false);
+					return;
+				}
+
+				if (!embeddedRecordId || !embeddedRecordLogicalName) {
+					throw new Error("Unable to resolve record context from the parent Power Platform form.");
+				}
+
+				const formInstance = await retrieveOrCreateFormInstanceForLatestVersion(embeddedRecordId, embeddedRecordLogicalName);
+				if (!formInstance) {
+					throw new Error("No active form versions found");
+				}
+
+				const formConfiguration = formInstance.Version.FormContent;
 				setConfig(formConfiguration);
-				setRecordData(null);
-				setRecordDataByEntity({});
+				setIsFormConfigurationLoading(false);
+				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
 				setUrlParams({
-					recordId: null,
-					versionId: embeddedVersionId,
-					recordLogicalName: null,
+					recordId: embeddedRecordId,
+					versionId: formInstance.Version.Id,
+					recordLogicalName: embeddedRecordLogicalName,
 					parentRecordLogicalName: null,
 					parentRecordFieldLogicalName: null,
 					parentRecordId: null,
 				});
-				setIsDebugData(false);
-				setIsFormConfigurationLoading(false);
+
+				const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(
+					formInstance,
+					embeddedRecordId,
+					embeddedRecordLogicalName,
+					formConfiguration
+				);
+				setRecordData(primaryData);
+				setRecordDataByEntity(secondaryDataMap);
 				setIsRecordDataLoading(false);
+				setIsDebugData(false);
+
+				await ensureUserFormSession(formInstance.Id);
 				return;
 			}
 

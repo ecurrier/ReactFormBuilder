@@ -66,6 +66,37 @@ export const resolveFormVersionFromExistingVersion = async (versionId: string): 
 	return version;
 };
 
+export const resolveLatestActiveVersionForForm = async (formId: string): Promise<Version | null> => {
+	const fetchXml = `
+        <fetch top="1">
+            <entity name="eyfrcc_version">
+                <attribute name="eyfrcc_formcontent" />
+                <attribute name="eyfrcc_regardingid" />
+                <attribute name="eyfrcc_versionid" />
+                <attribute name="statecode" />
+                <attribute name="createdon" />
+				<order attribute="createdon" descending="true" />
+                <filter type="and">
+                    <condition attribute="statecode" operator="eq" value="0" />
+                    <condition attribute="eyfrcc_regardingid" operator="eq" value="${formId}" />
+                </filter>
+            </entity>
+        </fetch>`;
+
+	const rawResponse = await retrieveMultipleRecords("eyfrcc_version", fetchXml);
+	if (!rawResponse || rawResponse.results.length === 0) {
+		return null;
+	}
+
+	const rawVersion = rawResponse.results[0];
+	const version: Version = {
+		Id: rawVersion.eyfrcc_versionid,
+		FormId: rawVersion["_eyfrcc_regardingid_value"],
+		FormContent: JSON.parse(rawVersion.eyfrcc_formcontent || "{}"),
+	};
+
+	return version;
+};
 export const resolveFormVersionFromExistingRecord = async (recordId: string, recordLogicalName: string): Promise<Version | null> => {
 	const fetchXml = `
         <fetch top="1">
