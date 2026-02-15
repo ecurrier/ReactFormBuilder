@@ -4,12 +4,12 @@ import path from "path";
 
 export default defineConfig(({ mode }) => {
 	const isPowerPlatformBuild = mode === "power-platform";
-	const jsFileName = isPowerPlatformBuild ? "react-form-builder-power-platform.js" : "react-form-builder.js";
-	const cssFileName = isPowerPlatformBuild ? "react-form-builder-power-platform.css" : "react-form-builder.css";
+	const jsFileName = isPowerPlatformBuild ? "Scripts/Pages/version-previewer.js" : "react-form-builder.js";
+	const cssFileName = isPowerPlatformBuild ? "Styles/version-previewer.css" : "react-form-builder.css";
 
 	return {
 		plugins: [react()],
-		base: "./",
+		base: isPowerPlatformBuild ? "/WebResources/eyfrcc_/" : "./",
 		resolve: {
 			alias: {
 				"@": path.resolve(__dirname, "./src"),
@@ -30,12 +30,12 @@ export default defineConfig(({ mode }) => {
 			rollupOptions: {
 				output: {
 					entryFileNames: jsFileName,
-					chunkFileNames: jsFileName,
+					chunkFileNames: isPowerPlatformBuild ? "Scripts/Pages/[name]-[hash].js" : "react-form-builder.js",
 					assetFileNames: (assetInfo) => {
 						if (assetInfo.name === "style.css") {
 							return cssFileName;
 						}
-						return assetInfo.name;
+						return isPowerPlatformBuild ? "assets/[name]-[hash][extname]" : assetInfo.name;
 					},
 				},
 			},

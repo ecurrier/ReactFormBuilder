@@ -35,11 +35,13 @@ Use the dedicated build target when packaging the app as a Dataverse web resourc
 npm run build:power-platform
 ```
 
-This creates `dist-power-platform/` with deterministic asset names:
-- `react-form-builder-power-platform.js`
-- `react-form-builder-power-platform.css`
+This creates `dist-power-platform/` with deterministic web resource paths:
+- `/WebResources/eyfrcc_/Scripts/Pages/version-previewer.js`
+- `/WebResources/eyfrcc_/Styles/version-previewer.css`
 
 In this build mode, the app reads the form configuration directly from the parent Model-driven form field `eyfrcc_formcontent` (instead of URL params/API fetch for version config), so opening the web resource from an `eyfrcc_version` record renders that record's JSON configuration for dev/testing.
+
+Mocking is also enabled in this mode to avoid portal-only API calls while running inside the model-driven app context.
 
 ## Local testing
 
