@@ -5,12 +5,21 @@ import {
 	loadRecordData,
 	resolveFormVersion,
 	resolveFormVersionFromExistingVersion,
+	resolveLatestActiveVersionForForm,
 	retrieveOrCreateFormInstanceForLatestVersion,
 	retrieveFormInstance,
 	retrieveUserFormSessions,
 	createUserFormSession,
 } from "@services";
-import { isPowerPlatformBuild, resolveEmbeddedVersionFormContent, resolveEmbeddedVersionId } from "@utilities";
+import {
+	isPowerPlatformFormBuild,
+	isPowerPlatformVersionBuild,
+	resolveEmbeddedFormIdForCreate,
+	resolveEmbeddedRecordId,
+	resolveEmbeddedRecordLogicalName,
+	resolveEmbeddedVersionFormContent,
+	resolveEmbeddedVersionId,
+} from "@utilities";
 import { resolveRequestorId } from "@utilities/session";
 
 interface ConfirmationModalState {
@@ -249,7 +258,7 @@ const App = () => {
 		resetStateForNewLoad();
 
 		try {
-			if (isPowerPlatformBuild()) {
+			if (isPowerPlatformVersionBuild()) {
 				const embeddedVersionId = resolveEmbeddedVersionId();
 				const formConfiguration = loadEmbeddedPowerPlatformConfig();
 
@@ -267,6 +276,49 @@ const App = () => {
 				setIsDebugData(false);
 				setIsFormConfigurationLoading(false);
 				setIsRecordDataLoading(false);
+				return;
+			} else if (isPowerPlatformFormBuild()) {
+				const embeddedRecordId = resolveEmbeddedRecordId();
+				const embeddedRecordLogicalName = resolveEmbeddedRecordLogicalName();
+				if (!embeddedRecordLogicalName) {
+					throw new Error("Unable to resolve record logical name from the parent Power Platform form.");
+				}
+
+				// TO-DO: Currently only support existing records, need to add support for create
+				if (!embeddedRecordId) {
+					throw new Error("Unable to resolve record id from the parent Power Platform form.");
+				}
+
+				const formInstance = await getFormInstanceForRecord(embeddedRecordId, embeddedRecordLogicalName);
+				if (!formInstance) {
+					throw new Error("No active form versions found");
+				}
+
+				const formConfiguration = formInstance.Version.FormContent;
+				setConfig(formConfiguration);
+				setIsFormConfigurationLoading(false);
+				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
+				setUrlParams({
+					recordId: embeddedRecordId,
+					versionId: formInstance.Version.Id,
+					recordLogicalName: embeddedRecordLogicalName,
+					parentRecordLogicalName: null,
+					parentRecordFieldLogicalName: null,
+					parentRecordId: null,
+				});
+
+				const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(
+					formInstance,
+					embeddedRecordId,
+					embeddedRecordLogicalName,
+					formConfiguration
+				);
+				setRecordData(primaryData);
+				setRecordDataByEntity(secondaryDataMap);
+				setIsRecordDataLoading(false);
+				setIsDebugData(false);
+
+				await ensureUserFormSession(formInstance.Id);
 				return;
 			}
 

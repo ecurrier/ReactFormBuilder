@@ -23,7 +23,6 @@ async function enableMocking() {
 	const { worker } = await import("@testing/mocks/browser");
 	await worker.start({
 		onUnhandledRequest: "bypass",
-		serviceWorker: undefined,
 	});
 }
 

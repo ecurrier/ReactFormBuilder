@@ -1,43 +1,45 @@
 {
-  "name": "frcc-crm-portalformrenderer",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss}\" --list-different",
-    "build": "npm run format && npm run typecheck && vite build",
-    "build:power-platform": "npm run format && npm run typecheck && vite build --mode power-platform",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
-  },
-  "dependencies": {
-    "bootstrap": "^5.3.7",
-    "msw": "^2.10.4",
-    "prettier": "^3.7.4",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "xmldom": "^0.6.0"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.55.0",
-    "@types/bootstrap": "^5.2.10",
-    "@types/node": "^25.0.3",
-    "@vitejs/plugin-react": "^4.3.1",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react": "^7.34.3",
-    "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-react-refresh": "^0.4.7",
-    "typescript": "^5.5.4",
-    "vite": "^7.3.0"
-  },
-  "msw": {
-    "workerDirectory": [
-      "public"
-    ]
-  }
+	"name": "frcc-crm-portalformrenderer",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss}\" --list-different",
+		"build": "npm run format && npm run typecheck && vite build",
+		"lint": "eslint .",
+		"preview": "vite preview",
+		"typecheck": "tsc --noEmit",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:e2e:headed": "playwright test --headed",
+		"build:power-platform-version": "npm run format && npm run typecheck && vite build --mode power-platform-version",
+		"build:power-platform-form": "npm run format && npm run typecheck && vite build --mode power-platform-form",
+		"build:power-platform": "npm run build:power-platform-version"
+	},
+	"dependencies": {
+		"bootstrap": "^5.3.7",
+		"msw": "^2.10.4",
+		"prettier": "^3.7.4",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"xmldom": "^0.6.0"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.55.0",
+		"@types/bootstrap": "^5.2.10",
+		"@types/node": "^25.0.3",
+		"@vitejs/plugin-react": "^4.3.1",
+		"eslint": "^8.57.0",
+		"eslint-plugin-react": "^7.34.3",
+		"eslint-plugin-react-hooks": "^4.6.2",
+		"eslint-plugin-react-refresh": "^0.4.7",
+		"typescript": "^5.5.4",
+		"vite": "^7.3.0"
+	},
+	"msw": {
+		"workerDirectory": [
+			"public"
+		]
+	}
 }
