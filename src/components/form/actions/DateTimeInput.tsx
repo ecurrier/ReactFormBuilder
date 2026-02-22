@@ -1,5 +1,6 @@
 import React from "react";
 import { DateTimeFormat } from "@constants/enums";
+import { normalizeDateTimeBehavior, normalizeDateTimeFormat } from "@utilities/dateTimeDisplay";
 
 type DateTimeInputProps = {
 	commonProps: React.InputHTMLAttributes<HTMLInputElement>;
@@ -16,28 +17,6 @@ const formatUtcDateTime = (date) => `${formatUtcDate(date)}T${pad(date.getUTCHou
 const formatLocalDate = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 const formatLocalDateTime = (date) => `${formatLocalDate(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-
-const normalizeDateTimeFormat = (value) => {
-	if (value === DateTimeFormat.DateOnly || value === "DateOnly" || value === 0 || value === "0") {
-		return DateTimeFormat.DateOnly;
-	}
-	if (value === DateTimeFormat.DateAndTime || value === "DateAndTime" || value === 1 || value === "1") {
-		return DateTimeFormat.DateAndTime;
-	}
-	return DateTimeFormat.DateOnly;
-};
-
-const normalizeDateTimeBehavior = (value) => {
-	if (typeof value !== "string") {
-		return "UserLocal";
-	}
-
-	if (value === "TimeZoneIndependent") {
-		return "TimeZoneIndependent";
-	}
-
-	return "UserLocal";
-};
 
 const parseDateOnlyUtc = (value) => {
 	if (!value) {

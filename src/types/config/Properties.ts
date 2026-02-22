@@ -36,7 +36,15 @@ export interface FieldInputProperties {
 	// Lookup fields
 	Targets?: Array<{
 		EntityLogicalName: string;
-		Columns: string[];
+		Columns: Array<
+			| string
+			| {
+					LogicalName: string;
+					DataType?: number;
+					DateTimeFormat?: string | number;
+					DateTimeBehavior?: string;
+			  }
+		>;
 		NavigationProperty?: string;
 		ReferencingAttribute?: string;
 		EntitySetName?: string;
