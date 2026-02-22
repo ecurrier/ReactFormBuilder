@@ -57,7 +57,7 @@ const normalizeColumn = (column: string | LookupColumnConfig): LookupColumnConfi
 const renderLookupCellValue = (row: Record<string, unknown>, column: LookupColumnConfig): React.ReactNode => {
 	const value = row[column.LogicalName];
 	if (value === null || value === undefined || value === "") {
-		return "";
+		return "—";
 	}
 
 	if (column.DataType === DataType.DateTime) {

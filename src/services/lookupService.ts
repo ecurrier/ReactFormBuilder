@@ -83,7 +83,7 @@ const mapLookupResults = (target: LookupTargetConfig, rows: Record<string, any>[
 			return {
 				id,
 				logicalName: target.EntityLogicalName,
-				name: row[primaryNameAttribute] ?? id,
+				name: row[primaryNameAttribute] ?? "—",
 				attributes: row,
 			};
 		})
