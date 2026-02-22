@@ -1,10 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import TableEntry from "@components/form/TableEntry";
+import { DataType, DateTimeFormat } from "@constants/enums";
 import { advancedSearchLookup } from "@services/lookupService";
+import { formatDateOnlyDisplay, formatDateTimeDisplayParts, normalizeDateTimeFormat } from "@utilities/dateTimeDisplay";
 import { resolveEntityDisplayName, resolvePrimaryNameAttributeDisplayName } from "@utilities/metadata";
 import type { LookupTargetConfig } from "@services/lookupService";
 
-type LookupTarget = LookupTargetConfig & { Columns?: string[] };
+type LookupColumnConfig = {
+	LogicalName: string;
+	DataType?: number;
+	DateTimeFormat?: string | number;
+	DateTimeBehavior?: string;
+};
+
+type LookupTarget = LookupTargetConfig & { Columns?: Array<string | LookupColumnConfig> };
 
 type LookupSelection = {
 	id: string;
@@ -37,6 +46,43 @@ const resolveDisplayName = (attributeName: string): string => {
 	return resolvePrimaryNameAttributeDisplayName(attributeName);
 };
 
+const normalizeColumn = (column: string | LookupColumnConfig): LookupColumnConfig => {
+	if (typeof column === "string") {
+		return { LogicalName: column };
+	}
+
+	return column;
+};
+
+const renderLookupCellValue = (row: Record<string, unknown>, column: LookupColumnConfig): React.ReactNode => {
+	const value = row[column.LogicalName];
+	if (value === null || value === undefined || value === "") {
+		return "";
+	}
+
+	if (column.DataType === DataType.DateTime) {
+		const normalizedFormat = normalizeDateTimeFormat(column.DateTimeFormat);
+
+		if (normalizedFormat === DateTimeFormat.DateAndTime) {
+			const parts = formatDateTimeDisplayParts(value, column.DateTimeBehavior);
+			if (!parts) {
+				return String(value);
+			}
+
+			return (
+				<span className="datetime-display">
+					<span>{parts.date}</span>
+					<span className="text-muted ml-1">{parts.time}</span>
+				</span>
+			);
+		}
+
+		return formatDateOnlyDisplay(value);
+	}
+
+	return String(value);
+};
+
 export const LookupAdvancedSearchModal = ({
 	isOpen,
 	onClose,
@@ -54,11 +100,16 @@ export const LookupAdvancedSearchModal = ({
 		}
 	}, [isOpen]);
 
+	const normalizedColumns = useMemo(() => (selectedTarget?.Columns || []).map(normalizeColumn), [selectedTarget]);
+
+	// TO-DO: renderLookupCellValue displays created on as an unformatted date because .Columns is a string array, and doesnt include properties about the data type of the column
+	// Need to re-wire or re-do how some of the form config generates lookup columns so we can ensure we have the necessary metadata to properly render values in the advanced search results, and ideally also use that metadata to build the fetchXml for retrieving results so we can limit the data we pull back to just what's needed for display and searching
 	const columns = useMemo(() => {
-		const baseColumns = (selectedTarget?.Columns || []).map((column) => ({
-			key: column,
-			label: resolveDisplayName(column),
+		const baseColumns = normalizedColumns.map((column) => ({
+			key: column.LogicalName,
+			label: resolveDisplayName(column.LogicalName),
 			sortEnabled: true,
+			render: (row: Record<string, unknown>) => renderLookupCellValue(row, column),
 		}));
 
 		return [
@@ -75,7 +126,7 @@ export const LookupAdvancedSearchModal = ({
 				className: "text-right",
 			},
 		];
-	}, [selectedTarget, onSelect]);
+	}, [normalizedColumns, onSelect]);
 
 	const fetchData = async (sort, pagination) => {
 		if (!selectedTarget) {
@@ -84,11 +135,7 @@ export const LookupAdvancedSearchModal = ({
 
 		const lookupTarget = {
 			...selectedTarget,
-			...(selectedTarget.Attributes
-				? { Attributes: selectedTarget.Attributes }
-				: selectedTarget.Columns && selectedTarget.Columns.length > 0
-					? { Attributes: selectedTarget.Columns }
-					: {}),
+			...(selectedTarget.Attributes ? { Attributes: selectedTarget.Attributes } : normalizedColumns.length > 0 ? { Attributes: normalizedColumns } : {}),
 		};
 
 		const response = await advancedSearchLookup(lookupTarget, query, pagination, sort?.key);

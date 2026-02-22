@@ -4,7 +4,15 @@ import { resolvePrimaryIdAttribute, resolvePrimaryNameAttribute } from "@utiliti
 
 export interface LookupTargetConfig {
 	EntityLogicalName: string;
-	Attributes: string[];
+	Attributes: Array<
+		| string
+		| {
+				LogicalName: string;
+				DataType?: number;
+				DateTimeFormat?: string | number;
+				DateTimeBehavior?: string;
+		  }
+	>;
 	NavigationProperty?: string;
 	ReferencingAttribute?: string;
 	EntitySetName?: string;
@@ -31,7 +39,8 @@ const getPrimaryNameAttribute = (target: LookupTargetConfig): string => {
 	}
 
 	if (target.Attributes && target.Attributes.length > 0) {
-		return target.Attributes[0];
+		const firstAttribute = target.Attributes[0];
+		return typeof firstAttribute === "string" ? firstAttribute : firstAttribute.LogicalName;
 	}
 
 	return "createdon";
@@ -40,7 +49,8 @@ const getPrimaryNameAttribute = (target: LookupTargetConfig): string => {
 const buildLookupAttributes = (target: LookupTargetConfig): string[] => {
 	const primaryNameAttribute = target.PrimaryNameAttribute || getPrimaryNameAttribute(target);
 	const primaryIdAttribute = target.PrimaryIdAttribute || resolvePrimaryIdAttribute(target.EntityLogicalName);
-	const attributeSet = new Set<string>([primaryIdAttribute, primaryNameAttribute, ...(target.Attributes || [])]);
+	const normalizedAttributes = (target.Attributes || []).map((attribute) => (typeof attribute === "string" ? attribute : attribute?.LogicalName));
+	const attributeSet = new Set<string>([primaryIdAttribute, primaryNameAttribute, ...normalizedAttributes.filter(Boolean)]);
 
 	return Array.from(attributeSet);
 };

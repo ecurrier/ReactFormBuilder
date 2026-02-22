@@ -2,9 +2,10 @@ import React, { useState, useRef } from "react";
 import TableEntry, { TableColumn, TableDataResponse, PaginationOptions, TableSortState } from "@components/form/TableEntry";
 import { TableEntryForm, LoadingIndicator, Sidepane, ConfirmationModal, Badge } from "@components";
 import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu";
-import { ActionType, DataType } from "@constants/enums";
+import { ActionType, DataType, DateTimeFormat } from "@constants/enums";
 import { retrieveRecord } from "@/services/api/Api";
 import { buildFetchXmlForRecord, resolvePrimaryIdAttribute, generateTempId, isTempId } from "@utilities";
+import { formatDateOnlyDisplay, formatDateTimeDisplayParts, normalizeDateTimeFormat } from "@utilities/dateTimeDisplay";
 
 const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -154,6 +155,40 @@ const getDisplayValue = (row: Record<string, any>, logicalName: string): string 
 	return value !== null && value !== undefined ? String(value) : "";
 };
 
+const getDateTimeDisplayValue = (
+	row: Record<string, any>,
+	logicalName: string,
+	dateTimeFormat?: string | number,
+	dateTimeBehavior?: string
+): React.ReactNode => {
+	const formatted = getFormattedValue(row, logicalName);
+	if (formatted) {
+		return String(formatted);
+	}
+
+	const value = row[logicalName];
+	if (value === null || value === undefined || value === "") {
+		return "";
+	}
+
+	const normalizedFormat = normalizeDateTimeFormat(dateTimeFormat);
+	if (normalizedFormat === DateTimeFormat.DateAndTime) {
+		const parts = formatDateTimeDisplayParts(value, dateTimeBehavior);
+		if (!parts) {
+			return value !== null && value !== undefined ? String(value) : "";
+		}
+
+		return (
+			<span className="datetime-display">
+				<span>{parts.date}</span>
+				<span className="text-muted ml-1">{parts.time}</span>
+			</span>
+		);
+	}
+
+	const dateOnlyValue = formatDateOnlyDisplay(value);
+	return dateOnlyValue || (value !== null && value !== undefined ? String(value) : "");
+};
 const resolveRecordId = (row: Record<string, any> | null | undefined, entityName?: string): string | undefined => {
 	if (!row) {
 		return undefined;
@@ -281,7 +316,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			const viewStep = config.ChildViewSteps[0];
 
 			// Add view columns
-			viewStep.Actions.forEach((action, actionIndex) => {
+			viewStep.Actions.forEach((action) => {
 				if (action.Type === ActionType.FieldInput) {
 					const isFirstColumn = cols.length === 0;
 					cols.push({
@@ -290,18 +325,24 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 						sortEnabled: true,
 						render: (row) => {
 							const isPending = row._isPending;
-							const content = getDisplayValue(row, action.Properties.LogicalName);
+							const isDateTimeField = action.Properties?.DataType === DataType.DateTime;
+							const content = isDateTimeField
+								? getDateTimeDisplayValue(
+										row,
+										action.Properties.LogicalName,
+										action.Properties.DateTimeFormat,
+										action.Properties.DateTimeBehavior
+									)
+								: getDisplayValue(row, action.Properties.LogicalName);
 
 							if (isPending) {
 								return (
 									<>
 										<span style={{ fontStyle: "italic", opacity: 0.8 }}>{content}</span>
 										{isFirstColumn && (
-											<>
-												<span className="ml-2">
-													<Badge type="warning" content="Pending" />
-												</span>
-											</>
+											<span className="ml-2">
+												<Badge type="warning" content="Pending" />
+											</span>
 										)}
 									</>
 								);

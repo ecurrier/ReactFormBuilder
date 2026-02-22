@@ -7,3 +7,4 @@ export * from "./eygaConfiguration";
 export * from "./eygaApi";
 export * from "./session";
 export * from "./powerPlatform";
+export * from "./dateTimeDisplay";

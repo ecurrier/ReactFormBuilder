@@ -4,7 +4,17 @@ import { quickSearchLookup } from "@services/lookupService";
 import { resolveEntityDisplayName } from "@/utilities/metadata";
 import type { LookupTargetConfig } from "@services/lookupService";
 
-type LookupTarget = LookupTargetConfig & { Columns?: string[] };
+type LookupTarget = LookupTargetConfig & {
+	Columns?: Array<
+		| string
+		| {
+				LogicalName: string;
+				DataType?: number;
+				DateTimeFormat?: string | number;
+				DateTimeBehavior?: string;
+		  }
+	>;
+};
 
 type LookupSelection = {
 	id: string;
