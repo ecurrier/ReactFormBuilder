@@ -254,135 +254,141 @@ const App = () => {
 		return "Unknown error";
 	};
 
+	const setEmbeddedUrlParams = (params: { recordId: string | null; versionId: string | null; recordLogicalName: string | null }) => {
+		setUrlParams({
+			recordId: params.recordId,
+			versionId: params.versionId,
+			recordLogicalName: params.recordLogicalName,
+			parentRecordLogicalName: null,
+			parentRecordFieldLogicalName: null,
+			parentRecordId: null,
+		});
+	};
+
+	const applyNewRecordState = (formConfiguration) => {
+		setConfig(formConfiguration);
+		setRecordData(null);
+		setRecordDataByEntity({});
+		setIsFormConfigurationLoading(false);
+		setIsRecordDataLoading(false);
+		setIsDebugData(false);
+	};
+
+	const applyExistingRecordState = async (formInstance, recordId: string, recordLogicalName: string, persistVersionIdToUrl = true) => {
+		const formConfiguration = formInstance.Version.FormContent;
+
+		setConfig(formConfiguration);
+		setIsFormConfigurationLoading(false);
+		setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
+
+		if (persistVersionIdToUrl) {
+			setUrlParams((prev) => ({
+				...prev,
+				versionId: formInstance.Version.Id,
+			}));
+		}
+
+		const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(formInstance, recordId, recordLogicalName, formConfiguration);
+		setRecordData(primaryData);
+		setRecordDataByEntity(secondaryDataMap);
+		setIsRecordDataLoading(false);
+		setIsDebugData(false);
+
+		await ensureUserFormSession(formInstance.Id);
+	};
+
+	const loadPowerPlatformVersionMode = async () => {
+		const embeddedVersionId = resolveEmbeddedVersionId();
+		const formConfiguration = loadEmbeddedPowerPlatformConfig();
+
+		setConfig(formConfiguration);
+		setRecordData(null);
+		setRecordDataByEntity({});
+		setEmbeddedUrlParams({
+			recordId: null,
+			versionId: embeddedVersionId,
+			recordLogicalName: null,
+		});
+		setIsDebugData(false);
+		setIsFormConfigurationLoading(false);
+		setIsRecordDataLoading(false);
+	};
+
+	const loadPowerPlatformFormMode = async () => {
+		const embeddedRecordId = resolveEmbeddedRecordId();
+		const embeddedRecordLogicalName = resolveEmbeddedRecordLogicalName();
+		if (!embeddedRecordLogicalName) {
+			throw new Error("Unable to resolve record logical name from the parent Power Platform form.");
+		}
+
+		// TO-DO: Currently only support existing records, need to add support for create
+		if (!embeddedRecordId) {
+			throw new Error("Unable to resolve record id from the parent Power Platform form.");
+		}
+
+		const formInstance = await getFormInstanceForRecord(embeddedRecordId, embeddedRecordLogicalName);
+		if (!formInstance) {
+			throw new Error("No active form versions found");
+		}
+
+		setEmbeddedUrlParams({
+			recordId: embeddedRecordId,
+			versionId: formInstance.Version.Id,
+			recordLogicalName: embeddedRecordLogicalName,
+		});
+
+		await applyExistingRecordState(formInstance, embeddedRecordId, embeddedRecordLogicalName, false);
+	};
+
+	const loadPowerPagesStandardMode = async () => {
+		const { recordId, versionId, recordLogicalName, parentRecordLogicalName, parentRecordFieldLogicalName, parentRecordId, isDebugMode } = parseUrlParams();
+
+		setUrlParams({
+			recordId,
+			versionId,
+			recordLogicalName,
+			parentRecordLogicalName,
+			parentRecordFieldLogicalName,
+			parentRecordId,
+		});
+
+		if (isDebugMode) {
+			handleDebugMode();
+			return;
+		}
+
+		if (!recordId && !versionId) {
+			throw new Error("Either recordId or versionId must be provided in the URL parameters");
+		}
+
+		if (!recordId && versionId) {
+			const formConfiguration = await resolveNewRecordConfig(versionId);
+			applyNewRecordState(formConfiguration);
+			return;
+		}
+
+		if (recordId && recordLogicalName) {
+			const formInstance = await getFormInstanceForRecord(recordId, recordLogicalName, versionId ?? undefined);
+			await applyExistingRecordState(formInstance, recordId, recordLogicalName);
+			return;
+		}
+
+		throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
+	};
+
 	const loadConfig = useCallback(async () => {
 		resetStateForNewLoad();
 
 		try {
 			if (isPowerPlatformVersionBuild()) {
-				const embeddedVersionId = resolveEmbeddedVersionId();
-				const formConfiguration = loadEmbeddedPowerPlatformConfig();
-
-				setConfig(formConfiguration);
-				setRecordData(null);
-				setRecordDataByEntity({});
-				setUrlParams({
-					recordId: null,
-					versionId: embeddedVersionId,
-					recordLogicalName: null,
-					parentRecordLogicalName: null,
-					parentRecordFieldLogicalName: null,
-					parentRecordId: null,
-				});
-				setIsDebugData(false);
-				setIsFormConfigurationLoading(false);
-				setIsRecordDataLoading(false);
+				await loadPowerPlatformVersionMode();
 				return;
 			} else if (isPowerPlatformFormBuild()) {
-				const embeddedRecordId = resolveEmbeddedRecordId();
-				const embeddedRecordLogicalName = resolveEmbeddedRecordLogicalName();
-				if (!embeddedRecordLogicalName) {
-					throw new Error("Unable to resolve record logical name from the parent Power Platform form.");
-				}
-
-				// TO-DO: Currently only support existing records, need to add support for create
-				if (!embeddedRecordId) {
-					throw new Error("Unable to resolve record id from the parent Power Platform form.");
-				}
-
-				const formInstance = await getFormInstanceForRecord(embeddedRecordId, embeddedRecordLogicalName);
-				if (!formInstance) {
-					throw new Error("No active form versions found");
-				}
-
-				const formConfiguration = formInstance.Version.FormContent;
-				setConfig(formConfiguration);
-				setIsFormConfigurationLoading(false);
-				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
-				setUrlParams({
-					recordId: embeddedRecordId,
-					versionId: formInstance.Version.Id,
-					recordLogicalName: embeddedRecordLogicalName,
-					parentRecordLogicalName: null,
-					parentRecordFieldLogicalName: null,
-					parentRecordId: null,
-				});
-
-				const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(
-					formInstance,
-					embeddedRecordId,
-					embeddedRecordLogicalName,
-					formConfiguration
-				);
-				setRecordData(primaryData);
-				setRecordDataByEntity(secondaryDataMap);
-				setIsRecordDataLoading(false);
-				setIsDebugData(false);
-
-				await ensureUserFormSession(formInstance.Id);
+				await loadPowerPlatformFormMode();
 				return;
 			}
 
-			const { recordId, versionId, recordLogicalName, parentRecordLogicalName, parentRecordFieldLogicalName, parentRecordId, isDebugMode } =
-				parseUrlParams();
-
-			setUrlParams({
-				recordId,
-				versionId,
-				recordLogicalName,
-				parentRecordLogicalName,
-				parentRecordFieldLogicalName,
-				parentRecordId,
-			});
-
-			if (isDebugMode) {
-				handleDebugMode();
-				return;
-			}
-
-			if (!recordId && !versionId) {
-				throw new Error("Either recordId or versionId must be provided in the URL parameters");
-			}
-
-			// New record
-			if (!recordId && versionId) {
-				const formConfiguration = await resolveNewRecordConfig(versionId);
-
-				setConfig(formConfiguration);
-				setRecordData(null);
-				setRecordDataByEntity({});
-				setIsFormConfigurationLoading(false);
-				setIsRecordDataLoading(false);
-				setIsDebugData(false);
-
-				return;
-			}
-
-			// Existing record
-			if (recordId && recordLogicalName) {
-				const formInstance = await getFormInstanceForRecord(recordId, recordLogicalName, versionId ?? undefined);
-				const formConfiguration = formInstance.Version.FormContent;
-
-				setConfig(formConfiguration);
-				setIsFormConfigurationLoading(false);
-				setFormSessionInfo((prev) => ({ ...prev, formInstanceId: formInstance.Id }));
-				setUrlParams((prev) => ({
-					...prev,
-					versionId: formInstance.Version.Id,
-				}));
-
-				// Load primary & secondary data
-				const { primaryData, secondaryDataMap } = await loadRecordDataForInstance(formInstance, recordId, recordLogicalName, formConfiguration);
-				setRecordData(primaryData);
-				setRecordDataByEntity(secondaryDataMap);
-				setIsRecordDataLoading(false);
-				setIsDebugData(false);
-
-				await ensureUserFormSession(formInstance.Id);
-
-				return;
-			}
-
-			throw new Error("Either versionId (for new records) or both recordId and recordLogicalName (for existing records) must be provided");
+			await loadPowerPagesStandardMode();
 		} catch (error) {
 			console.error("Failed to load form configuration", error);
 			setErrorMessage(`Unable to load the form configuration: ${toErrorMessage(error)}`);
