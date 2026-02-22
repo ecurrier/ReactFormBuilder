@@ -40,9 +40,6 @@ export const resolveFormVersionFromExistingVersion = async (versionId: string): 
                 <attribute name="statecode" />
                 <attribute name="createdon" />
 				<order attribute="createdon" descending="true" />
-                <filter type="and">
-                    <condition attribute="statecode" operator="eq" value="0" />
-                </filter>
 				<link-entity name="eyfrcc_version" from="eyfrcc_regardingid" to="eyfrcc_regardingid" link-type="inner" alias="OriginalVersion">
 					<filter type="and">
 						<condition attribute="eyfrcc_versionid" operator="eq" value="${versionId}" />
@@ -107,9 +104,6 @@ export const resolveFormVersionFromExistingRecord = async (recordId: string, rec
                 <attribute name="statecode" />
                 <attribute name="createdon" />
 				<order attribute="createdon" descending="true" />
-                <filter type="and">
-                    <condition attribute="statecode" operator="eq" value="0" />
-                </filter>
                 <link-entity name="eyfrcc_forminstance" from="eyfrcc_versionid" to="eyfrcc_versionid" link-type="inner" alias="FormInstance">
                     <attribute name="eyfrcc_forminstanceid" />
                     <filter type="and">

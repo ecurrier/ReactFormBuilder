@@ -80,7 +80,7 @@ const mapLookupResults = (target: LookupTargetConfig, rows: Record<string, any>[
 		.filter(Boolean) as LookupSearchResult[];
 };
 
-export const quickSearchLookup = async (target: LookupTargetConfig, query: string, top: number = 4): Promise<LookupSearchResult[]> => {
+export const quickSearchLookup = async (target: LookupTargetConfig, query: string, top: number = 10): Promise<LookupSearchResult[]> => {
 	const attributes = buildLookupAttributes(target);
 	const primaryNameAttribute = getPrimaryNameAttribute(target);
 
@@ -98,7 +98,9 @@ export const quickSearchLookup = async (target: LookupTargetConfig, query: strin
 		return mapLookupResults(target, response.results || []);
 	}
 
-	const filters = (target.Attributes || [getPrimaryNameAttribute(target)]).map((attribute) => ({
+	// TO-DO: Right now quick search is only searching the primary name, but in the future way may want to expand this and show additional information
+	// in the quick search results.
+	const filters = [getPrimaryNameAttribute(target)].map((attribute) => ({
 		attribute,
 		operator: "like",
 		value: `%${searchText}%`,
@@ -107,6 +109,7 @@ export const quickSearchLookup = async (target: LookupTargetConfig, query: strin
 	const fetchXml = buildFetchXmlWithFilter(target.EntityLogicalName, attributes, filters, "or");
 	const response = await retrieveMultipleRecords(target.EntityLogicalName, fetchXml, {
 		top,
+		orderBy: `${primaryNameAttribute} asc`,
 	});
 
 	return mapLookupResults(target, response.results || []);
@@ -128,7 +131,8 @@ export const advancedSearchLookup = async (
 
 	const searchText = query?.trim();
 	if (searchText) {
-		const filters = (target.Attributes || [getPrimaryNameAttribute(target)]).map((attribute) => ({
+		// TO-DO: Right now advanced search is only searching the primary name, but in the future way may want a better way to configure this.
+		const filters = [getPrimaryNameAttribute(target)].map((attribute) => ({
 			attribute,
 			operator: "like",
 			value: `%${searchText}%`,
