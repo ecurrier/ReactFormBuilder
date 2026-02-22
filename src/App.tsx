@@ -340,9 +340,8 @@ const App = () => {
 		await applyExistingRecordState(formInstance, embeddedRecordId, embeddedRecordLogicalName, false);
 	};
 
-	const loadUrlDrivenMode = async () => {
-		const { recordId, versionId, recordLogicalName, parentRecordLogicalName, parentRecordFieldLogicalName, parentRecordId, isDebugMode } =
-			parseUrlParams();
+	const loadPowerPagesStandardMode = async () => {
+		const { recordId, versionId, recordLogicalName, parentRecordLogicalName, parentRecordFieldLogicalName, parentRecordId, isDebugMode } = parseUrlParams();
 
 		setUrlParams({
 			recordId,
@@ -389,7 +388,7 @@ const App = () => {
 				return;
 			}
 
-			await loadUrlDrivenMode();
+			await loadPowerPagesStandardMode();
 		} catch (error) {
 			console.error("Failed to load form configuration", error);
 			setErrorMessage(`Unable to load the form configuration: ${toErrorMessage(error)}`);
