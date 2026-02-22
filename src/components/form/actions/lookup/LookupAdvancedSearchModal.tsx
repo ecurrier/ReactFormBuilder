@@ -102,6 +102,8 @@ export const LookupAdvancedSearchModal = ({
 
 	const normalizedColumns = useMemo(() => (selectedTarget?.Columns || []).map(normalizeColumn), [selectedTarget]);
 
+	// TO-DO: renderLookupCellValue displays created on as an unformatted date because .Columns is a string array, and doesnt include properties about the data type of the column
+	// Need to re-wire or re-do how some of the form config generates lookup columns so we can ensure we have the necessary metadata to properly render values in the advanced search results, and ideally also use that metadata to build the fetchXml for retrieving results so we can limit the data we pull back to just what's needed for display and searching
 	const columns = useMemo(() => {
 		const baseColumns = normalizedColumns.map((column) => ({
 			key: column.LogicalName,
