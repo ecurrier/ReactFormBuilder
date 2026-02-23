@@ -33,6 +33,18 @@ export const ValidationType = {
 	MinMax: 643260001,
 };
 
+export const FieldValidationType = 
+{
+	NoValidation: 643260002,
+	Equals: 643260000,
+	LessThan: 643260001,
+	GreaterThan: 643260007,
+	PhoneNumber: 643260003,
+	EmailAddress: 643260004,
+	RegularExpression: 643260005,
+	ValidAddress: 643260006
+};
+
 export const TableValidationType = {
 	AtLeastOneRecord: 643260000,
 	NoValidation: 643260001,
