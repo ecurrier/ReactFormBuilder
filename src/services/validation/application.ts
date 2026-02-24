@@ -99,9 +99,15 @@ export const validateFieldRules = ({
 	steps.forEach((step) => {
 		flattenFieldActions(step.Actions || []).forEach((action) => {
 			const props = action.Properties || {};
-			if (!props.LogicalName || props.IsHidden) return;
+			if (!props.LogicalName || props.IsHidden) {
+				return;
+			}
+
 			const fieldPath = getFieldPath(action, step, formState);
-			if (limitToFieldPaths && !limitToFieldPaths.has(fieldPath)) return;
+			if (limitToFieldPaths && !limitToFieldPaths.has(fieldPath)) {
+				return;
+			}
+
 			const value = formState?.getFieldValue?.(fieldPath);
 			const issueBase = {
 				stepId: step.Id ?? step.Name,
@@ -110,11 +116,17 @@ export const validateFieldRules = ({
 				severity: "error" as const,
 			};
 
-			if (props.IsRequired && isEmptyValue(value)) {
+			if (props.IsRequired && !props.IsReadOnly && isEmptyValue(value)) {
 				issues.push({ ...issueBase, message: props.ValidationMessage || `${props.Label || props.LogicalName} is required.` });
 				return;
 			}
-			if (isEmptyValue(value)) return;
+
+			// Commenting out for now since we may want validations to run even if a field is empty
+			/*
+			if (isEmptyValue(value)) {
+				return;
+			}
+			*/
 
 			switch (props.ValidationType) {
 				case FieldValidationType.Equals: {

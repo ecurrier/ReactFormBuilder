@@ -248,6 +248,9 @@ export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entit
 	if (properties.IsReadOnly) {
 		fieldClassNames.push("readonly");
 	}
+	if ((hasBeenTouched && realtimeValidationMessage) || errorIssues.length > 0) {
+		fieldClassNames.push("has-error");
+	}
 
 	const labelClassNames = ["control-label"];
 	if (properties.IsRequired) {

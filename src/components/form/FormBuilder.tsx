@@ -516,22 +516,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		setVisitedSteps((prev) => new Set([...prev, clampedIndex]));
 	};
 
-	const goToPrevious = () => {
-		setActiveStepIndex((prev) => {
-			const newIndex = clampIndex(prev - 1);
-			setVisitedSteps((prevVisited) => new Set([...prevVisited, newIndex]));
-			return newIndex;
-		});
-	};
-
-	const goToNext = () => {
-		setActiveStepIndex((prev) => {
-			const newIndex = clampIndex(prev + 1);
-			setVisitedSteps((prevVisited) => new Set([...prevVisited, newIndex]));
-			return newIndex;
-		});
-	};
-
 	const hasPrevious = activeStepIndex > 0;
 	const hasNext = activeStepIndex < visibleSteps.length - 1;
 	// Save handlers
@@ -716,30 +700,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 										</button>
 									);
 								})}
-							</div>
-							<div className="step-nav-controls">
-								<button
-									type="button"
-									className="nav-button nav-button--previous"
-									onClick={goToPrevious}
-									disabled={!hasPrevious || isSaving}
-									aria-label="Previous step">
-									<span className="nav-button__icon" aria-hidden="true">
-										←
-									</span>
-									<span className="sr-only">Previous</span>
-								</button>
-								<button
-									type="button"
-									className="nav-button nav-button--next"
-									onClick={goToNext}
-									disabled={!hasNext || isSaving}
-									aria-label="Next step">
-									<span className="nav-button__icon" aria-hidden="true">
-										→
-									</span>
-									<span className="sr-only">Next</span>
-								</button>
 							</div>
 						</nav>
 						<div className="steps-container">

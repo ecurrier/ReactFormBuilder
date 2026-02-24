@@ -182,23 +182,23 @@ const Step: React.FC<StepProps> = ({
 			<h2 className="form-subheading">{step.Name ?? entityName}</h2>
 			{step.Description && <div className="instructions" dangerouslySetInnerHTML={{ __html: step.Description }} />}
 			<p className="control-label block text-right mb-4 required-legend">Required</p>
-			<div className="step-validation-summary">
-				{stepIssues.length > 0 && (
-					<div className="alert alert-danger validation-summary-inline" role="alert">
-						<strong>Review the following before submitting:</strong>
-						<ul className="validation-summary-list">
-							{stepIssues.map((issue, index) => (
-								<li key={`${issue.fieldId || issue.anchorId || "issue"}-${index}`}>
-									<button type="button" className="validation-summary-link" onClick={() => onIssueSelect?.(issue)}>
-										{issue.message}
-									</button>
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
-			</div>
 			<div className="multi-step-form-main-content">
+				<div className="step-validation-summary">
+					{stepIssues.length > 0 && (
+						<div className="alert alert-danger validation-summary-inline" role="alert">
+							<strong>Review the following before submitting:</strong>
+							<ul className="validation-summary-list">
+								{stepIssues.map((issue, index) => (
+									<li key={`${issue.fieldId || issue.anchorId || "issue"}-${index}`}>
+										<button type="button" className="validation-summary-link" onClick={() => onIssueSelect?.(issue)}>
+											{issue.message}
+										</button>
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
+				</div>
 				<div className="actions">
 					<StepActions
 						actionItems={actionItems}
