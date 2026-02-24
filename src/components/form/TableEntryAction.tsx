@@ -52,6 +52,7 @@ export interface TableEntryActionProps {
 	shouldLoadData?: boolean;
 	onSave?: (entityName: string, data: any, recordId?: string, referencingAttribute?: string, referencingNavigationProperty?: string | null) => Promise<void>;
 	onDelete?: (entityName: string, recordId: string) => Promise<void>;
+	onValidateTableEntryForm?: (args: { actions: FieldAction[]; entityName?: string; values: Record<string, any> }) => Array<{ message: string }>;
 	className?: string;
 }
 
@@ -239,6 +240,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	fetchData,
 	shouldLoadData = true,
 	onDelete,
+	onValidateTableEntryForm,
 	className,
 }) => {
 	const [sidepaneOpen, setSidepaneOpen] = useState(false);
@@ -571,6 +573,7 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					nodeId={editingRecord?._nodeId}
 					onSave={handleFormSave}
 					onCancel={handleFormCancel}
+					onValidate={onValidateTableEntryForm}
 				/>
 			</Sidepane>
 

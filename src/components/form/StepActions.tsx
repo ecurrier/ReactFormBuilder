@@ -6,6 +6,9 @@ import type { ReactActionConfiguration } from "@app-types";
 type StepActionsProps = {
 	actionItems?: Array<{ action: ReactActionConfiguration; entityName?: string }>;
 	formState: any;
+	getFieldIssues?: (fieldId: string) => Array<{ message: string; severity: "error" | "warning" }>;
+	onFieldChangeClearIssues?: (fieldId: string) => void;
+	onValidateTableEntryForm?: (args: { actions: ReactActionConfiguration[]; entityName?: string; values: Record<string, any> }) => Array<{ message: string }>;
 	tableEntryOptions?: {
 		fetchFunctions?: Map<string, any>;
 		fallbackFetch?: (...args: any[]) => Promise<{ results: any[]; totalRecordCount: number }>;
@@ -17,7 +20,14 @@ type StepActionsProps = {
 	};
 };
 
-const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, tableEntryOptions }) => {
+const StepActions: React.FC<StepActionsProps> = ({
+	actionItems = [],
+	formState,
+	getFieldIssues,
+	onFieldChangeClearIssues,
+	onValidateTableEntryForm,
+	tableEntryOptions,
+}) => {
 	const normalizedActionItems = (actionItems ?? []) as Array<{ action: ReactActionConfiguration; entityName?: string }>;
 
 	if (!Array.isArray(normalizedActionItems) || normalizedActionItems.length === 0) {
@@ -32,9 +42,20 @@ const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, 
 				}
 
 				const actionKey = action.Id ?? action.Name;
+				const actionAnchorId = `action-${actionKey}`;
 
 				if (action.Type === ActionType.FieldInput) {
-					return <FieldInput key={actionKey} action={action} formState={formState} entityName={entityName} />;
+					return (
+						<div key={String(actionKey)} id={actionAnchorId}>
+							<FieldInput
+								action={action}
+								formState={formState}
+								entityName={entityName}
+								getFieldIssues={getFieldIssues}
+								onFieldChangeClearIssues={onFieldChangeClearIssues}
+							/>
+						</div>
+					);
 				}
 
 				if (action.Type === ActionType.TableEntry) {
@@ -50,17 +71,19 @@ const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, 
 					}
 
 					return (
-						<TableEntryAction
-							key={actionKey}
-							config={action.Properties}
-							fetchData={fetchData}
-							shouldLoadData={tableEntryOptions?.shouldLoadData}
-							parentRecordId={tableEntryOptions?.parentRecordId}
-							parentEntityName={tableEntryOptions?.parentEntityName}
-							formState={formState}
-							onSave={tableEntryOptions?.onSave}
-							onDelete={tableEntryOptions?.onDelete}
-						/>
+						<div key={String(actionKey)} id={actionAnchorId}>
+							<TableEntryAction
+								config={action.Properties}
+								fetchData={fetchData}
+								shouldLoadData={tableEntryOptions?.shouldLoadData}
+								parentRecordId={tableEntryOptions?.parentRecordId}
+								parentEntityName={tableEntryOptions?.parentEntityName}
+								formState={formState}
+								onSave={tableEntryOptions?.onSave}
+								onDelete={tableEntryOptions?.onDelete}
+								onValidateTableEntryForm={onValidateTableEntryForm}
+							/>
+						</div>
 					);
 				}
 
@@ -69,7 +92,11 @@ const StepActions: React.FC<StepActionsProps> = ({ actionItems = [], formState, 
 						return null;
 					}
 
-					return <DocumentUploadControl key={actionKey} config={action.Properties} formState={formState} entityName={entityName} />;
+					return (
+						<div key={String(actionKey)} id={actionAnchorId}>
+							<DocumentUploadControl config={action.Properties} formState={formState} entityName={entityName} />
+						</div>
+					);
 				}
 
 				return null;

@@ -24586,10 +24586,10 @@ ol ol {
 	display: flex;
 }
 .loading-ui-header {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	width: 100%;
 }
 .loading-ui-header p {
 	margin: auto;
@@ -31928,4 +31928,42 @@ div.title p.dataNum {
 
 .lookup-result-item.focused .lookup-entity-badge {
 	background-color: #e6e6e6;
+}
+
+.validation-summary-inline {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+}
+
+.validation-summary-list {
+	margin-top: 0.5rem;
+	margin-bottom: 0;
+	padding-left: 1.25rem;
+}
+
+.validation-summary-link {
+	background: none;
+	border: 0;
+	padding: 0;
+	color: var(--color-primary-default, #004771);
+	text-decoration: underline;
+	text-align: left;
+	cursor: pointer;
+}
+
+.step-status {
+	margin-left: 0.5rem;
+	font-weight: 700;
+}
+
+.step-status--error {
+	color: #c0392b;
+}
+
+.step-status--valid {
+	color: #2d6b00;
+}
+
+.table-entry-validation {
+	margin-bottom: 1rem;
 }

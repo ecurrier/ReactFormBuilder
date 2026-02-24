@@ -6,7 +6,15 @@ import { buildFetchXmlForChildRecords } from "@utilities/fetchXml";
 import { resolvePrimaryIdAttribute } from "@utilities/metadata";
 import type { ReactFormStep } from "@app-types";
 
+type StepIssue = { fieldId?: string; anchorId?: string; message: string; severity: "error" | "warning" };
+
 type StepProps = {
+	stepIssues?: StepIssue[];
+	onIssueSelect?: (issue: StepIssue) => void;
+	getFieldIssues?: (fieldId: string) => Array<{ message: string; severity: "error" | "warning" }>;
+	onFieldChangeClearIssues?: (fieldId: string) => void;
+	onValidateTableEntryForm?: (args: { actions: any[]; entityName?: string; values: Record<string, any> }) => Array<{ message: string }>;
+
 	step: ReactFormStep;
 	isActive: boolean;
 	hasBeenVisited: boolean;
@@ -16,7 +24,20 @@ type StepProps = {
 	urlParams?: Record<string, string | undefined>;
 };
 
-const Step: React.FC<StepProps> = ({ step, isActive, hasBeenVisited, positionLabel, recordId, formState, urlParams }) => {
+const Step: React.FC<StepProps> = ({
+	step,
+	isActive,
+	hasBeenVisited,
+	positionLabel,
+	recordId,
+	formState,
+	urlParams,
+	stepIssues = [] as StepIssue[],
+	onIssueSelect,
+	getFieldIssues,
+	onFieldChangeClearIssues,
+	onValidateTableEntryForm,
+}) => {
 	// Memoize sorted actions to prevent infinite loops
 	const actions = useMemo(() => {
 		return Array.isArray(step.Actions) ? [...step.Actions].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0)) : [];
@@ -161,9 +182,32 @@ const Step: React.FC<StepProps> = ({ step, isActive, hasBeenVisited, positionLab
 			<h2 className="form-subheading">{step.Name ?? entityName}</h2>
 			{step.Description && <div className="instructions" dangerouslySetInnerHTML={{ __html: step.Description }} />}
 			<p className="control-label block text-right mb-4 required-legend">Required</p>
+			<div className="step-validation-summary">
+				{stepIssues.length > 0 && (
+					<div className="alert alert-danger validation-summary-inline" role="alert">
+						<strong>Review the following before submitting:</strong>
+						<ul className="validation-summary-list">
+							{stepIssues.map((issue, index) => (
+								<li key={`${issue.fieldId || issue.anchorId || "issue"}-${index}`}>
+									<button type="button" className="validation-summary-link" onClick={() => onIssueSelect?.(issue)}>
+										{issue.message}
+									</button>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+			</div>
 			<div className="multi-step-form-main-content">
 				<div className="actions">
-					<StepActions actionItems={actionItems} formState={formState} tableEntryOptions={tableEntryOptions} />
+					<StepActions
+						actionItems={actionItems}
+						formState={formState}
+						tableEntryOptions={tableEntryOptions}
+						getFieldIssues={getFieldIssues}
+						onFieldChangeClearIssues={onFieldChangeClearIssues}
+						onValidateTableEntryForm={onValidateTableEntryForm}
+					/>
 				</div>
 			</div>
 		</div>
