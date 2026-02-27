@@ -3,6 +3,7 @@ import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuI
 import { retrieveEygaConfiguration, isTempId, type DocumentMetadata } from "@utilities";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord, getSASUrlForDocument } from "@services/documentService";
 import { AZURE_LATENCY_DELAY_MS, BYTES_IN_MB } from "@/constants";
+import { DocumentValidationType } from "@/constants/enums";
 
 export interface DocumentUploadControlProps {
 	config: DocumentUploadControlConfig;
@@ -45,6 +46,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [isUploading, setIsUploading] = React.useState(false);
 	const [isDeleting, setIsDeleting] = React.useState(false);
+	const [isDragActive, setIsDragActive] = React.useState(false);
 	const [deleteTarget, setDeleteTarget] = React.useState<DeleteTarget | null>(null);
 	const inputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -119,6 +121,10 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	const validateFiles = (files: File[]) => {
 		if (!files.length) {
 			return null;
+		}
+
+		if (config.ValidationType === DocumentValidationType.OneFileOnly && rows.length + files.length > 1) {
+			return "Exactly one file is required for this upload.";
 		}
 
 		for (const file of files) {
@@ -207,6 +213,35 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const files = event.target.files ? (Array.from(event.target.files) as File[]) : [];
 		event.target.value = "";
+		void handleFilesSelected(files);
+	};
+
+	const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
+		event.preventDefault();
+		event.stopPropagation();
+		setIsDragActive(true);
+	};
+
+	const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+		event.preventDefault();
+		event.stopPropagation();
+		setIsDragActive(true);
+	};
+
+	const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+		event.preventDefault();
+		event.stopPropagation();
+		if (event.currentTarget.contains(event.relatedTarget as Node)) {
+			return;
+		}
+		setIsDragActive(false);
+	};
+
+	const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+		event.preventDefault();
+		event.stopPropagation();
+		setIsDragActive(false);
+		const files = event.dataTransfer?.files ? (Array.from(event.dataTransfer.files) as File[]) : [];
 		void handleFilesSelected(files);
 	};
 
@@ -313,6 +348,14 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	};
 
 	const busyMessage = isUploading ? "Uploading files..." : isDeleting ? "Deleting file..." : "Loading files...";
+	const requiresDocumentUpload =
+		config.ValidationType === DocumentValidationType.AtLeastOneFile || config.ValidationType === DocumentValidationType.OneFileOnly;
+	const validationHint =
+		config.ValidationType === DocumentValidationType.OneFileOnly
+			? "Upload exactly one file."
+			: config.ValidationType === DocumentValidationType.AtLeastOneFile
+				? "Upload at least one file."
+				: null;
 	const rows = [
 		...pendingUploads.map((upload) => ({
 			key: `pending-${upload.id}`,
@@ -331,68 +374,82 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 
 	return (
 		<>
-			{config.Description && <h3 className="h3" dangerouslySetInnerHTML={{ __html: config.Description }} />}
+			{config.Description && (
+				<h3 className="h3 file-upload-heading">
+					<span dangerouslySetInnerHTML={{ __html: config.Description }} />
+					{requiresDocumentUpload && <span className="required-indicator">*</span>}
+					{validationHint && (
+						<span className="ml-2" title={validationHint}>
+							<Badge type="info" content={validationHint} />
+						</span>
+					)}
+				</h3>
+			)}
 			{alertState && (
 				<Alert type={alertState.type} dismissible onDismiss={() => setAlertState(null)}>
 					<p>{alertState.message}</p>
 				</Alert>
 			)}
-			<div className="form-field-file-upload">
+			<div
+				className={`form-field-file-upload-dropzone ${isDragActive ? "drag-active" : ""}`}
+				onDragEnter={handleDragEnter}
+				onDragOver={handleDragOver}
+				onDragLeave={handleDragLeave}
+				onDrop={handleDrop}>
 				<input
 					ref={inputRef}
 					className="file-upload-core"
 					type="file"
 					style={{ display: "none" }}
 					accept={normalizedAllowedTypes ? normalizedAllowedTypes.join(",") : undefined}
-					multiple
+					multiple={config.ValidationType !== DocumentValidationType.OneFileOnly}
 					onChange={handleInputChange}
 				/>
-				<button type="button" className="btn btn-default" aria-required="true" onClick={() => inputRef.current?.click()} disabled={isUploading}>
-					Choose File
+				<p className="drag-drop-instruction mb-2">Drag &amp; drop files here</p>
+				<p className="drag-drop-help-text">or</p>
+				<button type="button" className="btn btn-default" onClick={() => inputRef.current?.click()} disabled={isUploading}>
+					Select File
 				</button>
 			</div>
-			<div className="file-upload-table contextual-loading-container mt-3" style={{ minHeight: "250px" }}>
-				<LoadingIndicator visible={isLoading || isUploading || isDeleting} variant="contextual" message={busyMessage} />
-				<table id="file-upload-table" aria-live="polite" role="grid" className="table table-custom table-header-bg table-border-bottom table-hover">
-					<thead>
-						<tr>
-							<th scope="col" style={{ width: "100%" }}>
-								File Name
-							</th>
-							<th scope="col" className="actions-menu">
-								Actions
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						{rows.length > 0 &&
-							rows.map((row) => (
-								<tr key={row.key}>
-									<td>
-										{row.isPending ? (
-											<>
-												<span style={{ fontStyle: "italic", opacity: 0.8 }}>{row.name}</span>
-												<span className="ml-2">
-													<Badge type="warning" content="Pending" />
-												</span>
-											</>
-										) : (
-											<span>{row.name}</span>
-										)}
-									</td>
-									<td className="text-right">
-										<DropdownMenu actions={getActionsForRow(row)} />
-									</td>
-								</tr>
-							))}
-					</tbody>
-				</table>
-				{rows.length === 0 && (
-					<Alert type="warning" showIcon={false}>
-						No documents available
-					</Alert>
-				)}
-			</div>
+			{rows.length > 0 && (
+				<div className="file-upload-table contextual-loading-container mt-3" style={{ minHeight: "250px" }}>
+					<LoadingIndicator visible={isLoading || isUploading || isDeleting} variant="contextual" message={busyMessage} />
+					<table id="file-upload-table" aria-live="polite" role="grid" className="table table-custom table-header-bg table-border-bottom table-hover">
+						<thead>
+							<tr>
+								<th scope="col" style={{ width: "100%" }}>
+									File Name
+								</th>
+								<th scope="col" className="actions-menu">
+									Actions
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{rows.length > 0 &&
+								rows.map((row) => (
+									<tr key={row.key}>
+										<td>
+											{row.isPending ? (
+												<>
+													<span style={{ fontStyle: "italic", opacity: 0.8 }}>{row.name}</span>
+													<span className="ml-2">
+														<Badge type="warning" content="Pending" />
+													</span>
+												</>
+											) : (
+												<span>{row.name}</span>
+											)}
+										</td>
+										<td className="text-right">
+											<DropdownMenu actions={getActionsForRow(row)} />
+										</td>
+									</tr>
+								))}
+						</tbody>
+					</table>
+				</div>
+			)}
 			<ConfirmationModal
 				isOpen={Boolean(deleteTarget)}
 				title="Delete File"

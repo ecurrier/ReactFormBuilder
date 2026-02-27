@@ -18940,6 +18940,42 @@ input[type="file"]::file-selector-button:hover {
 	background-color: var(--bg-primary-hover);
 }
 
+.file-upload-heading {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.required-indicator {
+	color: var(--color-danger-default);
+	margin-left: 2px;
+}
+
+.form-field-file-upload-dropzone {
+	padding: 20px;
+	border: 2px dashed var(--border-color-default);
+	border-radius: 8px;
+	text-align: center;
+	background-color: var(--bg-default);
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+}
+
+.form-field-file-upload-dropzone.drag-active {
+	border-color: var(--border-color-on-primary-default);
+	background-color: var(--bg-info-lighter-default);
+}
+
+.drag-drop-instruction {
+	margin: 0;
+	font-weight: 600;
+}
+
+.drag-drop-help-text {
+	margin: 0 0 12px;
+}
 /* ------------------------------ COMPONENTS: Form Field - Input Group ------------------------------ */
 [data-toggle="buttons"] > .btn input[type="radio"],
 [data-toggle="buttons"] > .btn-group > .btn input[type="radio"],
