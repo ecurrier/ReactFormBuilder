@@ -657,10 +657,10 @@ export async function executeValidateAndSubmit(context: SaveContext): Promise<Sa
 			if (fieldConfig) {
 				const validationResult = validateField(fieldValue, fieldConfig);
 
-				if (validationResult.isValid === false) {
+				if (validationResult.IsValid === false) {
 					validationErrors.push({
 						phase: "validation",
-						message: `${fieldConfig.Label || metadata.logicalName}: ${validationResult.message || "Validation failed"}`,
+						message: `${fieldConfig.Label || metadata.logicalName}: ${validationResult.Message || "Validation failed"}`,
 						entityName: metadata.entityName,
 					});
 				}

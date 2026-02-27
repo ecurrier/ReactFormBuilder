@@ -2,6 +2,7 @@ import React from "react";
 import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuItem, Badge } from "@components";
 import { retrieveEygaConfiguration, isTempId, type DocumentMetadata } from "@utilities";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord, getSASUrlForDocument } from "@services/documentService";
+import { AZURE_LATENCY_DELAY_MS, BYTES_IN_MB } from "@/constants";
 
 export interface DocumentUploadControlProps {
 	config: DocumentUploadControlConfig;
@@ -121,7 +122,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 		}
 
 		for (const file of files) {
-			if (maxFileSizeMB && file.size / 1_000_000 > maxFileSizeMB) {
+			if (maxFileSizeMB && file.size / BYTES_IN_MB > maxFileSizeMB) {
 				return `You are attempting to upload a file larger than ${maxFileSizeMB} MB.`;
 			}
 
@@ -137,13 +138,13 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	};
 
 	const handleFilesSelected = async (files: File[]) => {
-		const validationError = validateFiles(files);
-		if (validationError) {
-			setAlertState({ type: "danger", message: validationError });
+		if (!files.length) {
 			return;
 		}
 
-		if (!files.length) {
+		const validationError = validateFiles(files);
+		if (validationError) {
+			setAlertState({ type: "danger", message: validationError });
 			return;
 		}
 
@@ -154,6 +155,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 				setAlertState({ type: "danger", message: "Save the record before uploading files." });
 				return;
 			}
+
 			files.forEach((file) => {
 				formState?.addUploadNode?.({
 					parentNodeId: recordNode.id,
@@ -164,29 +166,39 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 					childRecordId: undefined,
 				});
 			});
+
 			return;
 		}
 
 		setIsUploading(true);
 		try {
-			// TO-DO: Consider parallel uploads with Promise.all if needed
-			for (const file of files) {
-				await uploadDocumentForRecord({
-					entityName: contextEntityName,
-					recordId: contextRecordId,
-					folderName: config.FolderName,
-					file,
-					uploadDate: formatUploadDate(new Date()),
-					childId: uploadChildId,
-				});
+			const responses = await Promise.allSettled(
+				files.map((file) =>
+					uploadDocumentForRecord({
+						entityName: contextEntityName,
+						recordId: contextRecordId,
+						folderName: config.FolderName,
+						file,
+						uploadDate: formatUploadDate(new Date()),
+						childId: uploadChildId,
+					})
+				)
+			);
+			if (responses.every((res) => res.status === "fulfilled")) {
+				await new Promise((resolve) => setTimeout(resolve, AZURE_LATENCY_DELAY_MS));
+				setAlertState({ type: "success", message: "File(s) uploaded successfully." });
+			} else if (responses.some((res) => res.status === "rejected") && responses.some((res) => res.status === "fulfilled")) {
+				await new Promise((resolve) => setTimeout(resolve, AZURE_LATENCY_DELAY_MS));
+				setAlertState({ type: "warning", message: "One or more file(s) failed to upload. Please try again." });
+			} else if (responses.every((res) => res.status === "rejected")) {
+				setAlertState({ type: "danger", message: "All file(s) failed to upload. Please try again." });
 			}
-			setAlertState({ type: "success", message: "Files uploaded successfully." });
-			// Due to azure latency, we may need to wait a moment before reloading
-			// Currently, after an upload, the new document is not appearing immediately
+
+			setIsUploading(false);
 			await loadDocuments();
 		} catch (error) {
-			console.error("Upload failed:", error);
-			setAlertState({ type: "danger", message: "File upload failed. Please try again." });
+			console.error("File upload failed:", error);
+			setAlertState({ type: "danger", message: "File upload failed due to an unexpected error. Please try again." });
 		} finally {
 			setIsUploading(false);
 		}
@@ -230,8 +242,8 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 			setAlertState({ type: "success", message: "File deleted successfully." });
 			await loadDocuments();
 		} catch (error) {
-			console.error("Delete failed:", error);
-			setAlertState({ type: "danger", message: "Failed to delete file." });
+			console.error("File deletion failed:", error);
+			setAlertState({ type: "danger", message: "Failed to delete file due to an unexpected error. Please try again." });
 		} finally {
 			setIsDeleting(false);
 			setDeleteTarget(null);
@@ -247,7 +259,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 			await downloadDocument(contextEntityName, contextRecordId, fullName);
 		} catch (error) {
 			console.error("Download failed:", error);
-			setAlertState({ type: "danger", message: "Failed to download file." });
+			setAlertState({ type: "danger", message: "Failed to download file due to an unexpected error. Please try again." });
 		}
 	};
 
@@ -261,7 +273,7 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 			window.open(sasUrl, "_blank");
 		} catch (error) {
 			console.error("Failed to get SAS URL:", error);
-			setAlertState({ type: "danger", message: "Failed to open file." });
+			setAlertState({ type: "danger", message: "Failed to open file due to an unexpected error. Please try again." });
 		}
 	};
 

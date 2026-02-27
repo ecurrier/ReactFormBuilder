@@ -210,7 +210,7 @@ export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entit
 			}
 
 			const validationResult = getRealtimeValidationResult(newValue, properties);
-			const nextMessage = validationResult.isValid ? null : validationResult.message || null;
+			const nextMessage = validationResult.IsValid ? null : validationResult.Message || null;
 			setRealtimeValidationMessage(nextMessage);
 
 			formState.updateFieldValue(fieldPath, newValue);

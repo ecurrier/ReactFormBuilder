@@ -155,17 +155,17 @@ export const validateFieldRules = ({
 				}
 				case FieldValidationType.PhoneNumber: {
 					const result = validatePhone(value, props.ValidationMessage || "Please enter a valid phone number.");
-					if (!result.isValid) issues.push({ ...issueBase, message: result.message || "Please enter a valid phone number." });
+					if (!result.IsValid) issues.push({ ...issueBase, message: result.Message || "Please enter a valid phone number." });
 					break;
 				}
 				case FieldValidationType.EmailAddress: {
 					const result = validateEmail(value, props.ValidationMessage || "Please enter a valid email address.");
-					if (!result.isValid) issues.push({ ...issueBase, message: result.message || "Please enter a valid email address." });
+					if (!result.IsValid) issues.push({ ...issueBase, message: result.Message || "Please enter a valid email address." });
 					break;
 				}
 				case FieldValidationType.RegularExpression: {
 					const result = validateRegex(value, props.ValidationValue || EMAIL_REGEX, props.ValidationMessage || "Please enter a valid value.");
-					if (!result.isValid) issues.push({ ...issueBase, message: result.message || "Please enter a valid value." });
+					if (!result.IsValid) issues.push({ ...issueBase, message: result.Message || "Please enter a valid value." });
 					break;
 				}
 				default:

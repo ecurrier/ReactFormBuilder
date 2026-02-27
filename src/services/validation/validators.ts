@@ -1,3 +1,4 @@
+import { ValidationType } from "@/constants";
 import type { ValidationResult, FieldValidationConfig } from "./types";
 
 /**
@@ -11,8 +12,8 @@ export const validateRequired = (value: any, message?: string): ValidationResult
 	const isValid = value !== null && value !== undefined && value !== "";
 
 	return {
-		isValid,
-		message: isValid ? undefined : message || "This field is required.",
+		IsValid: isValid,
+		Message: isValid ? undefined : message || "This field is required.",
 	};
 };
 
@@ -26,15 +27,15 @@ export const validateRequired = (value: any, message?: string): ValidationResult
  */
 export const validateRegex = (value: any, pattern: string | RegExp, message?: string): ValidationResult => {
 	if (value === null || value === undefined || value === "") {
-		return { isValid: true }; // Empty values pass regex validation (use validateRequired separately)
+		return { IsValid: true }; // Empty values pass regex validation (use validateRequired separately)
 	}
 
 	const regex = typeof pattern === "string" ? new RegExp(pattern) : pattern;
 	const isValid = regex.test(String(value));
 
 	return {
-		isValid,
-		message: isValid ? undefined : message || "Please enter a valid value.",
+		IsValid: isValid,
+		Message: isValid ? undefined : message || "Please enter a valid value.",
 	};
 };
 
@@ -49,12 +50,12 @@ export const validateRegex = (value: any, pattern: string | RegExp, message?: st
  */
 export const validateMinMax = (value: any, min?: number, max?: number, message?: string): ValidationResult => {
 	if (value === null || value === undefined || value === "") {
-		return { isValid: true }; // Empty values pass min/max validation
+		return { IsValid: true }; // Empty values pass min/max validation
 	}
 
 	const numValue = Number(value);
 	if (isNaN(numValue)) {
-		return { isValid: false, message: "Please enter a valid number." };
+		return { IsValid: false, Message: "Please enter a valid number." };
 	}
 
 	let isValid = true;
@@ -75,8 +76,8 @@ export const validateMinMax = (value: any, min?: number, max?: number, message?:
 	}
 
 	return {
-		isValid,
-		message: isValid ? undefined : message || defaultMessage,
+		IsValid: isValid,
+		Message: isValid ? undefined : message || defaultMessage,
 	};
 };
 
@@ -90,15 +91,15 @@ export const validateMinMax = (value: any, min?: number, max?: number, message?:
  */
 export const validateMaxLength = (value: any, maxLength: number, message?: string): ValidationResult => {
 	if (value === null || value === undefined || value === "") {
-		return { isValid: true }; // Empty values pass length validation
+		return { IsValid: true }; // Empty values pass length validation
 	}
 
 	const strValue = String(value);
 	const isValid = strValue.length <= maxLength;
 
 	return {
-		isValid,
-		message: isValid ? undefined : message || `Maximum length is ${maxLength} characters.`,
+		IsValid: isValid,
+		Message: isValid ? undefined : message || `Maximum length is ${maxLength} characters.`,
 	};
 };
 
@@ -112,15 +113,15 @@ export const validateMaxLength = (value: any, maxLength: number, message?: strin
  */
 export const validateMinLength = (value: any, minLength: number, message?: string): ValidationResult => {
 	if (value === null || value === undefined || value === "") {
-		return { isValid: true }; // Empty values pass length validation (use validateRequired separately)
+		return { IsValid: true }; // Empty values pass length validation (use validateRequired separately)
 	}
 
 	const strValue = String(value);
 	const isValid = strValue.length >= minLength;
 
 	return {
-		isValid,
-		message: isValid ? undefined : message || `Minimum length is ${minLength} characters.`,
+		IsValid: isValid,
+		Message: isValid ? undefined : message || `Minimum length is ${minLength} characters.`,
 	};
 };
 
@@ -133,7 +134,7 @@ export const validateMinLength = (value: any, minLength: number, message?: strin
  */
 export const validateEmail = (value: any, message?: string): ValidationResult => {
 	if (value === null || value === undefined || value === "") {
-		return { isValid: true }; // Empty values pass email validation
+		return { IsValid: true }; // Empty values pass email validation
 	}
 
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -149,7 +150,7 @@ export const validateEmail = (value: any, message?: string): ValidationResult =>
  */
 export const validatePhone = (value: any, message?: string): ValidationResult => {
 	if (value === null || value === undefined || value === "") {
-		return { isValid: true }; // Empty values pass phone validation
+		return { IsValid: true }; // Empty values pass phone validation
 	}
 
 	// Basic phone validation - allows various formats
@@ -166,16 +167,16 @@ export const validatePhone = (value: any, message?: string): ValidationResult =>
  */
 export const validateUrl = (value: any, message?: string): ValidationResult => {
 	if (value === null || value === undefined || value === "") {
-		return { isValid: true }; // Empty values pass URL validation
+		return { IsValid: true }; // Empty values pass URL validation
 	}
 
 	try {
 		new URL(String(value));
-		return { isValid: true };
+		return { IsValid: true };
 	} catch {
 		return {
-			isValid: false,
-			message: message || "Please enter a valid URL.",
+			IsValid: false,
+			Message: message || "Please enter a valid URL.",
 		};
 	}
 };
@@ -189,34 +190,29 @@ export const validateUrl = (value: any, message?: string): ValidationResult => {
  * @returns Validation result (first failing validator or success)
  */
 export const validateField = (value: any, config: FieldValidationConfig): ValidationResult => {
-	// Required validation
-	if (config.isRequired) {
-		const result = validateRequired(value, config.validationMessage);
-		if (!result.isValid) return result;
+	if (config.IsRequired) {
+		const result = validateRequired(value, config.ValidationMessage);
+		if (!result.IsValid) return result;
 	}
 
-	// Empty values pass remaining validations
 	if (value === null || value === undefined || value === "") {
-		return { isValid: true };
+		return { IsValid: true };
 	}
 
-	// Regex validation (ValidationType = 643260000)
-	if (config.validationType === 643260000 && config.validationValue) {
-		const result = validateRegex(value, config.validationValue, config.validationMessage);
-		if (!result.isValid) return result;
+	if (config.ValidationType === ValidationType.RegEx && config.ValidationValue) {
+		const result = validateRegex(value, config.ValidationValue, config.ValidationMessage);
+		if (!result.IsValid) return result;
 	}
 
-	// Min/Max validation (ValidationType = 643260001)
-	if (config.validationType === 643260001) {
-		const result = validateMinMax(value, config.minValue, config.maxValue, config.validationMessage);
-		if (!result.isValid) return result;
+	if (config.ValidationType === ValidationType.MinMax) {
+		const result = validateMinMax(value, config.MinValue, config.MaxValue, config.ValidationMessage);
+		if (!result.IsValid) return result;
 	}
 
-	// Max length validation (for text fields)
-	if (config.maxLength !== undefined) {
-		const result = validateMaxLength(value, config.maxLength, config.validationMessage);
-		if (!result.isValid) return result;
+	if (config.MaxLength !== undefined) {
+		const result = validateMaxLength(value, config.MaxLength, config.ValidationMessage);
+		if (!result.IsValid) return result;
 	}
 
-	return { isValid: true };
+	return { IsValid: true };
 };

@@ -3,7 +3,7 @@ import type { FieldInputProperties } from "@app-types/config/Properties";
 import type { ValidationResult } from "./types";
 import { validateMaxLength, validateMinMax } from "./validators";
 
-const emptyResult: ValidationResult = { isValid: true };
+const emptyResult: ValidationResult = { IsValid: true };
 
 export const getRealtimeValidationResult = (value: unknown, properties: FieldInputProperties): ValidationResult => {
 	const dataType = properties.DataType;

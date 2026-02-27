@@ -527,64 +527,17 @@
 				"Conditions": [
 					{
 						"Id": "039c3caf-e909-f111-8406-7c1e527fbb74",
-						"Name": "Show 'Approved Cost Share' when Type of Application = Revision",
+						"Name": "Eligibility & Program Selection - Show Field Based on Condition - Lookup Test",
 						"Type": 643260000,
 						"IsOr": false,
 						"Expressions": [
 							{
-								"FieldLogicalName": "eyfrcc_typeofapplication",
-								"Value": 643260002,
+								"FieldLogicalName": "eyfrcc_areasimpacted",
+								"Value": "condition test",
 								"Operator": 643260000
 							}
 						],
-						"TargetActionId": "94ccd2a7-0ce0-f011-8544-7ced8d21d821"
-					},
-					{
-						"Id": "a1b2c3d4-0001-0001-0001-000000000001",
-						"Name": "Enable 'Risk Indicator' when Fully Disbursed = Yes",
-						"Type": 643260001,
-						"IsOr": false,
-						"Expressions": [
-							{
-								"FieldLogicalName": "eyfrcc_fullydisbursed",
-								"Value": true,
-								"Operator": 643260000
-							}
-						],
-						"TargetActionId": "644639ae-0ce0-f011-8544-7ced8d21d821"
-					},
-					{
-						"Id": "a1b2c3d4-0001-0001-0001-000000000002",
-						"Name": "Require 'Areas Impacted' when Indirect Cost Rate has data",
-						"Type": 643260006,
-						"IsOr": false,
-						"Expressions": [
-							{
-								"FieldLogicalName": "eyfrcc_totalapprovedindirectcostrate",
-								"Value": null,
-								"Operator": 643260008
-							}
-						],
-						"TargetActionId": "c7e5d189-0ce0-f011-8544-7ced8d21d821"
-					},
-					{
-						"Id": "a1b2c3d4-0001-0001-0001-000000000003",
-						"Name": "Show 'Subapplicant' table when Type of Application = New OR Continuation",
-						"Type": 643260004,
-						"IsOr": true,
-						"Expressions": [
-							{
-								"FieldLogicalName": "eyfrcc_typeofapplication",
-								"Value": 643260000,
-								"Operator": 643260000
-							},
-							{
-								"FieldLogicalName": "eyfrcc_typeofapplication",
-								"Value": 643260001,
-								"Operator": 643260000
-							}
-						],
-						"TargetActionId": "52e23263-40dd-f011-8544-6045bdd311df"
+						"TargetActionId": null
 					}
 				]
 			},
@@ -623,7 +576,7 @@
 									"EntitySetName": "eyfrcc_projects",
 									"PrimaryIdAttribute": "eyfrcc_projectid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_applicationprojectid"
 								}
 							]
@@ -857,7 +810,7 @@
 																	"EntitySetName": "eyfrcc_fiscalyears",
 																	"PrimaryIdAttribute": "eyfrcc_fiscalyearid",
 																	"PrimaryNameAttribute": "eyfrcc_name",
-																	"Columns": ["eyfrcc_name", "createdon"],
+																	"Columns": ["eyfrcc_name"],
 																	"NavigationProperty": "eyfrcc_startdate_fiscalyear"
 																}
 															]
@@ -913,7 +866,7 @@
 																	"EntitySetName": "eyfrcc_fiscalyears",
 																	"PrimaryIdAttribute": "eyfrcc_fiscalyearid",
 																	"PrimaryNameAttribute": "eyfrcc_name",
-																	"Columns": ["eyfrcc_name", "createdon"],
+																	"Columns": ["eyfrcc_name"],
 																	"NavigationProperty": "eyfrcc_enddate_fiscalyear"
 																}
 															]
@@ -1085,7 +1038,7 @@
 											"Properties": {
 												"FolderName": "InformationUpload",
 												"Description": "<p style=\"margin: 0;\">Please upload information</p>",
-												"validationType": 203300000,
+												"ValidationType": 203300000,
 												"ValidationMessage": null
 											}
 										}
@@ -1142,7 +1095,7 @@
 						"Properties": {
 							"FolderName": "BudgetNarrativeJustification",
 							"Description": "<p style=\"margin: 0;\">Budget Narrative / Justification</p>",
-							"validationType": null,
+							"ValidationType": null,
 							"ValidationMessage": null
 						}
 					},
@@ -1155,60 +1108,12 @@
 						"Properties": {
 							"FolderName": "LettersofSupportCommitment",
 							"Description": "<p style=\"margin: 0;\">Letters of Support / Commitment</p>",
-							"validationType": null,
+							"ValidationType": null,
 							"ValidationMessage": null
 						}
 					}
 				],
-				"Conditions": [
-					{
-						"Id": "a1b2c3d4-0002-0002-0002-000000000001",
-						"Name": "Show 'Budget Review Notes' when Budget Status has data",
-						"Type": 643260000,
-						"IsOr": false,
-						"Expressions": [
-							{
-								"FieldLogicalName": "eyfrcc_budgetstatus",
-								"Value": null,
-								"Operator": 643260008
-							}
-						],
-						"TargetActionId": "f047890f-59f9-f011-8406-7c1e524a2f52"
-					},
-					{
-						"Id": "a1b2c3d4-0002-0002-0002-000000000002",
-						"Name": "Require 'Letters of Support' when Budget Status = Approved",
-						"Type": 643260005,
-						"IsOr": false,
-						"Expressions": [
-							{
-								"FieldLogicalName": "eyfrcc_budgetstatus",
-								"Value": 643260000,
-								"Operator": 643260000
-							}
-						],
-						"TargetActionId": "ecf79541-59f9-f011-8406-7c1e524a2f52"
-					},
-					{
-						"Id": "a1b2c3d4-0002-0002-0002-000000000003",
-						"Name": "Show 'SF424-A' table when Budget Status = Approved or Revision Approved",
-						"Type": 643260004,
-						"IsOr": true,
-						"Expressions": [
-							{
-								"FieldLogicalName": "eyfrcc_budgetstatus",
-								"Value": 643260000,
-								"Operator": 643260000
-							},
-							{
-								"FieldLogicalName": "eyfrcc_budgetstatus",
-								"Value": 643260002,
-								"Operator": 643260000
-							}
-						],
-						"TargetActionId": "1223e6ce-3ce4-f011-8544-7ced8d21d821"
-					}
-				]
+				"Conditions": []
 			},
 			{
 				"Id": "63755ce0-3fdd-f011-8544-6045bdd311df",
@@ -1348,7 +1253,7 @@
 									"EntitySetName": "eyfrcc_appeals",
 									"PrimaryIdAttribute": "eyfrcc_appealid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_appeal"
 								},
 								{
@@ -1356,7 +1261,7 @@
 									"EntitySetName": "eyfrcc_expenditurereports",
 									"PrimaryIdAttribute": "eyfrcc_expenditurereportid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_expenditurereport"
 								},
 								{
@@ -1364,7 +1269,7 @@
 									"EntitySetName": "eyfrcc_indirectcostrates",
 									"PrimaryIdAttribute": "eyfrcc_indirectcostrateid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_indirectcostrate"
 								},
 								{
@@ -1372,7 +1277,7 @@
 									"EntitySetName": "eyfrcc_loanmodifications",
 									"PrimaryIdAttribute": "eyfrcc_loanmodificationid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_loanmodification"
 								},
 								{
@@ -1380,7 +1285,7 @@
 									"EntitySetName": "eyfrcc_matchreliefs",
 									"PrimaryIdAttribute": "eyfrcc_matchreliefid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_matchrelief"
 								},
 								{
@@ -1388,7 +1293,7 @@
 									"EntitySetName": "eyfrcc_modifications",
 									"PrimaryIdAttribute": "eyfrcc_modificationid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_modification"
 								},
 								{
@@ -1396,7 +1301,7 @@
 									"EntitySetName": "eyfrcc_monitorings",
 									"PrimaryIdAttribute": "eyfrcc_monitoringid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_monitoring"
 								},
 								{
@@ -1404,7 +1309,7 @@
 									"EntitySetName": "eyfrcc_paymentrequests",
 									"PrimaryIdAttribute": "eyfrcc_paymentrequestid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_paymentrequest"
 								},
 								{
@@ -1412,7 +1317,7 @@
 									"EntitySetName": "eyfrcc_performancereports",
 									"PrimaryIdAttribute": "eyfrcc_performancereportid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_performancereport"
 								},
 								{
@@ -1420,7 +1325,7 @@
 									"EntitySetName": "eyfrcc_profilereports",
 									"PrimaryIdAttribute": "eyfrcc_profilereportid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_profilereport"
 								},
 								{
@@ -1428,7 +1333,7 @@
 									"EntitySetName": "eyfrcc_progressreports",
 									"PrimaryIdAttribute": "eyfrcc_progressreportid",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_progressreport"
 								},
 								{
@@ -1436,57 +1341,14 @@
 									"EntitySetName": "eyfrcc_standardform425s",
 									"PrimaryIdAttribute": "eyfrcc_standardform425id",
 									"PrimaryNameAttribute": "eyfrcc_name",
-									"Columns": ["eyfrcc_name", "createdon"],
+									"Columns": ["eyfrcc_name"],
 									"NavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_standardform425"
 								}
 							]
 						}
 					}
 				],
-				"Conditions": [
-					{
-						"Id": "a1b2c3d4-0003-0003-0003-000000000001",
-						"Name": "Enable 'Estimated Funding: Applicant' when Attestation = Yes",
-						"Type": 643260001,
-						"IsOr": false,
-						"Expressions": [
-							{
-								"FieldLogicalName": "eyfrcc_attestation",
-								"Value": true,
-								"Operator": 643260000
-							}
-						],
-						"TargetActionId": "52a5c1fc-5af9-f011-8406-7ced8d209320"
-					},
-					{
-						"Id": "a1b2c3d4-0003-0003-0003-000000000002",
-						"Name": "Enable 'Estimated Funding: Other' when Attestation = Yes",
-						"Type": 643260001,
-						"IsOr": false,
-						"Expressions": [
-							{
-								"FieldLogicalName": "eyfrcc_attestation",
-								"Value": true,
-								"Operator": 643260000
-							}
-						],
-						"TargetActionId": "94f01501-5bf9-f011-8406-7c1e526ae8b9"
-					},
-					{
-						"Id": "a1b2c3d4-0003-0003-0003-000000000003",
-						"Name": "Show 'Organizational Affiliation' when Attestation = Yes",
-						"Type": 643260000,
-						"IsOr": false,
-						"Expressions": [
-							{
-								"FieldLogicalName": "eyfrcc_attestation",
-								"Value": true,
-								"Operator": 643260000
-							}
-						],
-						"TargetActionId": "ace17438-5bf9-f011-8406-7c1e526ae8b9"
-					}
-				]
+				"Conditions": []
 			},
 			{
 				"Id": "ff7634e7-17e0-f011-8544-0022482dfe82",
@@ -1507,7 +1369,7 @@
 						"Properties": {
 							"FolderName": "TaxDocuments",
 							"Description": "<p style=\"margin: 0;\">Upload supporting tax documentation</p>",
-							"validationType": 203300002,
+							"ValidationType": 203300002,
 							"ValidationMessage": "Please upload at least one file"
 						}
 					},
@@ -1564,7 +1426,7 @@
 														"EntitySetName": "eyfrcc_indirectcostratelineses",
 														"PrimaryIdAttribute": "eyfrcc_indirectcostratelinesid",
 														"PrimaryNameAttribute": "eyfrcc_name",
-														"Columns": ["eyfrcc_name", "createdon"],
+														"Columns": ["eyfrcc_name"],
 														"NavigationProperty": "eyfrcc_indirectcostrate"
 													}
 												]
@@ -1682,7 +1544,7 @@
 														"EntitySetName": "eyfrcc_indirectcostratelineses",
 														"PrimaryIdAttribute": "eyfrcc_indirectcostratelinesid",
 														"PrimaryNameAttribute": "eyfrcc_name",
-														"Columns": ["eyfrcc_name", "createdon"],
+														"Columns": ["eyfrcc_name"],
 														"NavigationProperty": "eyfrcc_indirectcostrate"
 													}
 												]
@@ -1825,7 +1687,7 @@
 						"Properties": {
 							"FolderName": "AdditionalDocuments",
 							"Description": "<p style=\"margin: 0;\">Upload any supplemental documents needed to support the application (e.g., narratives, letters of support, certifications, or other requested materials).</p>",
-							"validationType": 203300000,
+							"ValidationType": 203300000,
 							"ValidationMessage": null
 						}
 					}
