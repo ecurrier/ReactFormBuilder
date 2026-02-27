@@ -520,6 +520,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 	const hasPrevious = activeStepIndex > 0;
 	const hasNext = activeStepIndex < visibleSteps.length - 1;
+	const activeStep = visibleSteps[activeStepIndex];
+	const completionPercent = visibleSteps.length ? Math.round(((activeStepIndex + 1) / visibleSteps.length) * 100) : 0;
+	const completedStepCount = Math.max(0, activeStepIndex);
 	// Save handlers
 	const handleSave = async () => {
 		// Capture the save tree before any state changes
@@ -646,6 +649,20 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			<div className={`banner${isBannerSticky ? " banner--sticky" : ""}`}>
 				<div className="container">
 					<div className="banner-main-content">
+						<div className="banner-kpis" aria-label="Form progress overview">
+							<div className="banner-kpi">
+								<span className="banner-kpi-value">{completionPercent}%</span>
+								<span className="banner-kpi-label">Journey complete</span>
+							</div>
+							<div className="banner-kpi">
+								<span className="banner-kpi-value">{activeStepIndex + 1}</span>
+								<span className="banner-kpi-label">Active step</span>
+							</div>
+							<div className="banner-kpi">
+								<span className="banner-kpi-value">{completedStepCount}</span>
+								<span className="banner-kpi-label">Steps completed</span>
+							</div>
+						</div>
 						<div className="banner-title">
 							<h1>{config?.FundingOpportunity.FullName}</h1>
 						</div>
@@ -673,9 +690,14 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 					<div className="alert-container">{/* TO-DO: Step-level alerts for validations */}</div>
 					<div className="multi-step-form-layout">
 						<nav className="multi-step-form-list-group">
+							<div className="step-nav-header">
+								<p className="step-nav-eyebrow">Application map</p>
+								<h2>Your workflow</h2>
+							</div>
 							<div className="progress list-group left">
 								{visibleSteps.map((step, index) => {
 									const isActive = index === activeStepIndex;
+									const isComplete = index < activeStepIndex;
 									const stepState = stepErrorMap.get(index);
 									const hasErrors = (stepState?.errorCount || 0) > 0;
 									const showValid = hasValidated && !hasErrors;
@@ -683,9 +705,10 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 										<button
 											key={step.Id ?? step.Name}
 											type="button"
-											className={`list-group-item${isActive ? " active" : ""}`}
+											className={`list-group-item${isActive ? " active" : ""}${isComplete ? " completed" : ""}`}
 											aria-current={isActive ? "step" : undefined}
 											onClick={() => goToStep(index)}>
+											<span className="step-number">{index + 1}</span>
 											<span className="step-title">
 												{step.Name ?? `Step ${index + 1}`}
 												{hasErrors && (
@@ -705,6 +728,13 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 							</div>
 						</nav>
 						<div className="steps-container">
+							<div className="step-content-header">
+								<p className="step-content-label">Now editing</p>
+								<h3>{activeStep?.Name ?? `Step ${activeStepIndex + 1}`}</h3>
+								<p>
+									Step {activeStepIndex + 1} of {visibleSteps.length}
+								</p>
+							</div>
 							{/* Render all steps but only show active one */}
 							{visibleSteps.map((step, index) => {
 								const isActive = index === activeStepIndex;

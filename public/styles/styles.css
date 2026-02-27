@@ -31967,3 +31967,241 @@ div.title p.dataNum {
 .table-entry-validation {
 	margin-bottom: 1rem;
 }
+
+/* ------------------------------ Experimental modern UI refresh ------------------------------ */
+.page-content {
+	min-height: 100vh;
+	background:
+		radial-gradient(circle at 15% 10%, rgba(126, 126, 252, 0.22), transparent 35%),
+		radial-gradient(circle at 85% 20%, rgba(31, 194, 209, 0.2), transparent 40%),
+		linear-gradient(180deg, #f4f7ff 0%, #eef3fb 40%, #f9fbff 100%);
+}
+
+.form-builder .banner {
+	background: linear-gradient(135deg, #0f172a 0%, #182e66 52%, #273a84 100%);
+	color: #ffffff;
+	border: 0;
+	box-shadow: 0 10px 30px rgba(16, 24, 40, 0.28);
+	padding: 2rem 0;
+	position: relative;
+	overflow: hidden;
+}
+
+.form-builder .banner::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(circle at 90% -10%, rgba(255, 255, 255, 0.26), transparent 42%);
+	pointer-events: none;
+}
+
+.form-builder .banner .banner-main-content {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 1.5rem 2rem;
+	align-items: end;
+}
+
+.form-builder .banner-kpis {
+	grid-column: 1 / -1;
+	display: flex;
+	gap: 0.85rem;
+	flex-wrap: wrap;
+}
+
+.form-builder .banner-kpi {
+	background: rgba(255, 255, 255, 0.14);
+	border: 1px solid rgba(255, 255, 255, 0.32);
+	border-radius: 0.85rem;
+	padding: 0.5rem 0.85rem;
+	display: flex;
+	align-items: baseline;
+	gap: 0.45rem;
+}
+
+.form-builder .banner-kpi-value {
+	font-weight: 700;
+	font-size: 1.05rem;
+}
+
+.form-builder .banner-kpi-label {
+	font-size: 0.82rem;
+	opacity: 0.92;
+}
+
+.form-builder .banner .banner-title h1 {
+	font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+	line-height: 1.2;
+	font-weight: 700;
+	margin: 0;
+}
+
+.form-builder .banner .banner-details {
+	color: rgba(255, 255, 255, 0.9);
+	max-width: 68ch;
+}
+
+.form-builder .banner .banner-actions-primary {
+	display: flex;
+	gap: 0.75rem;
+	justify-self: end;
+}
+
+.form-builder .banner .banner-actions-primary .btn {
+	border-radius: 999px;
+	padding-inline: 1.1rem;
+	font-weight: 600;
+	box-shadow: none;
+}
+
+.form-builder .banner.banner--sticky {
+	backdrop-filter: blur(14px);
+	background: rgba(18, 29, 66, 0.92);
+}
+
+.form-builder .body-content {
+	padding: 1.5rem 0 2.25rem;
+}
+
+.form-builder .multi-step-form-layout {
+	display: grid;
+	grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+	gap: 1.2rem;
+	align-items: start;
+}
+
+.form-builder .multi-step-form-list-group,
+.form-builder .steps-container {
+	border: 1px solid rgba(30, 63, 131, 0.14);
+	background: rgba(255, 255, 255, 0.94);
+	border-radius: 1rem;
+	box-shadow: 0 18px 40px rgba(31, 56, 102, 0.08);
+}
+
+.form-builder .multi-step-form-list-group {
+	padding: 1rem;
+	position: sticky;
+	top: 98px;
+}
+
+.form-builder .step-nav-header h2 {
+	margin: 0;
+	font-size: 1.15rem;
+}
+
+.form-builder .step-nav-eyebrow {
+	margin: 0 0 0.2rem;
+	text-transform: uppercase;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.07em;
+	color: #3555a4;
+}
+
+.form-builder .list-group.progress.left {
+	display: grid;
+	gap: 0.5rem;
+	margin-top: 0.95rem;
+}
+
+.form-builder .list-group.progress .list-group-item {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	border-radius: 0.85rem;
+	border: 1px solid #d6e0f2;
+	padding: 0.7rem 0.85rem;
+	font-weight: 600;
+	color: #203861;
+	transition: all 0.2s ease;
+}
+
+.form-builder .step-number {
+	width: 1.6rem;
+	height: 1.6rem;
+	border-radius: 999px;
+	background: #e8eef9;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8rem;
+	font-weight: 700;
+	flex-shrink: 0;
+}
+
+.form-builder .list-group.progress .list-group-item.completed .step-number {
+	background: #d8f4e8;
+	color: #176443;
+}
+
+.form-builder .list-group.progress .list-group-item.active {
+	background: #e8f0ff;
+	border-color: #7ea0ea;
+	transform: translateX(3px);
+}
+
+.form-builder .steps-container {
+	padding: 1.2rem 1.5rem;
+}
+
+.form-builder .step-content-header {
+	padding-bottom: 1rem;
+	margin-bottom: 1rem;
+	border-bottom: 1px solid #e5ebf7;
+}
+
+.form-builder .step-content-label {
+	text-transform: uppercase;
+	font-size: 0.72rem;
+	letter-spacing: 0.07em;
+	font-weight: 700;
+	color: #4c67a7;
+	margin: 0 0 0.2rem;
+}
+
+.form-builder .step-content-header h3 {
+	margin: 0;
+	font-size: 1.25rem;
+}
+
+.form-builder .step-content-header p {
+	margin: 0.3rem 0 0;
+	color: #4d618f;
+}
+
+.form-builder .step {
+	background: #ffffff;
+}
+
+.form-builder .form-subheading {
+	font-size: 1.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.form-builder .instructions {
+	background: #f5f8ff;
+	border: 1px solid #d8e3f8;
+	padding: 0.85rem 1rem;
+	border-radius: 0.75rem;
+}
+
+@media (max-width: 991px) {
+	.form-builder .multi-step-form-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.form-builder .multi-step-form-list-group {
+		position: static;
+	}
+
+	.form-builder .banner .banner-main-content {
+		grid-template-columns: 1fr;
+	}
+
+	.form-builder .banner .banner-actions-primary {
+		justify-self: start;
+		flex-wrap: wrap;
+	}
+}
