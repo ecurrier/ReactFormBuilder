@@ -45,6 +45,7 @@ interface TableEntryFormProps {
 	nodeId?: string;
 	onSave: (data: any) => void;
 	onCancel: () => void;
+	onValidate?: (args: { actions: FieldAction[]; entityName?: string; values: Record<string, any> }) => Array<{ message: string }>;
 }
 
 export const TableEntryForm: React.FC<TableEntryFormProps> = ({
@@ -56,8 +57,10 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({
 	nodeId,
 	onSave,
 	onCancel,
+	onValidate,
 }) => {
 	const [formData, setFormData] = useState<any>(initialData || {});
+	const [validationMessages, setValidationMessages] = useState<string[]>([]);
 	const metadataRef = React.useRef<Record<string, any>>({});
 	const recordId = initialData?.id;
 	const getFieldKey = React.useCallback((path: string) => {
@@ -161,6 +164,13 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({
 					}
 				: { ...cleanedFormData };
 
+		const validationResults =
+			onValidate?.({ actions: actionItems.map((item) => item.action), entityName: config.ChildEntityLogicalName, values: dataToSave }) ?? [];
+		if (validationResults.length > 0) {
+			setValidationMessages(validationResults.map((item) => item.message));
+			return;
+		}
+		setValidationMessages([]);
 		onSave(dataToSave);
 	};
 
@@ -182,6 +192,15 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({
 	return (
 		<form onSubmit={handleSubmit} className="table-entry-form">
 			<p className="control-label block text-right mb-4 required-legend">Required</p>
+			{validationMessages.length > 0 && (
+				<div className="alert alert-danger table-entry-validation" role="alert">
+					<ul className="validation-summary-list">
+						{validationMessages.map((message, index) => (
+							<li key={`table-entry-validation-${index}`}>{message}</li>
+						))}
+					</ul>
+				</div>
+			)}
 			<div className="form-fields">
 				<StepActions actionItems={actionItems} formState={localFormState} />
 			</div>

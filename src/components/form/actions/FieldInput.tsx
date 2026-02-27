@@ -130,11 +130,18 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 	}
 };
 
-type FieldInputProps = { action: any; formState: any; entityName?: string };
+type FieldInputProps = {
+	action: any;
+	formState: any;
+	entityName?: string;
+	getFieldIssues?: (fieldId: string) => Array<{ message: string; severity: "error" | "warning" }>;
+	onFieldChangeClearIssues?: (fieldId: string) => void;
+};
 
-export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entityName: stepEntityName }) => {
+export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entityName: stepEntityName, getFieldIssues, onFieldChangeClearIssues }) => {
 	const properties = action?.Properties ?? {};
 	const inputId = properties.LogicalName ?? action.Id ?? action.Name ?? "field-input";
+	const fieldAnchorId = `field-${inputId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 	const label = properties.Label ?? action.Name ?? properties.LogicalName;
 	const childFieldActions = Array.isArray(properties.ChildActions)
 		? properties.ChildActions.filter((child) => child.Type === ActionType.FieldInput).sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0))
@@ -153,6 +160,8 @@ export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entit
 
 	// Get field value from formState
 	const fieldValue = formState?.getFieldValue(fieldPath);
+	const issues = getFieldIssues?.(fieldPath) ?? [];
+	const errorIssues = issues.filter((issue) => issue.severity === "error");
 
 	useEffect(() => {
 		setHasBeenTouched(false);
@@ -205,6 +214,7 @@ export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entit
 			setRealtimeValidationMessage(nextMessage);
 
 			formState.updateFieldValue(fieldPath, newValue);
+			onFieldChangeClearIssues?.(fieldPath);
 		}
 	};
 
@@ -216,7 +226,14 @@ export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entit
 				{renderDescription(DescriptionType.ShowAboveField)}
 				<div className="child-action-group">
 					{childFieldActions.map((child) => (
-						<FieldInput key={child.Id ?? child.Name} action={child} formState={formState} entityName={entityName} />
+						<FieldInput
+							key={child.Id ?? child.Name}
+							action={child}
+							formState={formState}
+							entityName={entityName}
+							getFieldIssues={getFieldIssues}
+							onFieldChangeClearIssues={onFieldChangeClearIssues}
+						/>
 					))}
 				</div>
 				{renderDescription(DescriptionType.ShowBelowField)}
@@ -231,6 +248,9 @@ export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entit
 	if (properties.IsReadOnly) {
 		fieldClassNames.push("readonly");
 	}
+	if ((hasBeenTouched && realtimeValidationMessage) || errorIssues.length > 0) {
+		fieldClassNames.push("has-error");
+	}
 
 	const labelClassNames = ["control-label"];
 	if (properties.IsRequired) {
@@ -241,7 +261,7 @@ export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entit
 	const isYesNo = properties.DataType === DataType.YesNo;
 
 	return (
-		<div className={fieldClassNames.join(" ")}>
+		<div className={fieldClassNames.join(" ")} id={fieldAnchorId}>
 			{renderDescription(DescriptionType.ShowAboveLabel)}
 			{isYesNo ? (
 				// For radio buttons, use legend instead of label
@@ -269,11 +289,11 @@ export const FieldInput: React.FC<FieldInputProps> = ({ action, formState, entit
 					{realtimeValidationMessage}
 				</span>
 			) : null}
-			{properties.ValidationMessage ? (
-				<span className="help-block text-danger" role="alert">
-					{properties.ValidationMessage}
+			{errorIssues.map((issue, index) => (
+				<span key={`${fieldPath}-issue-${index}`} className="help-block text-danger" role="alert">
+					{issue.message}
 				</span>
-			) : null}
+			))}
 		</div>
 	);
 };

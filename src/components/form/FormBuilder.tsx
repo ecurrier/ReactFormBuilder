@@ -3,8 +3,9 @@ import Step from "@components/form/Step";
 import { ActionType } from "@constants/enums";
 import { useFormState } from "@hooks/useFormState";
 import { populateFieldsFromData } from "@services/dataLoader";
-import { executeSave, executeValidateAndSubmit, reloadFormData } from "@services/saveOrchestrator";
+import { executeSave, reloadFormData } from "@services/saveOrchestrator";
 import { applyConditions } from "@services/conditions";
+import { createValidationSelectors, validateApplication, validateFieldRules, type ValidationIssue } from "@services/validation";
 import LoadingIndicator from "@components/common/LoadingIndicator";
 import { ProgressBar } from "@components/common";
 import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
@@ -42,6 +43,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	// Track which steps have been visited for lazy loading
 	const [visitedSteps, setVisitedSteps] = useState(new Set([0]));
 	const [isSaving, setIsSaving] = useState(false);
+	const [isValidating, setIsValidating] = useState(false);
+	const [hasValidated, setHasValidated] = useState(false);
+	const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>([]);
 	const [saveProgress, setSaveProgress] = useState<SaveProgressEvent[]>([]);
 	const [saveErrors, setSaveErrors] = useState<SaveError[]>([]);
 	const [savePhase, setSavePhase] = useState("idle");
@@ -92,6 +96,46 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 			},
 		};
 	}, [conditionedSteps, config]);
+
+	const validationSelectors = React.useMemo(() => createValidationSelectors(validationIssues), [validationIssues]);
+
+	const focusValidationIssue = React.useCallback((issue: { fieldId?: string; anchorId?: string } | undefined) => {
+		if (!issue) {
+			return;
+		}
+
+		const fieldAnchor = issue.fieldId
+			? `field-${issue.fieldId
+					.split(".")
+					.slice(-1)[0]
+					.replace(/[^a-zA-Z0-9_-]/g, "-")}`
+			: undefined;
+		const targetId = fieldAnchor || issue.anchorId;
+		if (!targetId) {
+			return;
+		}
+		const target = document.getElementById(targetId);
+		if (!target) {
+			return;
+		}
+		target.scrollIntoView({ behavior: "smooth", block: "center" });
+		const focusable = target.querySelector<HTMLElement>("input,select,textarea,button,[tabindex]") || (target as HTMLElement);
+		focusable?.focus?.();
+	}, []);
+
+	const clearIssuesForField = React.useCallback((fieldId: string) => {
+		setValidationIssues((prev) => prev.filter((issue) => issue.fieldId !== fieldId));
+	}, []);
+
+	const validateTableEntryForm = React.useCallback((args: { actions: any[]; entityName?: string; values: Record<string, any> }) => {
+		const virtualState = {
+			primaryEntityName: args.entityName || "",
+			getFieldValue: (path: string) => args.values?.[path.split(".").pop() || path],
+		};
+		const virtualStep = { Id: "table-entry", Name: "table-entry", EntityLogicalName: args.entityName, Actions: args.actions };
+		const issues = validateFieldRules({ steps: [virtualStep], formState: virtualState });
+		return issues.filter((issue) => issue.severity === "error").map((issue) => ({ message: issue.message }));
+	}, []);
 
 	const visibleSteps = useMemo(
 		() =>
@@ -443,31 +487,17 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	};
 
 	const stepErrorMap = React.useMemo(() => {
-		const errorEntities = new Set(saveErrors.map((error) => error?.entityName).filter(Boolean));
-
-		if (errorEntities.size === 0) {
-			return new Set();
-		}
-
-		const indices = new Set();
-
+		const map = new Map<number, { errorCount: number; hasIssues: boolean }>();
 		visibleSteps.forEach((step, index) => {
-			if (step.EntityLogicalName && errorEntities.has(step.EntityLogicalName)) {
-				indices.add(index);
-				return;
-			}
-
-			step.Actions?.forEach((action) => {
-				if (action.Type === ActionType.TableEntry && action.Properties?.ChildEntityLogicalName) {
-					if (errorEntities.has(action.Properties.ChildEntityLogicalName)) {
-						indices.add(index);
-					}
-				}
+			const stepId = step.Id ?? step.Name;
+			const stepIssues = validationSelectors.getIssuesForStep(stepId);
+			map.set(index, {
+				errorCount: stepIssues.filter((issue) => issue.severity === "error").length,
+				hasIssues: stepIssues.length > 0,
 			});
 		});
-
-		return indices;
-	}, [saveErrors, visibleSteps]);
+		return map;
+	}, [validationSelectors, visibleSteps]);
 
 	const clampIndex = (index) => {
 		if (visibleSteps.length === 0) {
@@ -484,22 +514,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		setActiveStepIndex(clampedIndex);
 		// Mark step as visited for lazy loading
 		setVisitedSteps((prev) => new Set([...prev, clampedIndex]));
-	};
-
-	const goToPrevious = () => {
-		setActiveStepIndex((prev) => {
-			const newIndex = clampIndex(prev - 1);
-			setVisitedSteps((prevVisited) => new Set([...prevVisited, newIndex]));
-			return newIndex;
-		});
-	};
-
-	const goToNext = () => {
-		setActiveStepIndex((prev) => {
-			const newIndex = clampIndex(prev + 1);
-			setVisitedSteps((prevVisited) => new Set([...prevVisited, newIndex]));
-			return newIndex;
-		});
 	};
 
 	const hasPrevious = activeStepIndex > 0;
@@ -552,48 +566,33 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	};
 
 	const handleValidateAndSubmit = async () => {
-		// Capture the save tree before any state changes
-		const currentSaveTree = formState.getSaveTree?.() || null;
-		setCapturedSaveTree(currentSaveTree);
-		setIsSaving(true);
-		setSaveProgress(buildInitialSaveProgress());
-		setSaveErrors([]);
-		setSavePhase("saving");
-		setShowSaveOverlay(true);
-
+		setIsValidating(true);
+		setHasValidated(true);
 		try {
-			const result = await executeValidateAndSubmit({
-				formState,
-				config: runtimeConfig,
-				urlParams,
-				onProgress: handleSaveProgress,
-			});
+			const issues = await validateApplication({ steps: visibleSteps, formState, config: runtimeConfig });
+			setValidationIssues(issues);
+			const blockingIssues = issues.filter((issue) => issue.severity === "error");
 
-			if (result.recordId) {
-				updateUrlAfterSave(result.recordId);
-			}
-
-			if (result.success) {
-				setSaveErrors([]);
-
-				// Reload form data after submission (plugins or other processes may have modified data)
-				if (result.recordId) {
-					const reloadedData = await reloadFormData({ formState, config: runtimeConfig, urlParams }, result.recordId);
-					if (reloadedData) {
-						const fieldData = populateFieldsFromData(reloadedData, primaryEntity, runtimeConfig);
-						formState.initializeFormData(fieldData);
-					}
+			if (blockingIssues.length > 0) {
+				const currentStepId = visibleSteps[activeStepIndex]?.Id ?? visibleSteps[activeStepIndex]?.Name;
+				const currentStepIssues = blockingIssues.filter((issue) => issue.stepId === currentStepId);
+				if (currentStepIssues.length > 0) {
+					focusValidationIssue(currentStepIssues[0]);
+					return;
 				}
-			} else {
-				setSaveErrors(result.errors || []);
+
+				const firstIssue = blockingIssues[0];
+				const firstIssueStepIndex = visibleSteps.findIndex((step) => (step.Id ?? step.Name) === firstIssue.stepId);
+				if (firstIssueStepIndex >= 0) {
+					goToStep(firstIssueStepIndex);
+					setTimeout(() => focusValidationIssue(firstIssue), 0);
+				}
+				return;
 			}
-		} catch (error) {
-			console.error("Validate and submit error:", error);
-			const message = error instanceof Error ? error.message : "An error occurred during submission";
-			setSaveErrors([{ message, phase: "save" }]);
+
+			await handleSave();
 		} finally {
-			setIsSaving(false);
-			setSavePhase("summary");
+			setIsValidating(false);
 		}
 	};
 
@@ -659,8 +658,8 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 								disabled={isSaving || (!formState.hasChanges && !formState.hasPendingUploads)}>
 								{isSaving ? "Saving..." : "Save Draft"}
 							</button>
-							<button type="button" className="btn btn-primary" onClick={handleValidateAndSubmit} disabled={isSaving}>
-								{isSaving ? "Submitting..." : "Validate & Submit"}
+							<button type="button" className="btn btn-primary" onClick={handleValidateAndSubmit} disabled={isSaving || isValidating}>
+								{isValidating ? "Validating..." : isSaving ? "Submitting..." : "Validate & Submit"}
 							</button>
 						</div>
 					</div>
@@ -675,7 +674,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 							<div className="progress list-group left">
 								{visibleSteps.map((step, index) => {
 									const isActive = index === activeStepIndex;
-									const hasErrors = stepErrorMap.has(index);
+									const stepState = stepErrorMap.get(index);
+									const hasErrors = (stepState?.errorCount || 0) > 0;
+									const showValid = hasValidated && !hasErrors;
 									return (
 										<button
 											key={step.Id ?? step.Name}
@@ -686,38 +687,19 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 											<span className="step-title">
 												{step.Name ?? `Step ${index + 1}`}
 												{hasErrors && (
-													<span style={{ marginLeft: "6px", color: "#c0392b", fontWeight: 700 }} aria-label="Step has errors">
+													<span className="step-status step-status--error" aria-label="Step has errors">
 														●
+													</span>
+												)}
+												{showValid && (
+													<span className="step-status step-status--valid" aria-label="Step valid">
+														✓
 													</span>
 												)}
 											</span>
 										</button>
 									);
 								})}
-							</div>
-							<div className="step-nav-controls">
-								<button
-									type="button"
-									className="nav-button nav-button--previous"
-									onClick={goToPrevious}
-									disabled={!hasPrevious || isSaving}
-									aria-label="Previous step">
-									<span className="nav-button__icon" aria-hidden="true">
-										←
-									</span>
-									<span className="sr-only">Previous</span>
-								</button>
-								<button
-									type="button"
-									className="nav-button nav-button--next"
-									onClick={goToNext}
-									disabled={!hasNext || isSaving}
-									aria-label="Next step">
-									<span className="nav-button__icon" aria-hidden="true">
-										→
-									</span>
-									<span className="sr-only">Next</span>
-								</button>
 							</div>
 						</nav>
 						<div className="steps-container">
@@ -736,6 +718,11 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 										recordId={primaryRecordId}
 										formState={formState}
 										urlParams={urlParams}
+										stepIssues={validationSelectors.getIssuesForStep(step.Id ?? step.Name)}
+										onIssueSelect={focusValidationIssue}
+										getFieldIssues={validationSelectors.getFieldIssues}
+										onFieldChangeClearIssues={clearIssuesForField}
+										onValidateTableEntryForm={validateTableEntryForm}
 									/>
 								);
 							})}
