@@ -378,11 +378,6 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 				<h3 className="h3 file-upload-heading">
 					<span dangerouslySetInnerHTML={{ __html: config.Description }} />
 					{requiresDocumentUpload && <span className="required-indicator">*</span>}
-					{validationHint && (
-						<span className="ml-2" title={validationHint}>
-							<Badge type="info" content={validationHint} />
-						</span>
-					)}
 				</h3>
 			)}
 			{alertState && (
