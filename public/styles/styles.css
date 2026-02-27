@@ -31967,3 +31967,244 @@ div.title p.dataNum {
 .table-entry-validation {
 	margin-bottom: 1rem;
 }
+
+/* ------------------------------ EXPERIMENTAL NEO LAYOUT ------------------------------ */
+.page-content {
+	min-height: 100vh;
+	background:
+		radial-gradient(circle at 8% 12%, rgba(0, 71, 113, 0.24) 0, transparent 34%),
+		radial-gradient(circle at 88% 0%, rgba(255, 156, 56, 0.2) 0, transparent 30%),
+		linear-gradient(180deg, #f2f7ff 0%, #f7f3ff 48%, #f7fafc 100%);
+	padding-bottom: 48px;
+}
+
+.neo-form-builder-shell {
+	padding-top: 24px;
+}
+
+.neo-hero {
+	background: rgba(12, 24, 56, 0.86);
+	backdrop-filter: blur(16px);
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	border-radius: 28px;
+	box-shadow: 0 20px 45px rgba(10, 23, 55, 0.28);
+	margin: 0 auto;
+	max-width: 1320px;
+}
+
+.neo-hero__container {
+	display: grid;
+	grid-template-columns: 1.4fr 1fr;
+	gap: 24px;
+	padding: 28px;
+}
+
+.neo-kicker {
+	font-size: 12px;
+	letter-spacing: 0.24em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.68);
+	margin-bottom: 10px;
+}
+
+.neo-hero .banner-title h1,
+.neo-hero .banner-details,
+.neo-hero .banner-details p {
+	color: #fff;
+}
+
+.neo-status-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+	margin-bottom: 14px;
+}
+
+.neo-status-grid > div {
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 14px;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.neo-status-grid span {
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.68);
+}
+
+.neo-status-grid strong {
+	font-size: 21px;
+	color: #fff;
+}
+
+.neo-actions-dock {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+}
+
+.neo-layout-grid {
+	display: grid;
+	grid-template-columns: 320px 1fr;
+	gap: 24px;
+	align-items: start;
+}
+
+.neo-step-rail {
+	position: sticky;
+	top: 20px;
+	align-self: start;
+	background: rgba(255, 255, 255, 0.84);
+	border: 1px solid rgba(18, 42, 92, 0.14);
+	border-radius: 24px;
+	box-shadow: 0 14px 28px rgba(15, 38, 81, 0.13);
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.neo-step-rail__list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.neo-step-pill {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	border-radius: 14px;
+	border: 1px solid rgba(0, 71, 113, 0.14);
+	padding: 10px 12px;
+	font-weight: 600;
+	background: #fff;
+	transition: all 0.2s ease;
+}
+
+.neo-step-pill__index {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	border-radius: 999px;
+	background: #eaf4ff;
+	color: #004771;
+	font-size: 12px;
+}
+
+.neo-step-pill.active {
+	background: linear-gradient(120deg, #004771, #5b5bdc);
+	color: #fff;
+}
+
+.neo-step-pill.active .neo-step-pill__index {
+	background: rgba(255, 255, 255, 0.2);
+	color: #fff;
+}
+
+.neo-rail-nav {
+	width: 100%;
+	border-radius: 12px;
+}
+
+.neo-steps-canvas {
+	background: rgba(255, 255, 255, 0.84);
+	border: 1px solid rgba(20, 56, 109, 0.12);
+	border-radius: 24px;
+	padding: 26px;
+	box-shadow: 0 15px 32px rgba(20, 56, 109, 0.11);
+}
+
+.neo-step-stage__position {
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.15em;
+	color: #4f5e75;
+	margin-bottom: 4px;
+}
+
+.neo-required-legend {
+	color: #44566f;
+}
+
+.neo-table-entry__surface {
+	background: #fff;
+	border: 1px solid #d8e3f3;
+	border-radius: 18px;
+	padding: 14px;
+}
+
+.neo-table-entry__toolbar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.neo-table-entry__toolbar-note {
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.09em;
+	margin: 0;
+	color: #607084;
+}
+
+.neo-table-entry__grid thead th {
+	background: #f2f7ff;
+	border-bottom: 1px solid #cddcf1;
+}
+
+.save-mission-control {
+	text-align: left;
+	max-width: 700px;
+	margin: 16px auto 0;
+	padding: 22px;
+	border-radius: 20px;
+	background: #fff;
+	border: 1px solid #d5e0f0;
+	box-shadow: 0 20px 40px rgba(8, 26, 58, 0.16);
+}
+
+.save-mission-control__kicker {
+	margin-bottom: 4px;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: #5d6f8b;
+}
+
+.save-mission-control__label {
+	margin-top: 8px;
+	margin-bottom: 0;
+	text-align: center;
+}
+
+.save-mission-control__details {
+	margin-top: 16px;
+}
+
+.save-mission-control__actions {
+	margin-top: 16px;
+	text-align: center;
+}
+
+@media (max-width: 1024px) {
+	.neo-layout-grid,
+	.neo-hero__container {
+		grid-template-columns: 1fr;
+	}
+
+	.neo-step-rail {
+		position: static;
+	}
+
+	.neo-actions-dock {
+		justify-content: flex-start;
+		flex-wrap: wrap;
+	}
+}

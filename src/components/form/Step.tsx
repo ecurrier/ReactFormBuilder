@@ -177,11 +177,14 @@ const Step: React.FC<StepProps> = ({
 	};
 
 	return (
-		<div className="step" style={{ display: isActive ? "block" : "none" }}>
-			<h2 className="form-subheading">{step.Name ?? entityName}</h2>
+		<section className="step neo-step-stage" style={{ display: isActive ? "block" : "none" }}>
+			<div className="neo-step-stage__header">
+				<p className="neo-step-stage__position">{positionLabel || "Current stage"}</p>
+				<h2 className="form-subheading">{step.Name ?? entityName}</h2>
+			</div>
 			{step.Description && <div className="instructions" dangerouslySetInnerHTML={{ __html: step.Description }} />}
-			<p className="control-label block text-right mb-4 required-legend">Required</p>
-			<div className="multi-step-form-main-content">
+			<p className="control-label block text-right mb-4 required-legend neo-required-legend">Required fields are marked</p>
+			<div className="multi-step-form-main-content neo-step-stage__content">
 				<div className="step-validation-summary">
 					{stepIssues.length > 0 && (
 						<div className="alert alert-danger validation-summary-inline" role="alert">
@@ -209,7 +212,7 @@ const Step: React.FC<StepProps> = ({
 					/>
 				</div>
 			</div>
-		</div>
+		</section>
 	);
 };
 

@@ -520,6 +520,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 	const hasPrevious = activeStepIndex > 0;
 	const hasNext = activeStepIndex < visibleSteps.length - 1;
+	const completionPercent = visibleSteps.length > 0 ? Math.round(((activeStepIndex + 1) / visibleSteps.length) * 100) : 0;
 	// Save handlers
 	const handleSave = async () => {
 		// Capture the save tree before any state changes
@@ -607,20 +608,24 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	}
 
 	return (
-		<div className="form-builder">
+		<div className="form-builder neo-form-builder-shell">
 			<LoadingIndicator
 				visible={showSaveOverlay}
 				variant="full-screen"
 				message={savePhase === "summary" ? "Save complete" : "Saving records..."}
 				showSpinner={savePhase !== "summary"}>
-				<div style={{ textAlign: "left", maxWidth: "640px", margin: "16px auto 0" }}>
-					<div style={{ textAlign: "center" }}>
-						<ProgressBar value={saveProgressTotals.percent} variant={saveProgressVariant} label={saveProgressLabel} />
-						<p style={{ marginTop: "8px", marginBottom: 0 }}>{saveProgressLabel}</p>
+				<div className="save-mission-control">
+					<div className="save-mission-control__header">
+						<p className="save-mission-control__kicker">Save Mission Control</p>
+						<h3>{savePhase === "summary" ? "Save run complete" : "Persisting your workspace"}</h3>
 					</div>
-					<details style={{ marginTop: "16px" }}>
+					<div>
+						<ProgressBar value={saveProgressTotals.percent} variant={saveProgressVariant} label={saveProgressLabel} />
+						<p className="save-mission-control__label">{saveProgressLabel}</p>
+					</div>
+					<details className="save-mission-control__details">
 						<summary>See Advanced Details...</summary>
-						<div style={{ marginTop: "10px" }}>
+						<div>
 							{saveDetailsTree.length > 0 ? (
 								renderSaveDetails(saveDetailsTree)
 							) : saveErrors.length > 0 ? (
@@ -635,7 +640,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 						</div>
 					</details>
 					{savePhase === "summary" && (
-						<div style={{ marginTop: "16px", textAlign: "center" }}>
+						<div className="save-mission-control__actions">
 							<button type="button" className="btn btn-primary" onClick={handleCloseSaveOverlay}>
 								Close
 							</button>
@@ -643,16 +648,35 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 					)}
 				</div>
 			</LoadingIndicator>
-			<div className={`banner${isBannerSticky ? " banner--sticky" : ""}`}>
-				<div className="container">
-					<div className="banner-main-content">
+			<div className={`banner neo-hero${isBannerSticky ? " banner--sticky" : ""}`}>
+				<div className="container neo-hero__container">
+					<div className="neo-hero__left">
+						<p className="neo-kicker">Experimental Workspace</p>
 						<div className="banner-title">
-							<h1>{config?.FundingOpportunity.FullName}</h1>
+							<h1>{config?.FundingOpportunity.FullName || "Application Studio"}</h1>
 						</div>
 						<div className="banner-details">
 							<p dangerouslySetInnerHTML={{ __html: config?.Form?.Introduction ?? "" }} />
 						</div>
-						<div className="banner-actions-primary">
+					</div>
+					<div className="neo-hero__right">
+						<div className="neo-status-grid">
+							<div>
+								<span>Step</span>
+								<strong>
+									{activeStepIndex + 1}/{visibleSteps.length}
+								</strong>
+							</div>
+							<div>
+								<span>Completion</span>
+								<strong>{completionPercent}%</strong>
+							</div>
+							<div>
+								<span>Pending uploads</span>
+								<strong>{formState.hasPendingUploads ? "Yes" : "No"}</strong>
+							</div>
+						</div>
+						<div className="banner-actions-primary neo-actions-dock">
 							<button
 								type="button"
 								className="btn btn-default"
@@ -668,12 +692,12 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				</div>
 			</div>
 			<div className="banner-sentinel" ref={bannerSentinelRef} aria-hidden="true" />
-			<div className="body-content">
+			<div className="body-content neo-body-content">
 				<div className="container">
 					<div className="alert-container">{/* TO-DO: Step-level alerts for validations */}</div>
-					<div className="multi-step-form-layout">
-						<nav className="multi-step-form-list-group">
-							<div className="progress list-group left">
+					<div className="multi-step-form-layout neo-layout-grid">
+						<nav className="multi-step-form-list-group neo-step-rail">
+							<div className="progress list-group left neo-step-rail__list">
 								{visibleSteps.map((step, index) => {
 									const isActive = index === activeStepIndex;
 									const stepState = stepErrorMap.get(index);
@@ -683,9 +707,10 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 										<button
 											key={step.Id ?? step.Name}
 											type="button"
-											className={`list-group-item${isActive ? " active" : ""}`}
+											className={`list-group-item neo-step-pill${isActive ? " active" : ""}`}
 											aria-current={isActive ? "step" : undefined}
 											onClick={() => goToStep(index)}>
+											<span className="neo-step-pill__index">{index + 1}</span>
 											<span className="step-title">
 												{step.Name ?? `Step ${index + 1}`}
 												{hasErrors && (
@@ -703,8 +728,18 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 									);
 								})}
 							</div>
+							{hasPrevious && (
+								<button type="button" className="btn btn-default neo-rail-nav" onClick={() => goToStep(activeStepIndex - 1)}>
+									↑ Previous step
+								</button>
+							)}
+							{hasNext && (
+								<button type="button" className="btn btn-default neo-rail-nav" onClick={() => goToStep(activeStepIndex + 1)}>
+									↓ Next step
+								</button>
+							)}
 						</nav>
-						<div className="steps-container">
+						<div className="steps-container neo-steps-canvas">
 							{/* Render all steps but only show active one */}
 							{visibleSteps.map((step, index) => {
 								const isActive = index === activeStepIndex;

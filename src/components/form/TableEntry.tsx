@@ -124,13 +124,13 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 	};
 
 	return (
-		<>
+		<section className="neo-table-entry">
 			{label && (
-				<h3 className="info form-subgrid-heading">
+				<h3 className="info form-subgrid-heading neo-table-entry__title">
 					<label className="h3">{label}</label>
 				</h3>
 			)}
-			<div className="contextual-loading-container" style={{ minHeight: "250px" }}>
+			<div className="contextual-loading-container neo-table-entry__surface" style={{ minHeight: "250px" }}>
 				<LoadingIndicator visible={loading} variant="contextual" message={loadingMessage} />
 
 				{error && (
@@ -140,7 +140,8 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 				)}
 
 				{createAction && (
-					<div className="pull-right toolbar-actions mb-2">
+					<div className="pull-right toolbar-actions mb-2 neo-table-entry__toolbar">
+						<p className="neo-table-entry__toolbar-note">Live dataset</p>
 						<div className="input-group pull-left">
 							<button type="button" className="btn btn-primary" onClick={createAction.onClick}>
 								{createAction.label}
@@ -149,7 +150,7 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 					</div>
 				)}
 
-				<table role="grid" className={`table table-fluid table-header-bg table-hover ${className || ""}`.trim()}>
+				<table role="grid" className={`table table-fluid table-header-bg table-hover neo-table-entry__grid ${className || ""}`.trim()}>
 					{caption && <caption className="sr-only">{caption}</caption>}
 					<thead>
 						<tr>
@@ -213,7 +214,7 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 					/>
 				)}
 			</div>
-		</>
+		</section>
 	);
 });
 
