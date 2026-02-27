@@ -2,8 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import StepActions from "@components/form/StepActions";
 import { ActionType } from "@constants/enums";
 import { createRecord, deleteRecord, retrieveMultipleRecords, updateRecord } from "@/services/api/Api";
-import { buildFetchXmlForChildRecords } from "@utilities/fetchXml";
-import { resolvePrimaryIdAttribute } from "@utilities/metadata";
+import { buildFetchXmlForChildRecords, resolvePrimaryIdAttribute } from "@utilities";
 import type { ReactFormStep } from "@app-types";
 
 type StepIssue = { fieldId?: string; anchorId?: string; message: string; severity: "error" | "warning" };
