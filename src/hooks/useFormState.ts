@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useMemo } from "react";
+import { useReducer, useCallback, useMemo, useRef } from "react";
 import type { Entity } from "@app-types/Entity";
 import type {
 	EntityChanges,
@@ -6,6 +6,7 @@ import type {
 	FieldValue,
 	FormState,
 	FormStateAction,
+	FormStateAPI,
 	FormStateNode,
 	FormStateTreeNode,
 	RelatedRecordInfo,
@@ -430,7 +431,7 @@ const formStateReducer = (state: FormState, action: FormStateAction): FormState 
  * // Submit changes via API...
  * ```
  */
-export const useFormState = (primaryEntityName: string, recordId: string | null = null) => {
+export const useFormState = (primaryEntityName: string, recordId: string | null = null): FormStateAPI => {
 	const rootNodeId = useMemo(() => generateTempId(), []);
 	const [state, dispatch] = useReducer(formStateReducer, undefined, () => buildInitialFormState({ primaryEntityName, recordId, rootNodeId }));
 
@@ -897,9 +898,16 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 	/**
 	 * Gets all dirty field paths.
 	 */
+	const dirtyFieldsRef = useRef<{ key: string; fields: string[] }>({ key: "", fields: [] });
 	const dirtyFields = useMemo(() => {
 		const fieldEntries = Object.entries(state.fields) as Array<[string, FieldValue]>;
-		return fieldEntries.filter(([, field]) => field.isDirty).map(([path]) => path);
+		const dirtyPaths = fieldEntries.filter(([, field]) => field.isDirty).map(([path]) => path);
+		const key = dirtyPaths.join("\0");
+		if (key === dirtyFieldsRef.current.key) {
+			return dirtyFieldsRef.current.fields;
+		}
+		dirtyFieldsRef.current = { key, fields: dirtyPaths };
+		return dirtyPaths;
 	}, [state.fields]);
 
 	/**
@@ -946,63 +954,116 @@ export const useFormState = (primaryEntityName: string, recordId: string | null 
 		return buildTree(state.rootNodeId);
 	}, [state.nodesById, state.rootNodeId]);
 
-	return {
-		type: "main",
-		// State
-		recordId: state.recordId,
-		primaryEntityName: state.primaryEntityName,
-		formInstanceId: state.formInstanceId,
-		userFormSessionId: state.userFormSessionId,
-		relatedRecords: state.relatedRecords,
-		childRecords: state.childRecords,
-		rootNodeId: state.rootNodeId,
-		nodesById: state.nodesById,
-		entityNodeIds: state.entityNodeIds,
-		hasChanges,
-		hasPendingChildren,
-		hasPendingDocumentUploads,
-		hasPendingUploads,
-		dirtyFields,
+	return useMemo<FormStateAPI>(
+		() => ({
+			type: "main" as const,
+			// State
+			recordId: state.recordId,
+			primaryEntityName: state.primaryEntityName,
+			formInstanceId: state.formInstanceId,
+			userFormSessionId: state.userFormSessionId,
+			relatedRecords: state.relatedRecords,
+			childRecords: state.childRecords,
+			rootNodeId: state.rootNodeId,
+			nodesById: state.nodesById,
+			entityNodeIds: state.entityNodeIds,
+			metadata: state.metadata,
+			hasChanges,
+			hasPendingChildren,
+			hasPendingDocumentUploads,
+			hasPendingUploads,
+			dirtyFields,
 
-		// Actions
-		registerField,
-		updateFieldValue,
-		setRecordId,
-		setFormInstanceId,
-		setUserFormSessionId,
-		resetDirty,
-		resetForm,
-		initializeFormData,
-		setRelatedRecord,
-		getRelatedRecord,
-		clearRelatedRecords,
-		setChildRecords,
-		upsertChildRecord,
-		clearChildRecords,
-		getChildRecords,
+			// Actions
+			registerField,
+			updateFieldValue,
+			setRecordId,
+			setFormInstanceId,
+			setUserFormSessionId,
+			resetDirty,
+			resetForm,
+			initializeFormData,
+			setRelatedRecord,
+			getRelatedRecord,
+			clearRelatedRecords,
+			setChildRecords,
+			upsertChildRecord,
+			clearChildRecords,
+			getChildRecords,
 
-		// Tree operations
-		upsertChildNode,
-		updateNodeData,
-		updateNodeRecordId,
-		resetNodeData,
-		deleteNode,
-		getChildNodes,
-		ensureEntityNode,
-		getNodeById,
-		getEntityNode,
-		findNodeByRecordId,
+			// Tree operations
+			upsertChildNode,
+			updateNodeData,
+			updateNodeRecordId,
+			resetNodeData,
+			deleteNode,
+			getChildNodes,
+			ensureEntityNode,
+			getNodeById,
+			getEntityNode,
+			findNodeByRecordId,
 
-		// Upload operations
-		addUploadNode,
-		getUploadNodes,
+			// Upload operations
+			addUploadNode,
+			getUploadNodes,
 
-		// Getters
-		getFieldValue,
-		getFieldMetadata,
-		isFieldDirty,
-		getChangedData,
-		serializeForSubmission,
-		getSaveTree,
-	};
+			// Getters
+			getFieldValue,
+			getFieldMetadata,
+			isFieldDirty,
+			getChangedData,
+			serializeForSubmission,
+			getSaveTree,
+		}),
+		[
+			state.recordId,
+			state.primaryEntityName,
+			state.formInstanceId,
+			state.userFormSessionId,
+			state.relatedRecords,
+			state.childRecords,
+			state.rootNodeId,
+			state.nodesById,
+			state.entityNodeIds,
+			state.metadata,
+			hasChanges,
+			hasPendingChildren,
+			hasPendingDocumentUploads,
+			hasPendingUploads,
+			dirtyFields,
+			registerField,
+			updateFieldValue,
+			setRecordId,
+			setFormInstanceId,
+			setUserFormSessionId,
+			resetDirty,
+			resetForm,
+			initializeFormData,
+			setRelatedRecord,
+			getRelatedRecord,
+			clearRelatedRecords,
+			setChildRecords,
+			upsertChildRecord,
+			clearChildRecords,
+			getChildRecords,
+			upsertChildNode,
+			updateNodeData,
+			updateNodeRecordId,
+			resetNodeData,
+			deleteNode,
+			getChildNodes,
+			ensureEntityNode,
+			getNodeById,
+			getEntityNode,
+			findNodeByRecordId,
+			addUploadNode,
+			getUploadNodes,
+			getFieldValue,
+			getFieldMetadata,
+			isFieldDirty,
+			getChangedData,
+			serializeForSubmission,
+			getSaveTree,
+		]
+	);
 };

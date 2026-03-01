@@ -69,6 +69,110 @@ export interface EntityChanges {
 }
 
 /**
+ * Return type of the useFormState() hook.
+ * Provides the full API for managing form state including field registration,
+ * value tracking, dirty tracking, tree operations, and serialization.
+ */
+export interface FormStateAPI {
+	type: "main";
+
+	// State
+	recordId: string | null;
+	primaryEntityName: string;
+	formInstanceId: string | null;
+	userFormSessionId: string | null;
+	relatedRecords: Record<string, RelatedRecordInfo>;
+	childRecords: Record<string, Record<string, Entity>>;
+	rootNodeId: string;
+	nodesById: Record<string, FormStateNode>;
+	entityNodeIds: Record<string, string>;
+	metadata: Record<string, FieldMetadata>;
+	hasChanges: boolean;
+	hasPendingChildren: boolean;
+	hasPendingDocumentUploads: boolean;
+	hasPendingUploads: boolean;
+	dirtyFields: string[];
+
+	// Actions
+	registerField: (path: string, metadata: FieldMetadata, initialValue?: any) => void;
+	updateFieldValue: (path: string, value: any) => void;
+	setRecordId: (recordId: string | null) => void;
+	setFormInstanceId: (formInstanceId: string | null) => void;
+	setUserFormSessionId: (userFormSessionId: string | null) => void;
+	resetDirty: (paths?: string[]) => void;
+	resetForm: () => void;
+	initializeFormData: (fieldData: Map<string, any>) => void;
+	setRelatedRecord: (entityName: string, recordId: string, referencingAttribute?: string, referencingNavigationProperty?: string) => void;
+	getRelatedRecord: (entityName: string) => RelatedRecordInfo | undefined;
+	clearRelatedRecords: (entityName?: string) => void;
+	setChildRecords: (entityName: string, records: Entity[]) => void;
+	upsertChildRecord: (entityName: string, record: Entity) => void;
+	clearChildRecords: (entityName?: string) => void;
+	getChildRecords: (entityName: string) => Entity[];
+
+	// Tree operations
+	upsertChildNode: (args: {
+		parentEntityName: string;
+		childEntityName: string;
+		data: Partial<Entity>;
+		recordId?: string;
+		referencingAttribute: string;
+		referencingNavigationProperty?: string;
+		isPersisted?: boolean;
+	}) => string;
+	updateNodeData: (nodeId: string, data: Partial<Entity>) => void;
+	updateNodeRecordId: (nodeId: string, recordId: string | null, isPersisted?: boolean) => void;
+	resetNodeData: (nodeId: string) => void;
+	deleteNode: (nodeId: string) => void;
+	getChildNodes: (entityName: string) => FormStateNode[];
+	ensureEntityNode: (entityName: string) => FormStateNode | undefined;
+	getNodeById: (nodeId: string) => FormStateNode | undefined;
+	getEntityNode: (entityName: string) => FormStateNode | undefined;
+	findNodeByRecordId: (entityName: string, recordId?: string | null) => FormStateNode | undefined;
+
+	// Upload operations
+	addUploadNode: (args: { parentNodeId: string; entityName: string; folderName: string; file: File; uploadDate: string; childRecordId?: string }) => string;
+	getUploadNodes: (args: { parentNodeId?: string; entityName?: string; folderName?: string }) => FormStateNode[];
+
+	// Getters
+	getFieldValue: (path: string) => any;
+	getFieldMetadata: (path: string) => FieldMetadata | undefined;
+	isFieldDirty: (path: string) => boolean;
+	getChangedData: () => EntityChanges[];
+	serializeForSubmission: () => EntityChanges[];
+	getSaveTree: () => FormStateTreeNode | null;
+}
+
+/**
+ * Local form state for TableEntryForm child forms.
+ * A subset of FormStateAPI with table-entry-specific context.
+ */
+export interface TableEntryFormState {
+	type: "tableEntry";
+	nodeId?: string;
+	recordId?: string;
+	primaryEntityName: string;
+	parentEntityName?: string;
+	parentRecordId?: string;
+	registerField: (path: string, metadata: FieldMetadata, initialValue?: any) => void;
+	updateFieldValue: (path: string, value: any) => void;
+	getFieldValue: (path: string) => any;
+	getFieldMetadata: (path: string) => FieldMetadata | undefined;
+	addUploadNode?: FormStateAPI["addUploadNode"];
+	getUploadNodes?: FormStateAPI["getUploadNodes"];
+	deleteNode?: FormStateAPI["deleteNode"];
+	getNodeById?: FormStateAPI["getNodeById"];
+	findNodeByRecordId?: FormStateAPI["findNodeByRecordId"];
+	getEntityNode?: FormStateAPI["getEntityNode"];
+}
+
+/**
+ * Discriminated union of all form state variants.
+ * Use when a component can receive either the main or table-entry form state.
+ */
+export type AnyFormState = FormStateAPI | TableEntryFormState;
+
+/**
  * Actions for form state reducer.
  */
 export type FormStateAction =

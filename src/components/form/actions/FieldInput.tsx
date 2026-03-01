@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ActionType, DataType, DescriptionType } from "@constants/enums";
 import { ChoiceInput, CurrencyInput, DateTimeInput, LookupControl, MultiLineTextInput, NumberInput, SingleLineTextInput, YesNoInput } from "@components";
 import { getRealtimeValidationResult } from "@services/validation";
+import type { AnyFormState } from "@app-types";
 
 const formatDescription = (description) => {
 	if (!description) {
@@ -132,7 +133,7 @@ const renderInput = (properties, inputId, placeholder, value, onChange, label) =
 
 type FieldInputProps = {
 	action: any;
-	formState: any;
+	formState: AnyFormState;
 	entityName?: string;
 	getFieldIssues?: (fieldId: string) => Array<{ message: string; severity: "error" | "warning" }>;
 	onFieldChangeClearIssues?: (fieldId: string) => void;

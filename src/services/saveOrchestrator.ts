@@ -2,6 +2,7 @@ import type {
 	Entity,
 	EntityReference,
 	FieldMetadata,
+	FormStateAPI,
 	FormStateTreeNode,
 	UploadNodeData,
 	ReactConfigurationIdentifierMetadata,
@@ -32,7 +33,7 @@ import {
 import { ConfigurationIdentifiers } from "@/constants/configurationIdentifiers";
 
 export interface SaveContext {
-	formState: any;
+	formState: FormStateAPI;
 	config: ReactFormConfiguration;
 	urlParams: any;
 	onProgress?: (event: SaveProgressEvent) => void;
@@ -194,7 +195,7 @@ const saveUploadNode = async ({
 	node: FormStateTreeNode;
 	parentNode: FormStateTreeNode | null;
 	onProgress: SaveContext["onProgress"];
-	formState: any;
+	formState: FormStateAPI;
 }): Promise<SaveError[]> => {
 	const uploadData = node.data as UploadNodeData;
 	const parentId = parentNode?.recordId;
@@ -258,7 +259,7 @@ const saveEntityNode = async ({
 }: {
 	node: FormStateTreeNode;
 	parentNode: FormStateTreeNode | null;
-	formState: any;
+	formState: FormStateAPI;
 	primaryEntity?: string;
 	stepReferenceByEntity: Map<string, { navigationProperty?: string; referencingAttribute?: string }>;
 	config: ReactFormConfiguration;
@@ -396,14 +397,12 @@ const saveEntityNode = async ({
 
 const ensureFormInstanceAndSession = async ({
 	formState,
-	config,
 	urlParams,
 	primaryEntity,
 	primaryRecordId,
 	recordIdsByEntity,
 }: {
-	formState: any;
-	config: ReactFormConfiguration;
+	formState: FormStateAPI;
 	urlParams: any;
 	primaryEntity?: string;
 	primaryRecordId: string | null;
@@ -573,7 +572,6 @@ export async function executeSave(context: SaveContext): Promise<SaveResult> {
 			try {
 				await ensureFormInstanceAndSession({
 					formState,
-					config,
 					urlParams: context.urlParams,
 					primaryEntity,
 					primaryRecordId,

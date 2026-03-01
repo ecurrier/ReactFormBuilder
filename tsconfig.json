@@ -17,6 +17,7 @@
       "@utilities/*": ["src/utilities/*"],
       "@utilities": ["src/utilities/index.ts"],
       "@hooks/*": ["src/hooks/*"],
+      "@hooks": ["src/hooks/index.ts"],
       "@constants/*": ["src/constants/*"],
       "@services/*": ["src/services/*"],
       "@services": ["src/services/index.ts"],

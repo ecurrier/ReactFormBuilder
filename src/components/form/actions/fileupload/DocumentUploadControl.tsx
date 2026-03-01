@@ -3,10 +3,11 @@ import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuI
 import { retrieveEygaConfiguration, isTempId, type DocumentMetadata } from "@utilities";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord, getSASUrlForDocument } from "@services/documentService";
 import { AZURE_LATENCY_DELAY_MS, BYTES_IN_MB } from "@/constants";
+import type { AnyFormState } from "@app-types";
 
 export interface DocumentUploadControlProps {
 	config: DocumentUploadControlConfig;
-	formState?: any;
+	formState?: AnyFormState;
 	entityName?: string;
 }
 

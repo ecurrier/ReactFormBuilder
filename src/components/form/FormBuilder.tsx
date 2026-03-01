@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Step, LoadingIndicator, ProgressBar } from "@components";
 import { ActionType } from "@constants/enums";
-import { useFormState } from "@hooks/useFormState";
+import { useFormState, FormStateContext } from "@hooks";
 import {
 	populateFieldsFromData,
 	executeSave,
@@ -81,7 +81,7 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				formState.updateFieldValue(path, value);
 			}
 		});
-	}, [conditionRuntime.fieldUpdates, formState]);
+	}, [conditionRuntime.fieldUpdates, formState.getFieldValue, formState.updateFieldValue]);
 
 	const conditionedSteps = conditionRuntime.steps;
 
@@ -607,132 +607,133 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	}
 
 	return (
-		<div className="form-builder">
-			<LoadingIndicator
-				visible={showSaveOverlay}
-				variant="full-screen"
-				message={savePhase === "summary" ? "Save complete" : "Saving records..."}
-				showSpinner={savePhase !== "summary"}>
-				<div style={{ textAlign: "left", maxWidth: "640px", margin: "16px auto 0" }}>
-					<div style={{ textAlign: "center" }}>
-						<ProgressBar value={saveProgressTotals.percent} variant={saveProgressVariant} label={saveProgressLabel} />
-						<p style={{ marginTop: "8px", marginBottom: 0 }}>{saveProgressLabel}</p>
+		<FormStateContext.Provider value={formState}>
+			<div className="form-builder">
+				<LoadingIndicator
+					visible={showSaveOverlay}
+					variant="full-screen"
+					message={savePhase === "summary" ? "Save complete" : "Saving records..."}
+					showSpinner={savePhase !== "summary"}>
+					<div style={{ textAlign: "left", maxWidth: "640px", margin: "16px auto 0" }}>
+						<div style={{ textAlign: "center" }}>
+							<ProgressBar value={saveProgressTotals.percent} variant={saveProgressVariant} label={saveProgressLabel} />
+							<p style={{ marginTop: "8px", marginBottom: 0 }}>{saveProgressLabel}</p>
+						</div>
+						<details style={{ marginTop: "16px" }}>
+							<summary>See Advanced Details...</summary>
+							<div style={{ marginTop: "10px" }}>
+								{saveDetailsTree.length > 0 ? (
+									renderSaveDetails(saveDetailsTree)
+								) : saveErrors.length > 0 ? (
+									<ul className="list-unstyled" style={{ marginTop: "8px" }}>
+										{saveErrors.map((error, index) => (
+											<li key={`save-error-${index}`}>{error.message}</li>
+										))}
+									</ul>
+								) : (
+									<p>Nothing to see here</p>
+								)}
+							</div>
+						</details>
+						{savePhase === "summary" && (
+							<div style={{ marginTop: "16px", textAlign: "center" }}>
+								<button type="button" className="btn btn-primary" onClick={handleCloseSaveOverlay}>
+									Close
+								</button>
+							</div>
+						)}
 					</div>
-					<details style={{ marginTop: "16px" }}>
-						<summary>See Advanced Details...</summary>
-						<div style={{ marginTop: "10px" }}>
-							{saveDetailsTree.length > 0 ? (
-								renderSaveDetails(saveDetailsTree)
-							) : saveErrors.length > 0 ? (
-								<ul className="list-unstyled" style={{ marginTop: "8px" }}>
-									{saveErrors.map((error, index) => (
-										<li key={`save-error-${index}`}>{error.message}</li>
-									))}
-								</ul>
-							) : (
-								<p>Nothing to see here</p>
-							)}
-						</div>
-					</details>
-					{savePhase === "summary" && (
-						<div style={{ marginTop: "16px", textAlign: "center" }}>
-							<button type="button" className="btn btn-primary" onClick={handleCloseSaveOverlay}>
-								Close
-							</button>
-						</div>
-					)}
-				</div>
-			</LoadingIndicator>
-			<div className={`banner${isBannerSticky ? " banner--sticky" : ""}`}>
-				<div className="container">
-					<div className="banner-main-content">
-						<div className="banner-title">
-							<h1>{config?.FundingOpportunity.FullName}</h1>
-						</div>
-						<div className="banner-details">
-							<p dangerouslySetInnerHTML={{ __html: config?.Form?.Introduction ?? "" }} />
-						</div>
-						<div className="banner-actions-primary">
-							<button
-								type="button"
-								className="btn btn-default"
-								onClick={handleSave}
-								disabled={isSaving || (!formState.hasChanges && !formState.hasPendingUploads)}>
-								{isSaving ? "Saving..." : "Save Draft"}
-							</button>
-							<button type="button" className="btn btn-primary" onClick={handleValidateAndSubmit} disabled={isSaving || isValidating}>
-								{isValidating ? "Validating..." : isSaving ? "Submitting..." : "Validate & Submit"}
-							</button>
+				</LoadingIndicator>
+				<div className={`banner${isBannerSticky ? " banner--sticky" : ""}`}>
+					<div className="container">
+						<div className="banner-main-content">
+							<div className="banner-title">
+								<h1>{config?.FundingOpportunity.FullName}</h1>
+							</div>
+							<div className="banner-details">
+								<p dangerouslySetInnerHTML={{ __html: config?.Form?.Introduction ?? "" }} />
+							</div>
+							<div className="banner-actions-primary">
+								<button
+									type="button"
+									className="btn btn-default"
+									onClick={handleSave}
+									disabled={isSaving || (!formState.hasChanges && !formState.hasPendingUploads)}>
+									{isSaving ? "Saving..." : "Save Draft"}
+								</button>
+								<button type="button" className="btn btn-primary" onClick={handleValidateAndSubmit} disabled={isSaving || isValidating}>
+									{isValidating ? "Validating..." : isSaving ? "Submitting..." : "Validate & Submit"}
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
-			<div className="banner-sentinel" ref={bannerSentinelRef} aria-hidden="true" />
-			<div className="body-content">
-				<div className="container">
-					<div className="alert-container">{/* TO-DO: Step-level alerts for validations */}</div>
-					<div className="multi-step-form-layout">
-						<nav className="multi-step-form-list-group">
-							<div className="progress list-group left">
+				<div className="banner-sentinel" ref={bannerSentinelRef} aria-hidden="true" />
+				<div className="body-content">
+					<div className="container">
+						<div className="alert-container">{/* TO-DO: Step-level alerts for validations */}</div>
+						<div className="multi-step-form-layout">
+							<nav className="multi-step-form-list-group">
+								<div className="progress list-group left">
+									{visibleSteps.map((step, index) => {
+										const isActive = index === activeStepIndex;
+										const stepState = stepErrorMap.get(index);
+										const hasErrors = (stepState?.errorCount || 0) > 0;
+										const showValid = hasValidated && !hasErrors;
+										return (
+											<button
+												key={step.Id ?? step.Name}
+												type="button"
+												className={`list-group-item${isActive ? " active" : ""}`}
+												aria-current={isActive ? "step" : undefined}
+												onClick={() => goToStep(index)}>
+												<span className="step-title">
+													{step.Name ?? `Step ${index + 1}`}
+													{hasErrors && (
+														<span className="step-status step-status--error" aria-label="Step has errors">
+															●
+														</span>
+													)}
+													{showValid && (
+														<span className="step-status step-status--valid" aria-label="Step valid">
+															✓
+														</span>
+													)}
+												</span>
+											</button>
+										);
+									})}
+								</div>
+							</nav>
+							<div className="steps-container">
+								{/* Render all steps but only show active one */}
 								{visibleSteps.map((step, index) => {
 									const isActive = index === activeStepIndex;
-									const stepState = stepErrorMap.get(index);
-									const hasErrors = (stepState?.errorCount || 0) > 0;
-									const showValid = hasValidated && !hasErrors;
+									const hasBeenVisited = visitedSteps.has(index);
+
 									return (
-										<button
+										<Step
 											key={step.Id ?? step.Name}
-											type="button"
-											className={`list-group-item${isActive ? " active" : ""}`}
-											aria-current={isActive ? "step" : undefined}
-											onClick={() => goToStep(index)}>
-											<span className="step-title">
-												{step.Name ?? `Step ${index + 1}`}
-												{hasErrors && (
-													<span className="step-status step-status--error" aria-label="Step has errors">
-														●
-													</span>
-												)}
-												{showValid && (
-													<span className="step-status step-status--valid" aria-label="Step valid">
-														✓
-													</span>
-												)}
-											</span>
-										</button>
+											step={step}
+											isActive={isActive}
+											hasBeenVisited={hasBeenVisited}
+											positionLabel={`Step ${index + 1} of ${visibleSteps.length}`}
+											recordId={primaryRecordId}
+											urlParams={urlParams}
+											stepIssues={validationSelectors.getIssuesForStep(step.Id ?? step.Name)}
+											onIssueSelect={focusValidationIssue}
+											getFieldIssues={validationSelectors.getFieldIssues}
+											onFieldChangeClearIssues={clearIssuesForField}
+											onValidateTableEntryForm={validateTableEntryForm}
+										/>
 									);
 								})}
 							</div>
-						</nav>
-						<div className="steps-container">
-							{/* Render all steps but only show active one */}
-							{visibleSteps.map((step, index) => {
-								const isActive = index === activeStepIndex;
-								const hasBeenVisited = visitedSteps.has(index);
-
-								return (
-									<Step
-										key={step.Id ?? step.Name}
-										step={step}
-										isActive={isActive}
-										hasBeenVisited={hasBeenVisited}
-										positionLabel={`Step ${index + 1} of ${visibleSteps.length}`}
-										recordId={primaryRecordId}
-										formState={formState}
-										urlParams={urlParams}
-										stepIssues={validationSelectors.getIssuesForStep(step.Id ?? step.Name)}
-										onIssueSelect={focusValidationIssue}
-										getFieldIssues={validationSelectors.getFieldIssues}
-										onFieldChangeClearIssues={clearIssuesForField}
-										onValidateTableEntryForm={validateTableEntryForm}
-									/>
-								);
-							})}
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</FormStateContext.Provider>
 	);
 };
 

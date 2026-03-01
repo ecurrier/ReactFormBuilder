@@ -1,11 +1,11 @@
 import React from "react";
 import { FieldInput, TableEntryAction, DocumentUploadControl } from "@components";
 import { ActionType } from "@constants/enums";
-import type { ReactActionConfiguration } from "@app-types";
+import type { ReactActionConfiguration, AnyFormState } from "@app-types";
 
 type StepActionsProps = {
 	actionItems?: Array<{ action: ReactActionConfiguration; entityName?: string }>;
-	formState: any;
+	formState: AnyFormState;
 	getFieldIssues?: (fieldId: string) => Array<{ message: string; severity: "error" | "warning" }>;
 	onFieldChangeClearIssues?: (fieldId: string) => void;
 	onValidateTableEntryForm?: (args: { actions: ReactActionConfiguration[]; entityName?: string; values: Record<string, any> }) => Array<{ message: string }>;
@@ -78,7 +78,6 @@ const StepActions: React.FC<StepActionsProps> = ({
 								shouldLoadData={tableEntryOptions?.shouldLoadData}
 								parentRecordId={tableEntryOptions?.parentRecordId}
 								parentEntityName={tableEntryOptions?.parentEntityName}
-								formState={formState}
 								onSave={tableEntryOptions?.onSave}
 								onDelete={tableEntryOptions?.onDelete}
 								onValidateTableEntryForm={onValidateTableEntryForm}

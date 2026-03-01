@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import StepActions from "@components/form/StepActions";
 import { ActionType } from "@constants/enums";
 import { applyConditions } from "@services/conditions";
+import type { FormStateAPI, TableEntryFormState } from "@app-types";
 
 interface FieldAction {
 	Id: string;
@@ -41,7 +42,7 @@ interface TableEntryFormProps {
 	initialData: any | null;
 	parentRecordId?: string;
 	parentEntityName?: string;
-	parentFormState?: any;
+	parentFormState?: FormStateAPI;
 	nodeId?: string;
 	onSave: (data: any) => void;
 	onCancel: () => void;
@@ -100,9 +101,9 @@ export const TableEntryForm: React.FC<TableEntryFormProps> = ({
 		[formData, getFieldKey]
 	);
 
-	const localFormState = React.useMemo(
+	const localFormState: TableEntryFormState = React.useMemo(
 		() => ({
-			type: "tableEntry",
+			type: "tableEntry" as const,
 			nodeId,
 			recordId,
 			primaryEntityName: config.ChildEntityLogicalName,

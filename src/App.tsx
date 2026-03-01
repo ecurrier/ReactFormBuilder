@@ -5,7 +5,6 @@ import {
 	loadRecordData,
 	resolveFormVersion,
 	resolveFormVersionFromExistingVersion,
-	resolveLatestActiveVersionForForm,
 	retrieveOrCreateFormInstanceForLatestVersion,
 	retrieveFormInstance,
 	retrieveUserFormSessions,
@@ -14,13 +13,12 @@ import {
 import {
 	isPowerPlatformFormBuild,
 	isPowerPlatformVersionBuild,
-	resolveEmbeddedFormIdForCreate,
 	resolveEmbeddedRecordId,
 	resolveEmbeddedRecordLogicalName,
 	resolveEmbeddedVersionFormContent,
 	resolveEmbeddedVersionId,
+	resolveRequestorId,
 } from "@utilities";
-import { resolveRequestorId } from "@utilities/session";
 
 interface ConfirmationModalState {
 	isOpen: boolean;
@@ -41,7 +39,6 @@ const App = () => {
 	const [isFormConfigurationLoading, setIsFormConfigurationLoading] = useState(true);
 	const [isRecordDataLoading, setIsRecordDataLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState("");
-	const [isDebugData, setIsDebugData] = useState(false);
 	const [modalState, setModalState] = useState<ConfirmationModalState>({
 		isOpen: false,
 		title: "",
@@ -102,7 +99,6 @@ const App = () => {
 
 	const handleDebugMode = () => {
 		setConfig(formConfig);
-		setIsDebugData(true);
 		setUrlParams({
 			recordId: null,
 			versionId: null,
@@ -271,7 +267,6 @@ const App = () => {
 		setRecordDataByEntity({});
 		setIsFormConfigurationLoading(false);
 		setIsRecordDataLoading(false);
-		setIsDebugData(false);
 	};
 
 	const applyExistingRecordState = async (formInstance, recordId: string, recordLogicalName: string, persistVersionIdToUrl = true) => {
@@ -292,7 +287,6 @@ const App = () => {
 		setRecordData(primaryData);
 		setRecordDataByEntity(secondaryDataMap);
 		setIsRecordDataLoading(false);
-		setIsDebugData(false);
 
 		await ensureUserFormSession(formInstance.Id);
 	};
@@ -309,7 +303,6 @@ const App = () => {
 			versionId: embeddedVersionId,
 			recordLogicalName: null,
 		});
-		setIsDebugData(false);
 		setIsFormConfigurationLoading(false);
 		setIsRecordDataLoading(false);
 	};

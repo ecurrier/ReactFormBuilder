@@ -3,6 +3,7 @@ import StepActions from "@components/form/StepActions";
 import { ActionType } from "@constants/enums";
 import { createRecord, deleteRecord, retrieveMultipleRecords, updateRecord } from "@/services/api/Api";
 import { buildFetchXmlForChildRecords, resolvePrimaryIdAttribute } from "@utilities";
+import { useFormStateContext } from "@hooks/useFormStateContext";
 import type { ReactFormStep } from "@app-types";
 
 type StepIssue = { fieldId?: string; anchorId?: string; message: string; severity: "error" | "warning" };
@@ -19,7 +20,6 @@ type StepProps = {
 	hasBeenVisited: boolean;
 	positionLabel?: string;
 	recordId?: string;
-	formState: any;
 	urlParams?: Record<string, string | undefined>;
 };
 
@@ -29,7 +29,6 @@ const Step: React.FC<StepProps> = ({
 	hasBeenVisited,
 	positionLabel,
 	recordId,
-	formState,
 	urlParams,
 	stepIssues = [] as StepIssue[],
 	onIssueSelect,
@@ -37,6 +36,8 @@ const Step: React.FC<StepProps> = ({
 	onFieldChangeClearIssues,
 	onValidateTableEntryForm,
 }) => {
+	const formState = useFormStateContext();
+
 	// Memoize sorted actions to prevent infinite loops
 	const actions = useMemo(() => {
 		return Array.isArray(step.Actions) ? [...step.Actions].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0)) : [];

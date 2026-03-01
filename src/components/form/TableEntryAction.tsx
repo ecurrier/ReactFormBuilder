@@ -5,6 +5,7 @@ import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu"
 import { ActionType, DataType, DateTimeFormat } from "@constants/enums";
 import { retrieveRecord } from "@/services/api/Api";
 import { buildFetchXmlForRecord, resolvePrimaryIdAttribute, generateTempId, isTempId } from "@utilities";
+import { useFormStateContext } from "@hooks/useFormStateContext";
 import { formatDateOnlyDisplay, formatDateTimeDisplayParts, normalizeDateTimeFormat } from "@utilities/dateTimeDisplay";
 
 const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -47,7 +48,6 @@ export interface TableEntryActionProps {
 	config: TableEntryActionConfig;
 	parentRecordId?: string;
 	parentEntityName?: string;
-	formState?: any;
 	fetchData: (sort?: TableSortState, pagination?: PaginationOptions) => Promise<TableDataResponse<any>>;
 	shouldLoadData?: boolean;
 	onSave?: (entityName: string, data: any, recordId?: string, referencingAttribute?: string, referencingNavigationProperty?: string | null) => Promise<void>;
@@ -236,13 +236,13 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	config,
 	parentRecordId,
 	parentEntityName,
-	formState,
 	fetchData,
 	shouldLoadData = true,
 	onDelete,
 	onValidateTableEntryForm,
 	className,
 }) => {
+	const formState = useFormStateContext();
 	const [sidepaneOpen, setSidepaneOpen] = useState(false);
 	const [editingRecord, setEditingRecord] = useState<any | null>(null);
 	const [isLoadingRecord, setIsLoadingRecord] = useState(false);
