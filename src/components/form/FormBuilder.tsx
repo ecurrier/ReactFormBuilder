@@ -518,8 +518,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 		setVisitedSteps((prev) => new Set([...prev, clampedIndex]));
 	};
 
-	const hasPrevious = activeStepIndex > 0;
-	const hasNext = activeStepIndex < visibleSteps.length - 1;
 	// Save handlers
 	const handleSave = async () => {
 		// Capture the save tree before any state changes
@@ -659,10 +657,10 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 									className="btn btn-default"
 									onClick={handleSave}
 									disabled={isSaving || (!formState.hasChanges && !formState.hasPendingUploads)}>
-									{isSaving ? "Saving..." : "Save Draft"}
+									{isSaving ? "Saving..." : "Save Unsaved Changes"}
 								</button>
 								<button type="button" className="btn btn-primary" onClick={handleValidateAndSubmit} disabled={isSaving || isValidating}>
-									{isValidating ? "Validating..." : isSaving ? "Submitting..." : "Validate & Submit"}
+									{isValidating ? "Validating..." : isSaving ? "Submitting..." : "Submit"}
 								</button>
 							</div>
 						</div>

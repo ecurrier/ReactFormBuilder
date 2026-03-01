@@ -7,4 +7,4 @@ export { default as ProgressBar } from "./ProgressBar";
 export { default as Sidepane } from "./Sidepane";
 export { default as Alert } from "./Alert";
 export { default as Badge } from "./Badge";
-export { default as FormConfigSkeleton } from "./FormConfigSkeleton";
+export * from "./layout";

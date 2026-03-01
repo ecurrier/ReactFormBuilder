@@ -1,8 +1,8 @@
 import React from "react";
-import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuItem, Badge } from "@components";
+import { Alert, ConfirmationModal, LoadingIndicator, DropdownMenu, DropdownMenuItem, Badge, UploadIcon } from "@components";
 import { retrieveEygaConfiguration, isTempId, type DocumentMetadata } from "@utilities";
 import { deleteDocument, downloadDocument, retrieveDocuments, uploadDocumentForRecord, getSASUrlForDocument } from "@services/documentService";
-import { AZURE_LATENCY_DELAY_MS, BYTES_IN_MB } from "@/constants";
+import { AZURE_LATENCY_DELAY_MS, BYTES_IN_MB, DocumentValidationType } from "@/constants";
 import type { AnyFormState } from "@app-types";
 
 export interface DocumentUploadControlProps {
@@ -47,7 +47,9 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 	const [isUploading, setIsUploading] = React.useState(false);
 	const [isDeleting, setIsDeleting] = React.useState(false);
 	const [deleteTarget, setDeleteTarget] = React.useState<DeleteTarget | null>(null);
+	const [isDragOver, setIsDragOver] = React.useState(false);
 	const inputRef = React.useRef<HTMLInputElement | null>(null);
+	const dragCounterRef = React.useRef(0);
 
 	const primaryEntityName = formState?.primaryEntityName;
 	const resolvedEntityName = entityName || primaryEntityName || "";
@@ -211,6 +213,39 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 		void handleFilesSelected(files);
 	};
 
+	const handleDragEnter = (event: React.DragEvent) => {
+		event.preventDefault();
+		event.stopPropagation();
+		dragCounterRef.current += 1;
+		if (event.dataTransfer.types.includes("Files")) {
+			setIsDragOver(true);
+		}
+	};
+
+	const handleDragOver = (event: React.DragEvent) => {
+		event.preventDefault();
+		event.stopPropagation();
+	};
+
+	const handleDragLeave = (event: React.DragEvent) => {
+		event.preventDefault();
+		event.stopPropagation();
+		dragCounterRef.current -= 1;
+		if (dragCounterRef.current === 0) {
+			setIsDragOver(false);
+		}
+	};
+
+	const handleDrop = (event: React.DragEvent) => {
+		event.preventDefault();
+		event.stopPropagation();
+		dragCounterRef.current = 0;
+		setIsDragOver(false);
+
+		const files = event.dataTransfer.files ? (Array.from(event.dataTransfer.files) as File[]) : [];
+		void handleFilesSelected(files);
+	};
+
 	const handleDeleteRequest = (target: DeleteTarget) => {
 		if (target.type === "persisted" && target.restrictDelete) {
 			setAlertState({ type: "warning", message: "You do not have permission to delete this file." });
@@ -313,6 +348,14 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 		return actions;
 	};
 
+	const isRequired = config.ValidationType === DocumentValidationType.OneFileOnly || config.ValidationType === DocumentValidationType.AtLeastOneFile;
+	const requirementLabel =
+		config.ValidationType === DocumentValidationType.OneFileOnly
+			? "One file required"
+			: config.ValidationType === DocumentValidationType.AtLeastOneFile
+				? "At least one file required"
+				: null;
+
 	const busyMessage = isUploading ? "Uploading files..." : isDeleting ? "Deleting file..." : "Loading files...";
 	const rows = [
 		...pendingUploads.map((upload) => ({
@@ -348,9 +391,43 @@ export const DocumentUploadControl: React.FC<DocumentUploadControlProps> = ({ co
 					multiple
 					onChange={handleInputChange}
 				/>
-				<button type="button" className="btn btn-default" aria-required="true" onClick={() => inputRef.current?.click()} disabled={isUploading}>
-					Choose File
-				</button>
+				<div
+					className={`file-upload-dropzone${isDragOver ? " file-upload-dropzone--drag-over" : ""}${isUploading ? " file-upload-dropzone--disabled" : ""}`}
+					onDragEnter={handleDragEnter}
+					onDragOver={handleDragOver}
+					onDragLeave={handleDragLeave}
+					onDrop={isUploading ? undefined : handleDrop}
+					onClick={() => !isUploading && inputRef.current?.click()}
+					role="button"
+					tabIndex={0}
+					onKeyDown={(e: React.KeyboardEvent) => {
+						if (e.key === "Enter" || e.key === " ") {
+							e.preventDefault();
+							inputRef.current?.click();
+						}
+					}}
+					aria-label="Upload files by dragging and dropping or clicking to browse">
+					<div className="file-upload-dropzone__icon">
+						<UploadIcon />
+					</div>
+					<p className="file-upload-dropzone__text">
+						<strong>Drag & drop files here</strong> or <span className="file-upload-dropzone__browse">browse</span>
+					</p>
+					{normalizedAllowedTypes && (
+						<p className="file-upload-dropzone__hint">
+							Accepted: {normalizedAllowedTypes.join(", ")}
+							{maxFileSizeMB ? ` (max ${maxFileSizeMB} MB)` : ""}
+						</p>
+					)}
+					{isRequired && requirementLabel && (
+						<p className="file-upload-dropzone__requirement">
+							<span className="file-upload-dropzone__requirement-marker" aria-hidden="true">
+								*
+							</span>
+							{requirementLabel}
+						</p>
+					)}
+				</div>
 			</div>
 			<div className="file-upload-table contextual-loading-container mt-3" style={{ minHeight: "250px" }}>
 				<LoadingIndicator visible={isLoading || isUploading || isDeleting} variant="contextual" message={busyMessage} />
