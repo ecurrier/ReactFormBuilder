@@ -245,18 +245,16 @@ export const LookupControl = ({
 						</div>
 					)}
 				</div>
-				<span className="input-group-btn">
+				<div className="btn-group">
 					<button type="button" className="btn btn-default" onClick={handleOpenAdvanced} disabled={isReadOnly}>
 						<span className="glyphicon glyphicon-search" aria-hidden="true"></span>
 					</button>
-				</span>
-				{value?.id && !isReadOnly && (
-					<span className="input-group-btn">
+					{value?.id && !isReadOnly && (
 						<button type="button" className="btn btn-default" onClick={handleClear} title="Remove value">
 							<span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
 						</button>
-					</span>
-				)}
+					)}
+				</div>
 			</div>
 
 			<LookupAdvancedSearchModal

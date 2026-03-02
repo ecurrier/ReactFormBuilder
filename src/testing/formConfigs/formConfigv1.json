@@ -419,6 +419,7 @@
 							"CreateEnabled": true,
 							"EditEnabled": true,
 							"DeleteEnabled": true,
+							"InlineEditEnabled": true,
 							"ValidationType": 643260000,
 							"ReferencingAttribute": "eyfrcc_childapplication",
 							"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
@@ -1388,6 +1389,7 @@
 							"EditEnabled": true,
 							"DeleteEnabled": true,
 							"ValidationType": 643260001,
+							"InlineEditEnabled": true,
 							"ReferencingAttribute": "eyfrcc_childsecondaryreport",
 							"ReferencingNavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_standardform425",
 							"ChildFormSteps": [
