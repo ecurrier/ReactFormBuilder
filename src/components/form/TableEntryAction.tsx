@@ -1,12 +1,13 @@
 import React, { useState, useRef } from "react";
 import TableEntry, { TableColumn, TableDataResponse, PaginationOptions, TableSortState } from "@components/form/TableEntry";
-import { TableEntryForm, LoadingIndicator, Sidepane, ConfirmationModal, Badge } from "@components";
+import { TableEntryForm, LoadingIndicator, Sidepane, ConfirmationModal, Badge, InlineFieldInput } from "@components";
 import DropdownMenu, { DropdownMenuItem } from "@components/common/DropdownMenu";
 import { ActionType, DataType, DateTimeFormat } from "@constants/enums";
 import { retrieveRecord } from "@/services/api/Api";
 import { buildFetchXmlForRecord, resolvePrimaryIdAttribute, generateTempId, isTempId } from "@utilities";
 import { useFormStateContext } from "@hooks/useFormStateContext";
 import { formatDateOnlyDisplay, formatDateTimeDisplayParts, normalizeDateTimeFormat } from "@utilities/dateTimeDisplay";
+import { useInlineGridState } from "@hooks/useInlineGridState";
 
 const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -37,6 +38,7 @@ interface TableEntryActionConfig {
 	CreateEnabled: boolean;
 	EditEnabled: boolean;
 	DeleteEnabled: boolean;
+	InlineEditEnabled: boolean;
 	ValidationType?: number;
 	ReferencingAttribute: string;
 	ReferencingNavigationProperty?: string;
@@ -252,6 +254,15 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 	const tableRef = useRef<any>(null);
 	const getChildNodes = formState?.getChildNodes;
 
+	// Inline grid editing state
+	const inlineGrid = useInlineGridState(config.ChildEntityLogicalName);
+
+	// Collect FieldInput action properties from ChildViewSteps for inline editing
+	const viewStepActions = React.useMemo(() => {
+		if (!config.ChildViewSteps || config.ChildViewSteps.length === 0) return [];
+		return config.ChildViewSteps[0].Actions.filter((a) => a.Type === ActionType.FieldInput);
+	}, [config.ChildViewSteps]);
+
 	const lookupFieldInfo = React.useMemo(() => {
 		const viewStep = config.ChildViewSteps?.[0];
 		return collectLookupFieldInfo(viewStep ? [viewStep] : []);
@@ -324,8 +335,41 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 					cols.push({
 						key: action.Properties.LogicalName,
 						label: action.Properties.Label,
-						sortEnabled: true,
+						sortEnabled: !inlineGrid.isEditMode,
+						cellClassName: inlineGrid.isEditMode
+							? (row) => {
+									const rowId = resolveRecordId(row, config.ChildEntityLogicalName) || "";
+									const isDirtyCell = inlineGrid.isDirty(rowId, action.Properties.LogicalName);
+									const hasError = Boolean(inlineGrid.getValidationError(rowId, action.Properties.LogicalName));
+									return [isDirtyCell && "dirty-cell", hasError && "has-error"].filter(Boolean).join(" ");
+								}
+							: undefined,
 						render: (row) => {
+							const rowId = resolveRecordId(row, config.ChildEntityLogicalName) || "";
+
+							// Inline edit mode: render input controls
+							if (inlineGrid.isEditMode) {
+								const cellValue = inlineGrid.getCellValue(rowId, action.Properties.LogicalName);
+								const validationError = inlineGrid.getValidationError(rowId, action.Properties.LogicalName);
+
+								return (
+									<div className="inline-edit-cell">
+										<InlineFieldInput
+											inputId={`inline-${rowId}-${action.Properties.LogicalName}`}
+											properties={action.Properties}
+											value={cellValue}
+											onChange={(newValue) => inlineGrid.updateCell(rowId, action.Properties.LogicalName, newValue)}
+										/>
+										{validationError && (
+											<span className="inline-cell-error" role="alert">
+												{validationError}
+											</span>
+										)}
+									</div>
+								);
+							}
+
+							// Read-only mode: existing display logic
 							const isPending = row._isPending;
 							const isDateTimeField = action.Properties?.DataType === DataType.DateTime;
 							const content = isDateTimeField
@@ -357,16 +401,14 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			});
 		}
 
-		// Add actions column
-		if (config.EditEnabled || config.DeleteEnabled) {
+		// Add actions column (hide in inline edit mode)
+		if ((config.EditEnabled || config.DeleteEnabled) && !inlineGrid.isEditMode) {
 			cols.push({
 				key: "_actions",
 				label: "Actions",
 				sortEnabled: false,
 				width: "8%",
 				render: (row) => {
-					const rowId = resolveRecordId(row, config.ChildEntityLogicalName);
-					const isPending = row._isPending;
 					const menuItems: DropdownMenuItem[] = [];
 
 					if (config.EditEnabled) {
@@ -387,8 +429,38 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 			});
 		}
 
+		// In inline edit mode, add a column for removing new rows
+		if (inlineGrid.isEditMode && inlineGrid.newRows.length > 0) {
+			cols.push({
+				key: "_inline_actions",
+				label: "",
+				sortEnabled: false,
+				width: "40px",
+				render: (row) => {
+					const rowId = resolveRecordId(row, config.ChildEntityLogicalName) || "";
+					const isNewRow = inlineGrid.newRows.some((r) => r.tempId === rowId);
+					if (!isNewRow) return null;
+
+					return (
+						<button type="button" className="btn btn-xs btn-danger" onClick={() => inlineGrid.removeNewRow(rowId)} title="Remove new row">
+							<span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
+						</button>
+					);
+				},
+			});
+		}
+
 		return cols;
-	}, [actionMenuOpen, config, config.EditEnabled, config.DeleteEnabled]);
+	}, [
+		actionMenuOpen,
+		config,
+		config.EditEnabled,
+		config.DeleteEnabled,
+		inlineGrid.isEditMode,
+		inlineGrid.drafts,
+		inlineGrid.newRows,
+		inlineGrid.validationErrors,
+	]);
 
 	const handleCreate = () => {
 		const tempId = generateTempId();
@@ -543,14 +615,128 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 		setEditingRecord(null);
 	};
 
+	// --- Inline grid editing handlers ---
+	const handleEnterInlineEdit = () => {
+		const currentData = tableRef.current?.getData() || [];
+		inlineGrid.enterEditMode(currentData);
+	};
+
+	const handleCancelInlineEdit = () => {
+		inlineGrid.exitEditMode();
+	};
+
+	const handleConfirmInlineChanges = () => {
+		const actionProps = viewStepActions.map((a) => a.Properties);
+		const isValid = inlineGrid.validate(actionProps);
+		if (!isValid) return;
+
+		const payload = inlineGrid.getCommitPayload();
+		const resolvedParentEntityName = parentEntityName || formState?.primaryEntityName;
+
+		// Commit modified rows
+		payload.modified.forEach(({ rowId, data }) => {
+			formState?.upsertChildNode?.({
+				parentEntityName: resolvedParentEntityName,
+				childEntityName: config.ChildEntityLogicalName,
+				data,
+				recordId: rowId,
+				referencingAttribute: config.ReferencingAttribute,
+				referencingNavigationProperty: config.ReferencingNavigationProperty || config.ReferencingAttribute,
+				isPersisted: !isTempId(rowId),
+			});
+		});
+
+		// Commit new rows
+		payload.created.forEach(({ tempId, data }) => {
+			formState?.upsertChildNode?.({
+				parentEntityName: resolvedParentEntityName,
+				childEntityName: config.ChildEntityLogicalName,
+				data,
+				recordId: tempId,
+				referencingAttribute: config.ReferencingAttribute,
+				referencingNavigationProperty: config.ReferencingNavigationProperty || config.ReferencingAttribute,
+				isPersisted: false,
+			});
+		});
+
+		inlineGrid.exitEditMode();
+		tableRef.current?.refresh();
+	};
+
+	const handleAddInlineRow = () => {
+		inlineGrid.addNewRow();
+	};
+
+	// Build footer row for inline "+" button
+	const inlineFooterRow = inlineGrid.isEditMode ? (
+		<tr className="inline-add-row">
+			<td colSpan={columns.length}>
+				<button type="button" className="btn btn-link inline-add-row-btn" onClick={handleAddInlineRow}>
+					<span className="glyphicon glyphicon-plus" aria-hidden="true"></span> Add Row
+				</button>
+			</td>
+		</tr>
+	) : undefined;
+
+	// Build toolbar actions for inline edit mode
+	const inlineToolbarActions = config.InlineEditEnabled ? (
+		inlineGrid.isEditMode ? (
+			<div className="btn-group pull-left ml-2">
+				<button type="button" className="btn btn-success" onClick={handleConfirmInlineChanges}>
+					<span aria-hidden="true"></span> Confirm Changes
+				</button>
+				<button type="button" className="btn btn-default ml-1" onClick={handleCancelInlineEdit}>
+					Cancel
+				</button>
+			</div>
+		) : (
+			<div className="btn-group pull-left ml-2">
+				<button type="button" className="btn btn-default" onClick={handleEnterInlineEdit}>
+					<span aria-hidden="true"></span> Edit Inline
+				</button>
+			</div>
+		)
+	) : undefined;
+
+	// Wrap fetchData to also include inline new rows when in edit mode
+	const fetchDataForGrid = React.useCallback(
+		async (sort?: TableSortState, pagination?: PaginationOptions): Promise<TableDataResponse<any>> => {
+			const baseResponse = await fetchDataWithPending(sort, pagination);
+
+			// Append inline new rows when in edit mode
+			if (inlineGrid.isEditMode && inlineGrid.newRows.length > 0) {
+				const inlineNewRecords = inlineGrid.newRows.map((row) => ({
+					id: row.tempId,
+					...row.data,
+					_isInlineNew: true,
+				}));
+
+				return {
+					results: [...baseResponse.results, ...inlineNewRecords],
+					totalRecordCount: (baseResponse.totalRecordCount || 0) + inlineNewRecords.length,
+				};
+			}
+
+			return baseResponse;
+		},
+		[fetchDataWithPending, inlineGrid.isEditMode, inlineGrid.newRows]
+	);
+
+	// Refresh grid when inline new rows change
+	React.useEffect(() => {
+		if (inlineGrid.isEditMode) {
+			tableRef.current?.refresh();
+		}
+	}, [inlineGrid.newRows.length, inlineGrid.isEditMode]);
+
 	return (
 		<>
 			<TableEntry
 				ref={tableRef}
 				label={config.DisplayName || ""}
 				columns={columns}
-				fetchData={shouldLoadData ? fetchDataWithPending : emptyFetch}
-				className={className}
+				fetchData={shouldLoadData ? fetchDataForGrid : emptyFetch}
+				className={`${className || ""}${inlineGrid.isEditMode ? " inline-edit-active" : ""}`.trim()}
 				initialSortState={columns.length > 0 ? { key: columns[0].key, direction: "asc" } : undefined}
 				createAction={
 					config.CreateEnabled
@@ -560,6 +746,13 @@ export const TableEntryAction: React.FC<TableEntryActionProps> = ({
 							}
 						: undefined
 				}
+				toolbarActions={inlineToolbarActions}
+				footerRow={inlineFooterRow}
+				rowClassName={(row) => {
+					if (!inlineGrid.isEditMode) return "";
+					if (row._isInlineNew) return "inline-new-row";
+					return "";
+				}}
 			/>
 
 			<Sidepane isOpen={sidepaneOpen} onClose={handleFormCancel} title={editingRecord?._isNew ? "Create Record" : "Edit Record"}>

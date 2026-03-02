@@ -73,6 +73,7 @@ export interface TableEntryProperties {
 	CreateEnabled?: boolean;
 	EditEnabled?: boolean;
 	DeleteEnabled?: boolean;
+	InlineEditEnabled?: boolean;
 	ChildViewSteps?: ReactFormStep[];
 	ChildFormSteps?: ReactFormStep[];
 }

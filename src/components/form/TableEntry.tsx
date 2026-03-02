@@ -8,6 +8,7 @@ export interface TableColumn<T = any> {
 	className?: string;
 	width?: string | number;
 	render?: (row: T) => React.ReactNode;
+	cellClassName?: (row: T) => string;
 }
 
 export interface TableSortState {
@@ -41,10 +42,14 @@ export interface TableEntryProps<T> {
 		pageSize: number;
 		controlSize: "sm" | "md" | "lg";
 	};
+	rowClassName?: (row: T) => string;
+	footerRow?: React.ReactNode;
+	toolbarActions?: React.ReactNode;
 }
 
 export interface TableEntryRef {
 	refresh: () => void;
+	getData: () => any[];
 }
 
 export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(function TableEntry<T extends { id?: string }>(
@@ -58,6 +63,9 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 		loadingMessage = "Loading data...",
 		createAction,
 		pagination = { pageSize: 5, controlSize: "md" },
+		rowClassName,
+		footerRow,
+		toolbarActions,
 	}: TableEntryProps<T>,
 	ref
 ): React.ReactElement {
@@ -99,6 +107,7 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 
 	useImperativeHandle(ref, () => ({
 		refresh: loadData,
+		getData: () => data,
 	}));
 
 	const handleSort = (columnKey: string) => {
@@ -139,13 +148,16 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 					</div>
 				)}
 
-				{createAction && (
+				{(createAction || toolbarActions) && (
 					<div className="pull-right toolbar-actions mb-2">
-						<div className="input-group pull-left">
-							<button type="button" className="btn btn-primary" onClick={createAction.onClick}>
-								{createAction.label}
-							</button>
-						</div>
+						{createAction && (
+							<div className="btn-group pull-left">
+								<button type="button" className="btn btn-primary" onClick={createAction.onClick}>
+									{createAction.label}
+								</button>
+								{toolbarActions}
+							</div>
+						)}
 					</div>
 				)}
 
@@ -189,14 +201,19 @@ export const TableEntry = React.forwardRef<TableEntryRef, TableEntryProps<any>>(
 					<tbody>
 						{data.length > 0 &&
 							data.map((row, i) => (
-								<tr key={row.id || i}>
-									{columns.map((col) => (
-										<td key={col.key} className={col.className || ""}>
-											{renderCellValue(row, col)}
-										</td>
-									))}
+								<tr key={row.id || i} className={rowClassName ? rowClassName(row) : undefined}>
+									{columns.map((col) => {
+										const dynamicClass = col.cellClassName ? col.cellClassName(row) : "";
+										const tdClass = [col.className, dynamicClass].filter(Boolean).join(" ");
+										return (
+											<td key={col.key} className={tdClass || undefined}>
+												{renderCellValue(row, col)}
+											</td>
+										);
+									})}
 								</tr>
 							))}
+						{footerRow}
 					</tbody>
 				</table>
 				{data.length === 0 && (
