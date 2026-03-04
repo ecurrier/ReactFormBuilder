@@ -482,6 +482,30 @@ export const handlers = [
 		const response = HttpResponse.json({}, { status: 200 });
 		return response;
 	}),
+	http.post("*https://americorps-fed-core-2.azure-api.net/address/v1/validate*", async ({ request }) => {
+		await delay(1500);
+
+		console.log("[MSW] Address Validate POST request:", { request });
+
+		const response = HttpResponse.json(
+			{
+				ValidationLevel: "Valid",
+				Message: "",
+				Address: {
+					AddressLines: ["525 W MONROE ST", "STE 500"],
+					Locality: "CHICAGO",
+					AdministrativeArea: "IL",
+					PostalCode: "60661",
+					RegionCode: "US",
+				},
+			},
+			{ status: 200 }
+		);
+
+		// Invalid address example
+		// { ValidationLevel: "Invalid", Message: "Address Not Found", Address: null }
+		return response;
+	}),
 	http.patch("*/_api/eyfrcc_forminstances*", async ({ request }) => {
 		await delay(500);
 

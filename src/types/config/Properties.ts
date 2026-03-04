@@ -14,6 +14,7 @@ export interface FieldInputProperties {
 	ValidationMessage?: string;
 	Description?: string;
 	DescriptionType?: number;
+	SubAddressType?: number;
 
 	// Choice/Picklist fields
 	CanSelectMultiple?: boolean;

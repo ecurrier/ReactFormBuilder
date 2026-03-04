@@ -64,6 +64,7 @@
 							"ValidationMessage": null,
 							"Description": "A description of the purpose of the project that has been awarded under the grant program. This comes from the Federal Integrated Business Framework (FIBF) model.",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"MaxLength": 100000,
 							"Format": null
 						}
@@ -81,11 +82,12 @@
 							"IsRequired": false,
 							"IsReadOnly": false,
 							"IsHidden": false,
-							"ValidationType": null,
+							"ValidationType": 643260006,
 							"ValidationValue": null,
-							"ValidationMessage": null,
+							"ValidationMessage": "Please enter a valid address.",
 							"Description": "",
 							"DescriptionType": 643260000,
+							"SubAddressType": null,
 							"ChildActions": [
 								{
 									"Id": "32458eca-5af9-f011-8406-7ced8d209320",
@@ -106,6 +108,7 @@
 										"ValidationMessage": null,
 										"Description": "Address Validation - Street 1",
 										"DescriptionType": 643260000,
+										"SubAddressType": 643260000,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
@@ -129,6 +132,7 @@
 										"ValidationMessage": null,
 										"Description": "Address Validation - Street 2",
 										"DescriptionType": 643260000,
+										"SubAddressType": 643260000,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
@@ -152,6 +156,7 @@
 										"ValidationMessage": null,
 										"Description": "Address Validation - City",
 										"DescriptionType": 643260000,
+										"SubAddressType": 643260001,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
@@ -175,6 +180,7 @@
 										"ValidationMessage": null,
 										"Description": "Address Validation - State / Province",
 										"DescriptionType": 643260000,
+										"SubAddressType": 643260002,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
@@ -198,6 +204,7 @@
 										"ValidationMessage": null,
 										"Description": "Address Validation - Postal Code",
 										"DescriptionType": 643260000,
+										"SubAddressType": 643260003,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
@@ -221,6 +228,7 @@
 										"ValidationMessage": null,
 										"Description": "Address Validation - Country",
 										"DescriptionType": 643260000,
+										"SubAddressType": 643260004,
 										"MaxLength": 1000,
 										"Format": "Text"
 									}
@@ -260,6 +268,7 @@
 							"ValidationMessage": null,
 							"Description": "The type of application that should be applied (e.g., new, continuation, revision). If \"New\", the application is being submitted for the first time. If \"Continuation\", an extension is required for an additional funding/budget period for a project with a projected completion date. This can include renewals. If \"Revision\", a change in the Federal government's financial obligation or contingent liability from an existing obligation has occurred.",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"CanSelectMultiple": false,
 							"Choices": [
 								{
@@ -297,6 +306,7 @@
 							"ValidationMessage": null,
 							"Description": "An amount of approved cost sharing or matching, where applicable. This comes from the Federal Integrated Business Framework (FIBF) model.",
 							"DescriptionType": 643260000,
+							"SubAddressType": null,
 							"MinValue": 0.0,
 							"MaxValue": 1000000000.0,
 							"Precision": 2
@@ -321,6 +331,7 @@
 							"ValidationMessage": null,
 							"Description": "The approved percentage for the indirect cost rate based on the calculation of the \"Total Approved Indirect Budget\" over the \"Total Approved Direct Budget\".",
 							"DescriptionType": 643260000,
+							"SubAddressType": null,
 							"MinValue": 0.0,
 							"MaxValue": 1000000000.0,
 							"Precision": 2
@@ -345,6 +356,7 @@
 							"ValidationMessage": null,
 							"Description": "A score that represents the risk level associated with this application and submitter. This is auto calculated based on the risk assessment configured by a Program Manager on the related funding opportunity. The higher the number, the greater the risk.",
 							"DescriptionType": 643260000,
+							"SubAddressType": null,
 							"MinValue": -100000000000.0,
 							"MaxValue": 100000000000.0,
 							"Precision": 2
@@ -369,6 +381,7 @@
 							"ValidationMessage": null,
 							"Description": "The indication of whether the application has been fully disbursed or not.",
 							"DescriptionType": 643260000,
+							"SubAddressType": null,
 							"Choices": [
 								{
 									"Value": 1,
@@ -401,6 +414,7 @@
 							"ValidationMessage": null,
 							"Description": "A list of geographic areas or entities aided within the function or activity for a Federal award using categories specified in the Federal agency instructions (e.g., Cities, Counties, States). This comes from the Federal Integrated Business Framework (FIBF) model.",
 							"DescriptionType": 643260000,
+							"SubAddressType": null,
 							"MaxLength": 100000,
 							"Format": null
 						}
@@ -453,6 +467,7 @@
 												"ValidationMessage": null,
 												"Description": "The email address of the third-party participant.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MaxLength": 1000,
 												"Format": "Text"
 											}
@@ -476,6 +491,7 @@
 												"ValidationMessage": null,
 												"Description": "The first name of the third-party participant.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MaxLength": 1000,
 												"Format": "Text"
 											}
@@ -514,6 +530,7 @@
 												"ValidationMessage": null,
 												"Description": "The email address of the third-party participant.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MaxLength": 1000,
 												"Format": "Text"
 											}
@@ -571,6 +588,7 @@
 							"ValidationMessage": null,
 							"Description": "<p style=\"margin: 0;\">Select an existing project to associate with this application.</p>",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"Targets": [
 								{
 									"EntityLogicalName": "eyfrcc_project",
@@ -630,6 +648,7 @@
 												"ValidationMessage": null,
 												"Description": "The primary name of this record. Once saved, this name will appear at the top of the page.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MaxLength": 100,
 												"Format": "Text"
 											}
@@ -653,6 +672,7 @@
 												"ValidationMessage": null,
 												"Description": "<p style=\"margin: 0;\">The anticipated date the project work will begin, if awarded.</p>",
 												"DescriptionType": 643260002,
+												"SubAddressType": null,
 												"DateTimeFormat": 0,
 												"DateTimeBehavior": "UserLocal"
 											}
@@ -676,6 +696,7 @@
 												"ValidationMessage": null,
 												"Description": "<p style=\"margin: 0;\">The anticipated date the project work will be completed.</p>",
 												"DescriptionType": 643260002,
+												"SubAddressType": null,
 												"DateTimeFormat": 0,
 												"DateTimeBehavior": "UserLocal"
 											}
@@ -699,6 +720,7 @@
 												"ValidationMessage": null,
 												"Description": "<p style=\"margin: 0;\">The U.S. congressional district where the project will be performed (e.g., IL-07).</p>",
 												"DescriptionType": 643260002,
+												"SubAddressType": null,
 												"MaxLength": 100,
 												"Format": "Text"
 											}
@@ -722,6 +744,7 @@
 												"ValidationMessage": null,
 												"Description": "The main description of this record that provides a brief, description of the project.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MaxLength": 100000,
 												"Format": null
 											}
@@ -760,6 +783,7 @@
 												"ValidationMessage": null,
 												"Description": "The primary name of this record. Once saved, this name will appear at the top of the page.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MaxLength": 100,
 												"Format": "Text"
 											}
@@ -783,6 +807,7 @@
 												"ValidationMessage": null,
 												"Description": "The proposed start date for this project.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"DateTimeFormat": 0,
 												"DateTimeBehavior": "UserLocal",
 												"ChildActions": [
@@ -805,6 +830,7 @@
 															"ValidationMessage": null,
 															"Description": "Start Date - Fiscal Year",
 															"DescriptionType": 643260000,
+															"SubAddressType": null,
 															"Targets": [
 																{
 																	"EntityLogicalName": "eyfrcc_fiscalyear",
@@ -839,6 +865,7 @@
 												"ValidationMessage": null,
 												"Description": "The proposed end date for this project.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"DateTimeFormat": 0,
 												"DateTimeBehavior": "UserLocal",
 												"ChildActions": [
@@ -861,6 +888,7 @@
 															"ValidationMessage": null,
 															"Description": "End Date - Fiscal Year",
 															"DescriptionType": 643260000,
+															"SubAddressType": null,
 															"Targets": [
 																{
 																	"EntityLogicalName": "eyfrcc_fiscalyear",
@@ -929,6 +957,7 @@
 							"ValidationMessage": null,
 							"Description": "<p style=\"margin: 0;\">Select the current stage of the budget review.</p>",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"CanSelectMultiple": false,
 							"Choices": [
 								{
@@ -974,6 +1003,7 @@
 							"ValidationMessage": null,
 							"Description": "<p style=\"margin: 0;\">Internal notes to document budget questions, adjustments, or review decisions.</p>",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"MaxLength": 100000,
 							"Format": null
 						}
@@ -1025,6 +1055,7 @@
 												"ValidationMessage": null,
 												"Description": "Enter the forecasted cash needs from federal sources for the first quarter of the first program year. If not applicable, leave blank.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MinValue": 0.0,
 												"MaxValue": 1000000000.0,
 												"Precision": 2
@@ -1077,6 +1108,7 @@
 												"ValidationMessage": null,
 												"Description": "The primary attribute",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MaxLength": 300,
 												"Format": "Text"
 											}
@@ -1145,6 +1177,7 @@
 							"ValidationMessage": null,
 							"Description": "The attestation required to be confirmed in order to submit the form.",
 							"DescriptionType": 643260000,
+							"SubAddressType": null,
 							"Choices": [
 								{
 									"Value": 1,
@@ -1177,6 +1210,7 @@
 							"ValidationMessage": null,
 							"Description": "The estimated amount to be requested, or to be contributed during the first funding/budget period by an applicant contributor.",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"MinValue": 0.0,
 							"MaxValue": 1000000000.0,
 							"Precision": 2
@@ -1201,6 +1235,7 @@
 							"ValidationMessage": null,
 							"Description": "The estimated amount to be requested, or to be contributed during the first funding/budget period by an other contributor.",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"MinValue": 0.0,
 							"MaxValue": 1000000000.0,
 							"Precision": 2
@@ -1225,6 +1260,7 @@
 							"ValidationMessage": null,
 							"Description": "<p style=\"margin: 0;\">Identify any affiliated organization relevant to this application (e.g., parent organization, partner, or sponsoring entity), if applicable.</p>",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"MaxLength": 1000,
 							"Format": "Text"
 						}
@@ -1248,6 +1284,7 @@
 							"ValidationMessage": null,
 							"Description": "<p style=\"margin: 0;\">Test field for demonstration polymorphic lookup capabilities.</p>",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"Targets": [
 								{
 									"EntityLogicalName": "eyfrcc_appeal",
@@ -1388,8 +1425,8 @@
 							"CreateEnabled": true,
 							"EditEnabled": true,
 							"DeleteEnabled": true,
-							"ValidationType": 643260001,
 							"InlineEditEnabled": true,
+							"ValidationType": 643260001,
 							"ReferencingAttribute": "eyfrcc_childsecondaryreport",
 							"ReferencingNavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_standardform425",
 							"ChildFormSteps": [
@@ -1422,6 +1459,7 @@
 												"ValidationMessage": null,
 												"Description": "<div data-wrapper=\"true\" dir=\"ltr\" style=\"font-size:9pt;font-family:'Segoe UI','Helvetica Neue',sans-serif;\"><div><em>Select the indirect cost rate line that represents the type of indirect expense, the indirect cost rate in effect during the reporting period, and the beginning and ending effective dates for the rate.</em></div></div>",
 												"DescriptionType": 643260002,
+												"SubAddressType": null,
 												"Targets": [
 													{
 														"EntityLogicalName": "eyfrcc_indirectcostratelines",
@@ -1453,6 +1491,7 @@
 												"ValidationMessage": null,
 												"Description": "<div data-wrapper=\"true\" dir=\"ltr\" style=\"font-size:9pt;font-family:'Segoe UI','Helvetica Neue',sans-serif;\"><div><em>Enter the amount of the base against which the rate(s) was applied.</em></div></div>",
 												"DescriptionType": 643260002,
+												"SubAddressType": null,
 												"MinValue": 0.0,
 												"MaxValue": 1000000000.0,
 												"Precision": 2
@@ -1477,6 +1516,7 @@
 												"ValidationMessage": null,
 												"Description": "<div data-wrapper=\"true\" dir=\"ltr\" style=\"font-size:9pt;font-family:'Segoe UI','Helvetica Neue',sans-serif;\"><div><em>&nbsp;The amount of indirect costs charged during the time period specified. This field is automatically calculated.</em></div></div>",
 												"DescriptionType": 643260002,
+												"SubAddressType": null,
 												"MinValue": 0.0,
 												"MaxValue": 1000000000.0,
 												"Precision": 2
@@ -1501,6 +1541,7 @@
 												"ValidationMessage": null,
 												"Description": "<div data-wrapper=\"true\" dir=\"ltr\" style=\"font-size:9pt;font-family:'Segoe UI','Helvetica Neue',sans-serif;\"><div><em>Enter the Federal share of the amount from \"Amount Charged\".</em></div></div>",
 												"DescriptionType": 643260002,
+												"SubAddressType": null,
 												"MinValue": 0.0,
 												"MaxValue": 1000000000.0,
 												"Precision": 2
@@ -1540,6 +1581,7 @@
 												"ValidationMessage": null,
 												"Description": "The related indirect cost rate line from a negotiated indirect cost rate agreement in which assess the amount charged.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"Targets": [
 													{
 														"EntityLogicalName": "eyfrcc_indirectcostratelines",
@@ -1571,6 +1613,7 @@
 												"ValidationMessage": null,
 												"Description": "The amount of the base against which the rate(s) was applied.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MinValue": 0.0,
 												"MaxValue": 1000000000.0,
 												"Precision": 2
@@ -1595,6 +1638,7 @@
 												"ValidationMessage": null,
 												"Description": "The auto calculated amount of indirect costs charged during the time period specified. This is the related indirect cost rate multiplied by the base.",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MinValue": 0.0,
 												"MaxValue": 1000000000.0,
 												"Precision": 2
@@ -1619,6 +1663,7 @@
 												"ValidationMessage": null,
 												"Description": "The Federal share of the amount in \"Amount Charged\".",
 												"DescriptionType": 643260000,
+												"SubAddressType": null,
 												"MinValue": 0.0,
 												"MaxValue": 1000000000.0,
 												"Precision": 2
@@ -1662,6 +1707,7 @@
 							"ValidationMessage": null,
 							"Description": "A code denoting the type of grant application submitted, e.g., initial application for a Federal award, pre-application, or revised application for a Federal award. This comes from the Federal Integrated Business Framework (FIBF) model.",
 							"DescriptionType": 643260002,
+							"SubAddressType": null,
 							"CanSelectMultiple": false,
 							"Choices": [
 								{

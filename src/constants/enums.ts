@@ -28,6 +28,14 @@ export const DateTimeFormat = {
 	DateAndTime: 1,
 };
 
+export const SubAddressType = {
+	AddressLine: 643260000,
+	Locality: 643260001,
+	AdministrativeArea: 643260002,
+	PostalCode: 643260003,
+	RegionCode: 643260004,
+};
+
 export const ValidationType = {
 	RegEx: 643260000,
 	MinMax: 643260001,

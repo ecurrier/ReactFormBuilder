@@ -16,4 +16,4 @@ export {
 export { getRealtimeValidationResult } from "./realtime";
 
 export type { ValidationIssue } from "./application";
-export { validateApplication, validateFieldRules, validateComplexRules, createValidationSelectors, getFieldAnchorId, getActionAnchorId } from "./application";
+export { validateApplication, validateFieldRules, validateSubmitRules, createValidationSelectors, getFieldAnchorId, getActionAnchorId } from "./application";

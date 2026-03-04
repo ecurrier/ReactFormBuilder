@@ -1,6 +1,7 @@
 import { ActionType, FieldValidationType, TableValidationType, DocumentValidationType, DataType } from "@constants/enums";
 import { EygaApiClient } from "@utilities/eygaApi";
 import { validateEmail, validatePhone, validateRegex } from "./validators";
+import { buildAddressRequest, addressesEqual } from "./address";
 
 export type ValidationIssue = {
 	stepId: string;
@@ -41,48 +42,6 @@ const getFieldPath = (action: any, step: any, formState: any) => {
 	const props = action?.Properties ?? {};
 	const entityName = props.EntityName || step?.EntityLogicalName || formState?.primaryEntityName || "";
 	return `${entityName}.${props.LogicalName}`;
-};
-
-const buildAddressRequest = (action: any, step: any, formState: any) => {
-	const props = action?.Properties ?? {};
-	const validationValue = props.ValidationValue;
-	let addressConfig = validationValue;
-	if (typeof validationValue === "string") {
-		try {
-			addressConfig = JSON.parse(validationValue);
-		} catch {
-			addressConfig = undefined;
-		}
-	}
-
-	const addressLinesConfig = addressConfig?.AddressLineFields || props.AddressLineFields || [];
-	const getValueByField = (fieldConfig: any) => {
-		const fieldLogicalName = fieldConfig?.FieldLogicalName || fieldConfig?.LogicalName || fieldConfig;
-		if (!fieldLogicalName) return "";
-		const path = `${step?.EntityLogicalName || formState?.primaryEntityName}.${fieldLogicalName}`;
-		return formState?.getFieldValue?.(path);
-	};
-
-	const request = {
-		AddressLines: addressLinesConfig.map((field: any) => getValueByField(field)),
-		Locality: getValueByField(addressConfig?.LocalityField || props.LocalityField),
-		AdministrativeArea: getValueByField(addressConfig?.AdministrativeAreaField || props.AdministrativeAreaField),
-		PostalCode: getValueByField(addressConfig?.PostalCodeField || props.PostalCodeField),
-		RegionCode: getValueByField(addressConfig?.RegionCodeField || props.RegionCodeField) || addressConfig?.RegionCodeDefault || props.RegionCodeDefault,
-	};
-
-	return request;
-};
-
-const addressesEqual = (request: any, responseAddress: any) => {
-	const equals = (left?: string, right?: string) => (left || "").trim().toLowerCase() === (right || "").trim().toLowerCase();
-	return (
-		request.AddressLines.every((line: string, index: number) => equals(line, responseAddress?.AddressLines?.[index])) &&
-		equals(request.Locality, responseAddress?.Locality) &&
-		equals(request.AdministrativeArea, responseAddress?.AdministrativeArea) &&
-		equals(request.PostalCode, responseAddress?.PostalCode) &&
-		equals(request.RegionCode, responseAddress?.RegionCode)
-	);
 };
 
 export const validateFieldRules = ({
@@ -180,25 +139,34 @@ export const validateFieldRules = ({
 	return issues;
 };
 
-export const validateComplexRules = async ({ steps, formState, config }: { steps: any[]; formState: any; config: any }): Promise<ValidationIssue[]> => {
+export const validateSubmitRules = async ({ steps, formState, config }: { steps: any[]; formState: any; config: any }): Promise<ValidationIssue[]> => {
 	const issues: ValidationIssue[] = [];
 	const primaryEntity = config?.Form?.PrimaryApplicationTable?.TableLogicalName;
 
 	for (const step of steps) {
 		for (const action of step.Actions || []) {
-			if (action?.Properties?.__conditionHidden) continue;
+			if (action?.Properties?.__conditionHidden) {
+				continue;
+			}
 
 			if (action.Type === ActionType.FieldInput && action.Properties?.ValidationType === FieldValidationType.ValidAddress) {
 				const request = buildAddressRequest(action, step, formState);
 				const isEmptyAddress =
 					!request.AddressLines?.[0] && !request.AddressLines?.[1] && !request.Locality && !request.AdministrativeArea && !request.PostalCode;
-				if (isEmptyAddress) continue;
+				if (isEmptyAddress) {
+					continue;
+				}
+
 				try {
 					const response = await EygaApiClient.Address.Validate(request, {
 						RegardingId: formState?.recordId || undefined,
 						RegardingLogicalName: primaryEntity,
 						ApiAction: "Validate Address",
 					});
+
+					/*
+						TO-DO: Depending on how we want to do address validation, need to modify how we handle responses
+					*/
 					if (response?.ValidationLevel === "Invalid" || !response?.Address || !addressesEqual(request, response.Address)) {
 						const fieldPath = getFieldPath(action, step, formState);
 						issues.push({
@@ -255,8 +223,8 @@ export const validateComplexRules = async ({ steps, formState, config }: { steps
 
 export const validateApplication = async ({ steps, formState, config }: { steps: any[]; formState: any; config: any }): Promise<ValidationIssue[]> => {
 	const fieldIssues = validateFieldRules({ steps, formState });
-	const complexIssues = await validateComplexRules({ steps, formState, config });
-	return [...fieldIssues, ...complexIssues];
+	const submitIssues = await validateSubmitRules({ steps, formState, config });
+	return [...fieldIssues, ...submitIssues];
 };
 
 export const createValidationSelectors = (issues: ValidationIssue[]) => ({
