@@ -1,5 +1,5 @@
 import React from "react";
-import { FieldInput, TableEntryAction, DocumentUploadControl } from "@components";
+import { FieldInput, TableEntryAction, DocumentUploadControl, QuickViewAction } from "@components";
 import { ActionType } from "@constants/enums";
 import type { ReactActionConfiguration, AnyFormState } from "@app-types";
 
@@ -94,6 +94,18 @@ const StepActions: React.FC<StepActionsProps> = ({
 					return (
 						<div key={String(actionKey)} id={actionAnchorId}>
 							<DocumentUploadControl config={action.Properties} formState={formState} entityName={entityName} />
+						</div>
+					);
+				}
+
+				if (action.Type === ActionType.QuickView) {
+					if ((action.Properties as any)?.__conditionHidden) {
+						return null;
+					}
+
+					return (
+						<div key={String(actionKey)} id={actionAnchorId}>
+							<QuickViewAction action={action} formState={formState} entityName={entityName} />
 						</div>
 					);
 				}

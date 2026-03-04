@@ -2,6 +2,7 @@ export const ActionType = {
 	FieldInput: 203300000,
 	FileUpload: 203300001,
 	TableEntry: 203300002,
+	QuickView: 643260003,
 };
 
 export const DescriptionType = {

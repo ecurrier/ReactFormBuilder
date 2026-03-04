@@ -433,7 +433,6 @@
 							"CreateEnabled": true,
 							"EditEnabled": true,
 							"DeleteEnabled": true,
-							"InlineEditEnabled": true,
 							"ValidationType": 643260000,
 							"ReferencingAttribute": "eyfrcc_childapplication",
 							"ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",
@@ -570,9 +569,20 @@
 				"Order": 3,
 				"Actions": [
 					{
+						"Id": "0921ba70-d417-f111-8341-7c1e527fbb74",
+						"Name": "Project or Request Details - Free-Form Text",
+						"Order": 1,
+						"ChildOrder": 0,
+						"Type": 643260002,
+						"Properties": {
+							"Content": "Project Custom Header",
+							"Style": 643260000
+						}
+					},
+					{
 						"Id": "cf7f98ef-58f9-f011-8406-7c1e524a2f52",
 						"Name": "Project or Request Details - Field Input - Project (Child Application)",
-						"Order": 1,
+						"Order": 2,
 						"ChildOrder": 0,
 						"Type": 203300000,
 						"Properties": {
@@ -602,9 +612,108 @@
 						}
 					},
 					{
+						"Id": "c261ada6-d217-f111-8341-7c1e527fbb74",
+						"Name": "Project or Request Details - Quick View Form",
+						"Order": 3,
+						"ChildOrder": 0,
+						"Type": 643260003,
+						"Properties": {
+							"DisplayName": "Project Details",
+							"ParentLookup": "eyfrcc_applicationprojectid",
+							"QuickViewEntityLogicalName": "eyfrcc_project",
+							"QuickViewSteps": [
+								{
+									"Id": "3b26873a-0de0-f011-8544-7ced8d21d821",
+									"Name": "Quick View Fields",
+									"EntityLogicalName": "eyfrcc_project",
+									"EntityDisplayName": "Project",
+									"ReferencingAttribute": null,
+									"ReferencingNavigationProperty": null,
+									"Description": null,
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "06b19e40-0de0-f011-8544-7ced8d21d821",
+											"Name": "Quick View Fields - Field Input - Description (Project)",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_description",
+												"SchemaName": "eyfrcc_description",
+												"Label": "Description",
+												"DataType": 643260001,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The main description of this record that provides a brief, description of the project.",
+												"DescriptionType": 643260000,
+												"SubAddressType": null,
+												"MaxLength": 100000,
+												"Format": null
+											}
+										},
+										{
+											"Id": "681c8652-0de0-f011-8544-7ced8d21d821",
+											"Name": "Quick View Fields - Field Input - Proposed Start Date",
+											"Order": 2,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_proposedstartdate",
+												"SchemaName": "eyfrcc_proposedstartdate",
+												"Label": "Proposed Start Date",
+												"DataType": 643260008,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The proposed start date for this project.",
+												"DescriptionType": 643260000,
+												"SubAddressType": null,
+												"DateTimeFormat": 0,
+												"DateTimeBehavior": "UserLocal"
+											}
+										},
+										{
+											"Id": "42f39858-0de0-f011-8544-7ced8d21d821",
+											"Name": "Quick View Fields - Field Input - Proposed End Date",
+											"Order": 3,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_proposedenddate",
+												"SchemaName": "eyfrcc_proposedenddate",
+												"Label": "Proposed End Date",
+												"DataType": 643260008,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"ValidationType": null,
+												"ValidationValue": null,
+												"ValidationMessage": null,
+												"Description": "The proposed end date for this project.",
+												"DescriptionType": 643260000,
+												"SubAddressType": null,
+												"DateTimeFormat": 0,
+												"DateTimeBehavior": "UserLocal"
+											}
+										}
+									],
+									"Conditions": []
+								}
+							]
+						}
+					},
+					{
 						"Id": "c804edbf-58f9-f011-8406-7c1e524a2f52",
 						"Name": "Project or Request Details - Table Entry - Project",
-						"Order": 2,
+						"Order": 4,
 						"ChildOrder": 0,
 						"Type": 203300002,
 						"Properties": {
@@ -1425,7 +1534,6 @@
 							"CreateEnabled": true,
 							"EditEnabled": true,
 							"DeleteEnabled": true,
-							"InlineEditEnabled": true,
 							"ValidationType": 643260001,
 							"ReferencingAttribute": "eyfrcc_childsecondaryreport",
 							"ReferencingNavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_standardform425",
