@@ -11,3 +11,4 @@ export * from "./lookup/LookupControl";
 export * from "./lookup/CompactLookupControl";
 export * from "./lookup/LookupAdvancedSearchModal";
 export * from "./fileupload/DocumentUploadControl";
+export { default as QuickViewAction } from "./quickview/QuickViewAction";

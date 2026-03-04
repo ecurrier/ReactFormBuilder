@@ -142,7 +142,9 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 	const visibleSteps = useMemo(
 		() =>
 			conditionedSteps.filter((step) =>
-				step.Actions?.some((action) => [ActionType.FieldInput, ActionType.TableEntry, ActionType.FileUpload].includes(action.Type))
+				step.Actions?.some((action) =>
+					[ActionType.FieldInput, ActionType.TableEntry, ActionType.FileUpload, ActionType.QuickView].includes(action.Type)
+				)
 			),
 		[conditionedSteps]
 	);

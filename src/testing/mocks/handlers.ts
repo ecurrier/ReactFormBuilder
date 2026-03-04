@@ -213,7 +213,7 @@ export const handlers = [
 					"eyfrcc_proposedenddate@OData.Community.Display.V1.FormattedValue": "12/31/2025",
 					eyfrcc_proposedenddate: "2026-01-01T00:00:00Z",
 					eyfrcc_projectid: "2487281d-0de5-f011-8544-7ced8d21d821",
-					eyfrcc_description: "Description",
+					eyfrcc_description: "This is a long description\n\nWith new lines!",
 				},
 			],
 		});

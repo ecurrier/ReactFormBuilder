@@ -88,5 +88,6 @@ export interface PlainTextProperties {
 export interface QuickViewProperties {
 	DisplayName?: string;
 	ParentLookup?: string;
+	QuickViewEntityLogicalName?: string;
 	QuickViewSteps?: ReactFormStep[];
 }
