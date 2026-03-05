@@ -3,6 +3,7 @@ export const ActionType = {
 	FileUpload: 203300001,
 	TableEntry: 203300002,
 	QuickView: 643260003,
+	FreeFormText: 643260002,
 };
 
 export const DescriptionType = {
@@ -66,6 +67,11 @@ export const DocumentValidationType = {
 
 export const ConditionType = {
 	RequireFieldBasedOnCondition: 643260006,
+};
+
+export const FreeFormTextStylings = {
+	Header: 643260000,
+	Body: 643260001,
 };
 
 export const FormInstanceEventType = {

@@ -1,5 +1,5 @@
 import type { ReactFormStep } from "./Step";
-import type { FieldInputProperties, FileUploadProperties, TableEntryProperties, PlainTextProperties, QuickViewProperties } from "./Properties";
+import type { FieldInputProperties, FileUploadProperties, TableEntryProperties, FreeFormTextProperties, QuickViewProperties } from "./Properties";
 
 export interface ReactActionConfiguration {
 	Id: string;
@@ -14,6 +14,6 @@ export type ActionProperties =
 	| FieldInputProperties
 	| FileUploadProperties
 	| TableEntryProperties
-	| PlainTextProperties
+	| FreeFormTextProperties
 	| QuickViewProperties
 	| Record<string, any>; // Fallback for unknown action types

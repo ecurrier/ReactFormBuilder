@@ -79,10 +79,9 @@ export interface TableEntryProperties {
 	ChildFormSteps?: ReactFormStep[];
 }
 
-export interface PlainTextProperties {
-	Description?: string;
-	FreeFormTextContent?: string;
-	FreeFormTextStyling?: string;
+export interface FreeFormTextProperties {
+	Content?: string;
+	Style?: number;
 }
 
 export interface QuickViewProperties {

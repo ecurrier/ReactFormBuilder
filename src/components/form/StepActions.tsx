@@ -1,5 +1,5 @@
 import React from "react";
-import { FieldInput, TableEntryAction, DocumentUploadControl, QuickViewAction } from "@components";
+import { FieldInput, TableEntryAction, DocumentUploadControl, QuickViewAction, FreeFormText } from "@components";
 import { ActionType } from "@constants/enums";
 import type { ReactActionConfiguration, AnyFormState } from "@app-types";
 
@@ -94,6 +94,14 @@ const StepActions: React.FC<StepActionsProps> = ({
 					return (
 						<div key={String(actionKey)} id={actionAnchorId}>
 							<DocumentUploadControl config={action.Properties} formState={formState} entityName={entityName} />
+						</div>
+					);
+				}
+
+				if (action.Type === ActionType.FreeFormText) {
+					return (
+						<div key={String(actionKey)} id={actionAnchorId}>
+							<FreeFormText action={action} />
 						</div>
 					);
 				}
