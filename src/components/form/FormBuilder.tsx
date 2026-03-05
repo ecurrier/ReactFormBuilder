@@ -1,4 +1,6 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+
+const DevConsole = import.meta.env.DEV ? React.lazy(() => import("@testing/devtools/DevConsole")) : null;
 import { Step, LoadingIndicator, ProgressBar } from "@components";
 import { ActionType } from "@constants/enums";
 import { useFormState, FormStateContext } from "@hooks";
@@ -733,6 +735,11 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 					</div>
 				</div>
 			</div>
+			{DevConsole && (
+				<Suspense>
+					<DevConsole />
+				</Suspense>
+			)}
 		</FormStateContext.Provider>
 	);
 };

@@ -20,7 +20,7 @@ async function enableMocking() {
 	// Import custom styles AFTER Bootstrap to ensure they take precedence
 	await import("@public/styles/styles.css");
 
-	const { worker } = await import("@testing/mocks/browser");
+	const { worker } = await import("@testing/mocks");
 	await worker.start({
 		onUnhandledRequest: "bypass",
 	});

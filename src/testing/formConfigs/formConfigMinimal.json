@@ -1,0 +1,91 @@
+{
+	"Version": "1.0",
+	"Program": null,
+	"FundingOpportunity": {
+		"Id": "0bfaf433-42d8-4486-bf73-3cb72b6a3fe2",
+		"Name": "Dev & Testing: Minimal Form",
+		"FullName": "Dev & Testing: Minimal Form",
+		"Settings": {
+			"IdentityVerificationEnabled": false,
+			"LateSubmissionAllowedUntil": "0001-01-01T00:00:00"
+		},
+		"ApplicationTable": {
+			"Id": "605acbcf-b5fa-eb11-94ef-0022481e1fc4",
+			"Name": "Child Application",
+			"TableLogicalName": "eyfrcc_childapplicationtest",
+			"Description": "Minimal form for testing basic field input.",
+			"Usage": 643260000,
+			"ConfigurationFields": {
+				"Name": "eyfrcc_name",
+				"Purpose": "eyfrcc_purpose"
+			}
+		}
+	},
+	"Form": {
+		"Id": "minimal-form-001",
+		"Name": "Minimal Test Form",
+		"PrimaryApplicationTable": {
+			"Id": "605acbcf-b5fa-eb11-94ef-0022481e1fc4",
+			"Name": "Child Application",
+			"TableLogicalName": "eyfrcc_childapplicationtest",
+			"Description": "Minimal form for testing basic field input.",
+			"Usage": 643260000
+		},
+		"Introduction": null,
+		"Settings": {
+			"IncludeInApplicationPackage": false,
+			"RequireFormForApplicant": false
+		},
+		"Steps": [
+			{
+				"Id": "minimal-step-001",
+				"Name": "Basic Info",
+				"EntityLogicalName": "eyfrcc_childapplicationtest",
+				"ReferencingAttributeLogicalName": null,
+				"Description": "<p>A minimal step with just two fields.</p>",
+				"Order": 1,
+				"Actions": [
+					{
+						"Id": "minimal-action-001",
+						"Name": "Purpose",
+						"Order": 1,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_purpose",
+							"SchemaName": "eyfrcc_purpose",
+							"Label": "Purpose",
+							"DataType": 643260001,
+							"IsRequired": true,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"Description": "Describe the purpose.",
+							"MaxLength": 100000,
+							"Format": null
+						}
+					},
+					{
+						"Id": "minimal-action-002",
+						"Name": "Project Name",
+						"Order": 2,
+						"ChildOrder": 0,
+						"Type": 203300000,
+						"Properties": {
+							"LogicalName": "eyfrcc_projectname",
+							"SchemaName": "eyfrcc_projectname",
+							"Label": "Project Name",
+							"DataType": 643260000,
+							"IsRequired": false,
+							"IsReadOnly": false,
+							"IsHidden": false,
+							"Description": "Name of the project.",
+							"MaxLength": 200,
+							"Format": "Text"
+						}
+					}
+				],
+				"Conditions": []
+			}
+		]
+	}
+}

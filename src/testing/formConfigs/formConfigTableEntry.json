@@ -1,0 +1,192 @@
+{
+	"Version": "1.0",
+	"Program": null,
+	"FundingOpportunity": {
+		"Id": "0bfaf433-42d8-4486-bf73-3cb72b6a3fe2",
+		"Name": "Dev & Testing: Table Entry Form",
+		"FullName": "Dev & Testing: Table Entry Form",
+		"Settings": {
+			"IdentityVerificationEnabled": false,
+			"LateSubmissionAllowedUntil": "0001-01-01T00:00:00"
+		},
+		"ApplicationTable": {
+			"Id": "605acbcf-b5fa-eb11-94ef-0022481e1fc4",
+			"Name": "Child Application",
+			"TableLogicalName": "eyfrcc_childapplicationtest",
+			"Description": "Form focused on TableEntry action testing.",
+			"Usage": 643260000,
+			"ConfigurationFields": {
+				"Name": "eyfrcc_name",
+				"Purpose": "eyfrcc_purpose"
+			}
+		}
+	},
+	"Form": {
+		"Id": "table-entry-form-001",
+		"Name": "Table Entry Test Form",
+		"PrimaryApplicationTable": {
+			"Id": "605acbcf-b5fa-eb11-94ef-0022481e1fc4",
+			"Name": "Child Application",
+			"TableLogicalName": "eyfrcc_childapplicationtest",
+			"Description": "Form focused on TableEntry action testing.",
+			"Usage": 643260000
+		},
+		"Introduction": null,
+		"Settings": {
+			"IncludeInApplicationPackage": false,
+			"RequireFormForApplicant": false
+		},
+		"Steps": [
+			{
+				"Id": "te-step-001",
+				"Name": "Subrecipients",
+				"EntityLogicalName": "eyfrcc_childapplicationtest",
+				"ReferencingAttributeLogicalName": null,
+				"Description": "<p>Add and manage subrecipients in the table below.</p>",
+				"Order": 1,
+				"Actions": [
+					{
+						"Id": "te-action-001",
+						"Name": "Subrecipient Table",
+						"Order": 1,
+						"ChildOrder": 0,
+						"Type": 203300002,
+						"Properties": {
+							"DisplayName": "Subrecipients",
+							"ChildEntityLogicalName": "eyfrcc_subrecipient",
+							"RelationshipName": "eyfrcc_childapplicationtest_eyfrcc_subrecipient",
+							"ValidationMessage": "Please enter at least one subrecipient.",
+							"CreateEnabled": true,
+							"EditEnabled": true,
+							"DeleteEnabled": true,
+							"ValidationType": 643260000,
+							"ReferencingAttribute": "eyfrcc_childapplication",
+							"ChildFormSteps": [
+								{
+									"Id": "te-child-step-001",
+									"Name": "Subrecipient Details",
+									"EntityLogicalName": "eyfrcc_subrecipient",
+									"ReferencingAttributeLogicalName": null,
+									"Description": null,
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "te-child-action-001",
+											"Name": "Email Address",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_emailaddress",
+												"SchemaName": "eyfrcc_emailaddress",
+												"Label": "Email Address",
+												"DataType": 643260000,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"Description": "The email address of the subrecipient.",
+												"MaxLength": 1000,
+												"Format": "Text"
+											}
+										},
+										{
+											"Id": "te-child-action-002",
+											"Name": "First Name",
+											"Order": 2,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_firstname",
+												"SchemaName": "eyfrcc_firstname",
+												"Label": "First Name",
+												"DataType": 643260000,
+												"IsRequired": true,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"Description": "First name of the subrecipient.",
+												"MaxLength": 1000,
+												"Format": "Text"
+											}
+										},
+										{
+											"Id": "te-child-action-003",
+											"Name": "Subrecipient Name",
+											"Order": 3,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_name",
+												"SchemaName": "eyfrcc_name",
+												"Label": "Subrecipient Name",
+												"DataType": 643260000,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"Description": "Full name of the subrecipient organization.",
+												"MaxLength": 1000,
+												"Format": "Text"
+											}
+										}
+									],
+									"Conditions": []
+								}
+							],
+							"ChildViewSteps": [
+								{
+									"Id": "te-view-step-001",
+									"Name": "View",
+									"EntityLogicalName": "eyfrcc_subrecipient",
+									"ReferencingAttributeLogicalName": null,
+									"Description": null,
+									"Order": 1,
+									"Actions": [
+										{
+											"Id": "te-view-action-001",
+											"Name": "Email Address",
+											"Order": 1,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_emailaddress",
+												"SchemaName": "eyfrcc_emailaddress",
+												"Label": "Email Address",
+												"DataType": 643260000,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"Description": "The email address.",
+												"MaxLength": 1000,
+												"Format": "Text"
+											}
+										},
+										{
+											"Id": "te-view-action-002",
+											"Name": "First Name",
+											"Order": 2,
+											"ChildOrder": 0,
+											"Type": 203300000,
+											"Properties": {
+												"LogicalName": "eyfrcc_firstname",
+												"SchemaName": "eyfrcc_firstname",
+												"Label": "First Name",
+												"DataType": 643260000,
+												"IsRequired": false,
+												"IsReadOnly": false,
+												"IsHidden": false,
+												"Description": "First name.",
+												"MaxLength": 1000,
+												"Format": "Text"
+											}
+										}
+									],
+									"Conditions": []
+								}
+							]
+						}
+					}
+				],
+				"Conditions": []
+			}
+		]
+	}
+}

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import formConfig from "@/testing/formConfigs/formConfigv1.json";
 import { Alert, ConfirmationModal, FormBuilder, FormConfigSkeleton, LoadingIndicator } from "@components";
 import {
@@ -19,6 +19,13 @@ import {
 	resolveEmbeddedVersionId,
 	resolveRequestorId,
 } from "@utilities";
+import { DevToolsContext, type DevToolsAPI } from "@testing";
+
+const formConfigLoaders: Record<string, () => Promise<any>> = {
+	formConfigv1: () => Promise.resolve(formConfig),
+	formConfigMinimal: () => import("@/testing/formConfigs/formConfigMinimal.json").then((m) => m.default),
+	formConfigTableEntry: () => import("@/testing/formConfigs/formConfigTableEntry.json").then((m) => m.default),
+};
 
 interface ConfirmationModalState {
 	isOpen: boolean;
@@ -112,6 +119,17 @@ const App = () => {
 		setIsFormConfigurationLoading(false);
 		setIsRecordDataLoading(false);
 	};
+
+	const reloadWithConfig = useCallback(async (configKey: string) => {
+		const loader = formConfigLoaders[configKey];
+		if (!loader) return;
+		const newConfig = await loader();
+		setConfig(newConfig);
+		setRecordData(null);
+		setRecordDataByEntity({});
+	}, []);
+
+	const devToolsApi = useMemo<DevToolsAPI>(() => ({ reloadWithConfig }), [reloadWithConfig]);
 
 	const resolveNewRecordConfig = async (versionId: string) => {
 		let version = await resolveFormVersion(versionId);
@@ -402,7 +420,7 @@ const App = () => {
 		<main className="page-content">
 			{showInitialSkeleton ? <FormConfigSkeleton /> : null}
 			{config ? (
-				<>
+				<DevToolsContext.Provider value={devToolsApi}>
 					<FormBuilder
 						config={config}
 						recordData={recordData}
@@ -411,7 +429,7 @@ const App = () => {
 						urlParams={urlParams}
 						onUrlParamsChange={setUrlParams}
 					/>
-				</>
+				</DevToolsContext.Provider>
 			) : null}
 			{errorMessage ? (
 				<Alert type="danger" dismissible onDismiss={() => setErrorMessage("")}>

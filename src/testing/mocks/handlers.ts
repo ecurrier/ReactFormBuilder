@@ -1,143 +1,92 @@
 import { http, delay, HttpResponse } from "msw";
+import {
+	getMockDelay,
+	maybeErrorResponse,
+	getRecords,
+	extractIdFromFetchXml,
+	extractIdFromUrl,
+	odataCollection,
+	insertRecord,
+	updateRecord,
+} from "../devtools/handlerUtils";
+import { getStore } from "../devtools/mockStore";
 
 export const handlers = [
-	// Handle FetchXML queries for subrecipients (with or without filtering)
+	// ─── GET: Subrecipients ───────────────────────────────────────────────
 	http.get("/_api/eyfrcc_subrecipients", async ({ request }) => {
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
 		const url = new URL(request.url);
 		const fetchXml = url.searchParams.get("fetchXml");
 
 		console.log("[MSW] Subrecipients request:", { fetchXml });
 
-		let value = [
-			{
-				eyfrcc_subrecipientid: "074f4b3c-e18f-4ce4-9239-793c64a94d8e",
-				eyfrcc_name: "Evan's Test Subrecipient",
-				eyfrcc_emailaddress: "evan@testsubrecipient.com",
-				eyfrcc_firstname: "Evan",
-				eyfrcc_childapplication: "parent-record-id", // Mock parent reference
-			},
-			{
-				eyfrcc_subrecipientid: "074f4b3c-e18f-4ce4-9239-793c64a94d8d",
-				eyfrcc_name: "Sample Subrecipient",
-				eyfrcc_emailaddress: "sample@testsubrecipient.com",
-				eyfrcc_firstname: "Sample",
-				eyfrcc_childapplication: "parent-record-id",
-			},
-			{
-				eyfrcc_subrecipientid: "074f4b3c-e18f-4ce4-9239-793c64a94d8f",
-				eyfrcc_name: "Demo Subrecipient",
-				eyfrcc_emailaddress: "demo@testsubrecipient.com",
-				eyfrcc_firstname: "Demo",
-				eyfrcc_childapplication: "parent-record-id",
-			},
-			{
-				eyfrcc_subrecipientid: "074f4b3c-e18f-4ce4-9239-793c64a94d8g",
-				eyfrcc_name: "Test Subrecipient",
-				eyfrcc_emailaddress: "test@testsubrecipient.com",
-				eyfrcc_firstname: "Test",
-				eyfrcc_childapplication: "parent-record-id",
-			},
-			{
-				eyfrcc_subrecipientid: "074f4b3c-e18f-4ce4-9239-793c64a94d8h",
-				eyfrcc_name: "Mock Subrecipient",
-				eyfrcc_emailaddress: "mock@testsubrecipient.com",
-				eyfrcc_firstname: "Mock",
-				eyfrcc_childapplication: "parent-record-id",
-			},
-		];
+		const filterId = fetchXml ? extractIdFromFetchXml(fetchXml, "eyfrcc_subrecipientid") : null;
+		const records = filterId ? getRecords("eyfrcc_subrecipients", filterId) : getRecords("eyfrcc_subrecipients");
 
-		// TODO: Parse FetchXML and filter results based on conditions
-		// For now, return all records regardless of filter
-
-		await delay(1000);
-		return HttpResponse.json({
-			"@odata.count": value.length,
-			"@Microsoft.Dynamics.CRM.totalrecordcount": value.length,
-			value,
-		});
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── PATCH: Accounts ──────────────────────────────────────────────────
 	http.patch("*/_api/accounts*", async () => {
-		await delay(1000);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
 		return HttpResponse.json({ success: true });
 	}),
+
+	// ─── GET: EYGA Configurations ─────────────────────────────────────────
 	http.get("*/_api/eyfrcc_eygaconfigurations*", async () => {
-		await delay(800);
-		return HttpResponse.json({
-			"@odata.context":
-				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_eygaconfigurations(eyfrcc_eygaconfigurationid,eyfrcc_eygaapikey,eyfrcc_allowedextensions,eyfrcc_maxfilesizemb,eyfrcc_documentapiurl,eyfrcc_addressapiurl,eyfrcc_samgovapiurl)",
-			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
-			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
-			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51526383",
-			value: [
-				{
-					"@odata.etag": 'W/"44049758"',
-					"eyfrcc_maxfilesizemb@OData.Community.Display.V1.FormattedValue": "10",
-					eyfrcc_maxfilesizemb: 10,
-					eyfrcc_eygaapikey: "DUMMY_API_KEY_FOR_TESTING_PURPOSES_ONLY",
-					eyfrcc_documentapiurl: "https://americorps-fed-core-2.azure-api.net/document/v1",
-					eyfrcc_allowedextensions:
-						'{"ValidFileTypes":[{"m":"application/vnd.openxmlformats-officedocument.wordprocessingml.document","e":"docx"},{"m":"image/bmp","e":"bmp"},{"m":"application/msword","e":"doc"},{"m":"application/pdf","e":"pdf"},{"m":"image/gif","e":"gif"},{"m":"image/jpeg","e":"jpg,jpeg"},{"m":"image/png","e":"png"},{"m":"application/vnd.ms-powerpoint","e":"ppt"},{"m":"application/vnd.openxmlformats-officedocument.presentationml.presentation","e":"pptx"},{"m":"application/rtf","e":"rtf"},{"m":"image/tiff","e":"tif,tiff"},{"m":"text/plain","e":"txt"},{"m":"application/vnd.ms-excel","e":"xls"},{"m":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","e":"xlsx"},{"m":"image/heic","e":"heic"},{"m":"image/heif","e":"heif"},{"m":"text/csv","e":"csv"}]}',
-					eyfrcc_addressapiurl: "https://americorps-fed-core-2.azure-api.net/address/v1",
-					eyfrcc_eygaconfigurationid: "993ae21c-08e6-ed11-a7c7-0022482a942e",
-					eyfrcc_samgovapiurl: "https://americorps-fed-core-2.azure-api.net/samgov/v1",
-				},
-			],
-		});
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_eygaconfigurations");
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── GET: API Tokens ──────────────────────────────────────────────────
 	http.get("*/_api/eyfrcc_apitokens*", async () => {
-		await delay(800);
-		return HttpResponse.json({
-			"@odata.context": "https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_apitokens",
-			"@Microsoft.Dynamics.CRM.totalrecordcount": 0,
-			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
-			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51526383",
-			value: [
-				{
-					eyfrcc_token:
-						"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzb3VyY2UiOiJwb3J0YWwiLCJwb3J0YWwtdXNlci1pZCI6IjhiODk2MTE4LThkZjYtZWUxMS1hMWZlLTAwMjI0ODI1YjE3YSIsInBvcnRhbC1vcmctaWQiOiJhZWMzNGYxZC03NjI3LWVmMTEtOGVlNy0wMDIyNDg1M2Q0MjAiLCJuYmYiOjE3NjczODEwNjgsImV4cCI6MTc2NzM4ODI2OCwiaWF0IjoxNzY3MzgxMDY4fQ.tDdfEn33NGn9jjxZlcd4imeVHJeBfDPtoQXPTxdu9e0",
-					"eyfrcc_expirationdate@OData.Community.Display.V1.FormattedValue": "1/2/2026 3:11 PM",
-					eyfrcc_expirationdate: "2026-01-02T21:11:08.4104192Z",
-					eyfrcc_apitokenid: "4e63a104-9b0e-4381-8e5e-24ce4ea79c71",
-					eyfrcc_name: "API Token Expires: 1/2/2026 9:11:08 PM",
-				},
-			],
-		});
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_apitokens");
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── GET: Versions ────────────────────────────────────────────────────
+	// Returns OData-wrapped version record with form content JSON
 	http.get("*/_api/eyfrcc_versions*", async () => {
-		await delay(1500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_versions");
 		return HttpResponse.json({
 			"@odata.context":
 				"https://eyga-fedcore2.crm.dynamics.com/api/data/v9.2/$metadata#eyfrcc_versions(eyfrcc_formcontent,_eyfrcc_regardingid_value,eyfrcc_RegardingId_eyfrcc_form,eyfrcc_versionid,eyfrcc_RegardingId_eyfrcc_form())",
-			value: [
-				{
-					"@odata.etag": 'W/"51209211"',
-					eyfrcc_formcontent:
-						'{\r\n  "Version": "1.0",\r\n  "Program": null,\r\n  "FundingOpportunity": {\r\n    "Id": "0bfaf433-42d8-4486-bf73-3cb72b6a3fe2",\r\n    "Name": "Dev & Testing: React Forms",\r\n    "FullName": "Dev & Testing: React Forms",\r\n    "Settings": {\r\n      "IdentityVerificationEnabled": false,\r\n      "LateSubmissionAllowedUntil": "0001-01-01T00:00:00"\r\n    },\r\n    "ApplicationTable": {\r\n      "Id": "605acbcf-b5fa-eb11-94ef-0022481e1fc4",\r\n      "Name": "Child Application",\r\n      "TableLogicalName": "eyfrcc_childapplicationtest",\r\n      "Description": "This table represents the template \\"child\\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",\r\n      "Usage": 643260000,\r\n      "ConfigurationFields": {\r\n        "ParentApplication": "eyfrcc_application",\r\n        "Requestor": "eyfrcc_requestor",\r\n        "ApplicationType": "eyfrcc_applicationtype",\r\n        "Portfolio": "eyfrcc_program",\r\n        "DenialReason": "eyfrcc_denialreason",\r\n        "Organization": "eyfrcc_organization",\r\n        "ApplicationNumber": "eyfrcc_applicationnumber",\r\n        "DocumentPath": "eyfrcc_documentpath",\r\n        "DecisionExplanation": "eyfrcc_decisionexplanation",\r\n        "ConditionsTriggered": "eyfrcc_conditionstriggered",\r\n        "TerminationExplanation": "eyfrcc_terminationexplanation",\r\n        "ApplicationOpen": "eyfrcc_applicationopen",\r\n        "FollowUp": "eyfrcc_followup",\r\n        "ReportDue": "eyfrcc_reportdue",\r\n        "SubmissionDate": "eyfrcc_submissiondate",\r\n        "DecisionDate": "eyfrcc_decisiondate",\r\n        "ReportDueDate": "eyfrcc_reportduedate",\r\n        "PeriodOfPerformanceStartDate": "eyfrcc_periodofperformancestartdate",\r\n        "PeriodOfPerformanceEndDate": "eyfrcc_periodofperformanceenddate",\r\n        "TotalAllowableExpenditures": "eyfrcc_totalallowableexpenditures",\r\n        "TotalUnallowableExpenditures": "eyfrcc_totalunallowableexpenditures",\r\n        "TotalDirectCostExpenditures": "eyfrcc_totaldirectcostexpenditures",\r\n        "TotalIndirectCostExpenditures": "eyfrcc_totalindirectcostexpenditures",\r\n        "TotalApprovedExpenditures": "eyfrcc_totalapprovedexpenditures",\r\n        "TotalDirectAwards": "eyfrcc_totaldirectawards",\r\n        "TotalIndirectAwards": "eyfrcc_totalindirectawards",\r\n        "TotalAwards": "eyfrcc_totalawards",\r\n        "TotalPayments": "eyfrcc_totalpayments",\r\n        "RiskIndicator": "eyfrcc_riskindicator2",\r\n        "IndirectCostRate": "eyfrcc_indirectcostrate",\r\n        "NegotiatedIndirectCostRate": "eyfrcc_negotiatedindirectcostrate",\r\n        "ApplicationStatus": "eyfrcc_status",\r\n        "ReportingFrequency": "eyfrcc_reportingfrequency",\r\n        "Decision": "eyfrcc_decision",\r\n        "ReviewConclusion": "eyfrcc_reviewconclusion",\r\n        "FundingAwardType": "eyfrcc_awardtype",\r\n        "FormType": "eyfrcc_formtype",\r\n        "CloseoutPeriodEndDate": "eyfrcc_closeoutperiodenddate",\r\n        "CloseoutReportDue": "eyfrcc_closeoutreportdue",\r\n        "PrimeDecision": "eyfrcc_primedecision",\r\n        "RevisionTypeOther": "eyfrcc_revisiontype_other",\r\n        "TotalProposedIndirectBudget": "eyfrcc_totalproposedindirectbudget",\r\n        "TotalProposedIndirectCostRate": "eyfrcc_totalproposedindirectcostrate",\r\n        "TotalApprovedDirectBudget": "eyfrcc_totalapproveddirectbudget",\r\n        "TotalApprovedIndirectBudget": "eyfrcc_totalapprovedindirectbudget",\r\n        "TotalApprovedIndirectCostRate": "eyfrcc_totalapprovedindirectcostrate",\r\n        "TotalIncome": "eyfrcc_totalincome",\r\n        "Owner": "ownerid",\r\n        "AlternateApplicationID": "eyfrcc_alternateapplicationid",\r\n        "PaymentandInterestSchedule": "eyfrcc_paymentandinterestschedule",\r\n        "TotalSubrecipientFunding": "eyfrcc_totalsubrecipientfunding",\r\n        "PaymentRequestLimit": "eyfrcc_paymentrequestlimit",\r\n        "PaymentRequestLimitPeriod": "eyfrcc_paymentrequestlimitperiod",\r\n        "ProjectScope": "eyfrcc_projectscope",\r\n        "CurrentandPendingSupport": "eyfrcc_currentandpendingsupport",\r\n        "RateofSpendingIssues": "eyfrcc_rateofspendingissues",\r\n        "CompetitionType": "eyfrcc_competitiontype",\r\n        "IncrementalFunding": "eyfrcc_incrementalfunding",\r\n        "Revised": "eyfrcc_revised",\r\n        "TerminationReason": "eyfrcc_terminationreason",\r\n        "PreSiteVisitInstructions": "eyfrcc_presitevisitinstructions",\r\n        "DelinquentDebtExplanation": "eyfrcc_delinquentdebtexplanation",\r\n        "Signature": "eyfrcc_signature",\r\n        "SuspensionorDebarmentExplanation": "eyfrcc_suspensionordebarmentexplanation",\r\n        "TotalNumberofParticipantsTrainees": "eyfrcc_totalnumberofparticipantstrainees",\r\n        "Project": "eyfrcc_applicationprojectid",\r\n        "Purpose": "eyfrcc_purpose",\r\n        "Recommendations": "eyfrcc_recommendations",\r\n        "TotalGrantAwards": "eyfrcc_totalgrantawards",\r\n        "TotalLoanAwards": "eyfrcc_totalloanawards",\r\n        "CompetitionTitle": "eyfrcc_competitiontitle",\r\n        "RevisionTypes": "eyfrcc_revisiontypes",\r\n        "TotalExecutiveCompensation": "eyfrcc_totalexecutivecompensation",\r\n        "Name": "eyfrcc_name",\r\n        "ProcessingStatus": "eyfrcc_processingstatus",\r\n        "FullyDisbursed": "eyfrcc_fullydisbursed",\r\n        "Form": "eyfrcc_form",\r\n        "ApplicationScore": "eyfrcc_applicationscore",\r\n        "TypeofApplication": "eyfrcc_typeofapplication",\r\n        "TotalAmountofExpenditures": "eyfrcc_totalamountofexpenditures",\r\n        "SuspensionorDebarmentReason": "eyfrcc_suspensionordebarmentreason",\r\n        "SmartFundingContract": "eyfrcc_smartfundingcontract",\r\n        "ParentSmartContract": "eyfrcc_parentsmartcontract",\r\n        "IndirectCostLevel": "eyfrcc_indirectcostlevel",\r\n        "VerifiedTotalLiabilities": "eyfrcc_verifiedtotalliabilities",\r\n        "VerifiedTotalIncome": "eyfrcc_verifiedtotalincome",\r\n        "VerifiedMinimumDebtService": "eyfrcc_verifiedminimumdebtservice",\r\n        "VerifiedEBITDA": "eyfrcc_verifiedebitda",\r\n        "VerifiedTotalAssets": "eyfrcc_verifiedtotalassets",\r\n        "CreditScore": "eyfrcc_creditscore",\r\n        "DebttoIncomeRatio": "eyfrcc_debttoincomeratio",\r\n        "LiquidityRatio": "eyfrcc_liquidityratio",\r\n        "TotalProposedBudget": "eyfrcc_totalproposedbudget",\r\n        "TotalApprovedBudget": "eyfrcc_totalapprovedbudget",\r\n        "AreasImpacted": "eyfrcc_areasimpacted",\r\n        "AwardDescription": "eyfrcc_awarddescription",\r\n        "PrimaryPlaceofPerformance": "eyfrcc_primaryplaceofperformance",\r\n        "LifecycleStage": "eyfrcc_lifecyclestage",\r\n        "BusinessFundIndicator": "eyfrcc_businessfundindicator",\r\n        "ReviewerConflictsofInterest": "eyfrcc_reviewerconflictsofinterest",\r\n        "SubmissionType": "eyfrcc_submissiontype",\r\n        "SigningStatus": "eyfrcc_signingstatus",\r\n        "BudgetStatus": "eyfrcc_budgetstatus",\r\n        "ApprovedCostShareorMatch": "eyfrcc_approvedcostshareormatch",\r\n        "ApprovedCostShareorMatchExplanation": "eyfrcc_approvedcostshareormatchexplanation",\r\n        "CostShareorMatchStatus": "eyfrcc_costshareormatchstatus",\r\n        "ReviewNotes": "eyfrcc_reviewnotes",\r\n        "TerminationType": "eyfrcc_terminationtype",\r\n        "AwardActionType": "eyfrcc_awardactiontype",\r\n        "IndirectCostRateDistributionBasis": "eyfrcc_indirectcostratedistributionbasis",\r\n        "ProjectName": "eyfrcc_projectname",\r\n        "TheoryofChange": "eyfrcc_theoryofchange",\r\n        "ExpectedImpact": "eyfrcc_expectedimpact",\r\n        "Feasibility": "eyfrcc_feasibility",\r\n        "ReturnonInvestment": "eyfrcc_returnoninvestment",\r\n        "Equity": "eyfrcc_equity",\r\n        "PreviousFundingRecipient": "eyfrcc_previousfundingrecipient",\r\n        "PreviousProgramParticipant": "eyfrcc_previousprogramparticipant",\r\n        "DebarmentStatus": "eyfrcc_debarmentstatus",\r\n        "OfficialAwardIDNumber": "eyfrcc_officialawardidnumber",\r\n        "FollowUpDate": "eyfrcc_followupdate",\r\n        "InstructionalText": "eyfrcc_instructionaltext",\r\n        "FederalShareofIndirectCosts": "eyfrcc_federalshareofindirectcosts",\r\n        "CompetitionIdentificationNumber": "eyfrcc_competitionidentificationnumber",\r\n        "AllowAppeal": "eyfrcc_allowappeal",\r\n        "AllowStandardForm424": "eyfrcc_allowstandardform424",\r\n        "AllowStandardForm424A": "eyfrcc_allowstandardform424a",\r\n        "DocumentReviewNotes": "eyfrcc_documentreviewnotes",\r\n        "ProjectReviewNotes": "eyfrcc_projectreviewnotes",\r\n        "FinancialReviewNotes": "eyfrcc_financialreviewnotes",\r\n        "BudgetReviewNotes": "eyfrcc_budgetreviewnotes",\r\n        "PrimeApplication": "eyfrcc_primeapplication",\r\n        "TotalProposedDirectBudget": "eyfrcc_totalproposeddirectbudget",\r\n        "DocumentNumber": "eyfrcc_documentnumber",\r\n        "ReadyforPayment": "eyfrcc_readyforpayment",\r\n        "AuditPackageGenerated": "eyfrcc_auditpackagegenerated",\r\n        "AuditPackageDocumentUrl": "eyfrcc_auditpackagedocumenturl",\r\n        "PreApplicationReference": "eyfrcc_preapplicationid",\r\n        "PostApplicationReference": "eyfrcc_postapplicationid",\r\n        "AuthorizedRepresentative": "eyfrcc_authorizedrepresentative",\r\n        "ApplicationPackage": "eyfrcc_applicationpackage",\r\n        "HasStarted": "eyfrcc_hasstarted"\r\n      }\r\n    }\r\n  },\r\n  "Form": {\r\n    "Id": "ffc7ca6a-3fdd-f011-8544-6045bdd311df",\r\n    "Name": "Dev & Testing: React Forms - Application Portal Form",\r\n    "PrimaryApplicationTable": {\r\n      "Id": "605acbcf-b5fa-eb11-94ef-0022481e1fc4",\r\n      "Name": "Child Application",\r\n      "TableLogicalName": "eyfrcc_childapplicationtest",\r\n      "Description": "This table represents the template \\"child\\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",\r\n      "Usage": 643260000,\r\n      "ConfigurationFields": {\r\n        "ParentApplication": "eyfrcc_application",\r\n        "Requestor": "eyfrcc_requestor",\r\n        "ApplicationType": "eyfrcc_applicationtype",\r\n        "Portfolio": "eyfrcc_program",\r\n        "DenialReason": "eyfrcc_denialreason",\r\n        "Organization": "eyfrcc_organization",\r\n        "ApplicationNumber": "eyfrcc_applicationnumber",\r\n        "DocumentPath": "eyfrcc_documentpath",\r\n        "DecisionExplanation": "eyfrcc_decisionexplanation",\r\n        "ConditionsTriggered": "eyfrcc_conditionstriggered",\r\n        "TerminationExplanation": "eyfrcc_terminationexplanation",\r\n        "ApplicationOpen": "eyfrcc_applicationopen",\r\n        "FollowUp": "eyfrcc_followup",\r\n        "ReportDue": "eyfrcc_reportdue",\r\n        "SubmissionDate": "eyfrcc_submissiondate",\r\n        "DecisionDate": "eyfrcc_decisiondate",\r\n        "ReportDueDate": "eyfrcc_reportduedate",\r\n        "PeriodOfPerformanceStartDate": "eyfrcc_periodofperformancestartdate",\r\n        "PeriodOfPerformanceEndDate": "eyfrcc_periodofperformanceenddate",\r\n        "TotalAllowableExpenditures": "eyfrcc_totalallowableexpenditures",\r\n        "TotalUnallowableExpenditures": "eyfrcc_totalunallowableexpenditures",\r\n        "TotalDirectCostExpenditures": "eyfrcc_totaldirectcostexpenditures",\r\n        "TotalIndirectCostExpenditures": "eyfrcc_totalindirectcostexpenditures",\r\n        "TotalApprovedExpenditures": "eyfrcc_totalapprovedexpenditures",\r\n        "TotalDirectAwards": "eyfrcc_totaldirectawards",\r\n        "TotalIndirectAwards": "eyfrcc_totalindirectawards",\r\n        "TotalAwards": "eyfrcc_totalawards",\r\n        "TotalPayments": "eyfrcc_totalpayments",\r\n        "RiskIndicator": "eyfrcc_riskindicator2",\r\n        "IndirectCostRate": "eyfrcc_indirectcostrate",\r\n        "NegotiatedIndirectCostRate": "eyfrcc_negotiatedindirectcostrate",\r\n        "ApplicationStatus": "eyfrcc_status",\r\n        "ReportingFrequency": "eyfrcc_reportingfrequency",\r\n        "Decision": "eyfrcc_decision",\r\n        "ReviewConclusion": "eyfrcc_reviewconclusion",\r\n        "FundingAwardType": "eyfrcc_awardtype",\r\n        "FormType": "eyfrcc_formtype",\r\n        "CloseoutPeriodEndDate": "eyfrcc_closeoutperiodenddate",\r\n        "CloseoutReportDue": "eyfrcc_closeoutreportdue",\r\n        "PrimeDecision": "eyfrcc_primedecision",\r\n        "RevisionTypeOther": "eyfrcc_revisiontype_other",\r\n        "TotalProposedIndirectBudget": "eyfrcc_totalproposedindirectbudget",\r\n        "TotalProposedIndirectCostRate": "eyfrcc_totalproposedindirectcostrate",\r\n        "TotalApprovedDirectBudget": "eyfrcc_totalapproveddirectbudget",\r\n        "TotalApprovedIndirectBudget": "eyfrcc_totalapprovedindirectbudget",\r\n        "TotalApprovedIndirectCostRate": "eyfrcc_totalapprovedindirectcostrate",\r\n        "TotalIncome": "eyfrcc_totalincome",\r\n        "Owner": "ownerid",\r\n        "AlternateApplicationID": "eyfrcc_alternateapplicationid",\r\n        "PaymentandInterestSchedule": "eyfrcc_paymentandinterestschedule",\r\n        "TotalSubrecipientFunding": "eyfrcc_totalsubrecipientfunding",\r\n        "PaymentRequestLimit": "eyfrcc_paymentrequestlimit",\r\n        "PaymentRequestLimitPeriod": "eyfrcc_paymentrequestlimitperiod",\r\n        "ProjectScope": "eyfrcc_projectscope",\r\n        "CurrentandPendingSupport": "eyfrcc_currentandpendingsupport",\r\n        "RateofSpendingIssues": "eyfrcc_rateofspendingissues",\r\n        "CompetitionType": "eyfrcc_competitiontype",\r\n        "IncrementalFunding": "eyfrcc_incrementalfunding",\r\n        "Revised": "eyfrcc_revised",\r\n        "TerminationReason": "eyfrcc_terminationreason",\r\n        "PreSiteVisitInstructions": "eyfrcc_presitevisitinstructions",\r\n        "DelinquentDebtExplanation": "eyfrcc_delinquentdebtexplanation",\r\n        "Signature": "eyfrcc_signature",\r\n        "SuspensionorDebarmentExplanation": "eyfrcc_suspensionordebarmentexplanation",\r\n        "TotalNumberofParticipantsTrainees": "eyfrcc_totalnumberofparticipantstrainees",\r\n        "Project": "eyfrcc_applicationprojectid",\r\n        "Purpose": "eyfrcc_purpose",\r\n        "Recommendations": "eyfrcc_recommendations",\r\n        "TotalGrantAwards": "eyfrcc_totalgrantawards",\r\n        "TotalLoanAwards": "eyfrcc_totalloanawards",\r\n        "CompetitionTitle": "eyfrcc_competitiontitle",\r\n        "RevisionTypes": "eyfrcc_revisiontypes",\r\n        "TotalExecutiveCompensation": "eyfrcc_totalexecutivecompensation",\r\n        "Name": "eyfrcc_name",\r\n        "ProcessingStatus": "eyfrcc_processingstatus",\r\n        "FullyDisbursed": "eyfrcc_fullydisbursed",\r\n        "Form": "eyfrcc_form",\r\n        "ApplicationScore": "eyfrcc_applicationscore",\r\n        "TypeofApplication": "eyfrcc_typeofapplication",\r\n        "TotalAmountofExpenditures": "eyfrcc_totalamountofexpenditures",\r\n        "SuspensionorDebarmentReason": "eyfrcc_suspensionordebarmentreason",\r\n        "SmartFundingContract": "eyfrcc_smartfundingcontract",\r\n        "ParentSmartContract": "eyfrcc_parentsmartcontract",\r\n        "IndirectCostLevel": "eyfrcc_indirectcostlevel",\r\n        "VerifiedTotalLiabilities": "eyfrcc_verifiedtotalliabilities",\r\n        "VerifiedTotalIncome": "eyfrcc_verifiedtotalincome",\r\n        "VerifiedMinimumDebtService": "eyfrcc_verifiedminimumdebtservice",\r\n        "VerifiedEBITDA": "eyfrcc_verifiedebitda",\r\n        "VerifiedTotalAssets": "eyfrcc_verifiedtotalassets",\r\n        "CreditScore": "eyfrcc_creditscore",\r\n        "DebttoIncomeRatio": "eyfrcc_debttoincomeratio",\r\n        "LiquidityRatio": "eyfrcc_liquidityratio",\r\n        "TotalProposedBudget": "eyfrcc_totalproposedbudget",\r\n        "TotalApprovedBudget": "eyfrcc_totalapprovedbudget",\r\n        "AreasImpacted": "eyfrcc_areasimpacted",\r\n        "AwardDescription": "eyfrcc_awarddescription",\r\n        "PrimaryPlaceofPerformance": "eyfrcc_primaryplaceofperformance",\r\n        "LifecycleStage": "eyfrcc_lifecyclestage",\r\n        "BusinessFundIndicator": "eyfrcc_businessfundindicator",\r\n        "ReviewerConflictsofInterest": "eyfrcc_reviewerconflictsofinterest",\r\n        "SubmissionType": "eyfrcc_submissiontype",\r\n        "SigningStatus": "eyfrcc_signingstatus",\r\n        "BudgetStatus": "eyfrcc_budgetstatus",\r\n        "ApprovedCostShareorMatch": "eyfrcc_approvedcostshareormatch",\r\n        "ApprovedCostShareorMatchExplanation": "eyfrcc_approvedcostshareormatchexplanation",\r\n        "CostShareorMatchStatus": "eyfrcc_costshareormatchstatus",\r\n        "ReviewNotes": "eyfrcc_reviewnotes",\r\n        "TerminationType": "eyfrcc_terminationtype",\r\n        "AwardActionType": "eyfrcc_awardactiontype",\r\n        "IndirectCostRateDistributionBasis": "eyfrcc_indirectcostratedistributionbasis",\r\n        "ProjectName": "eyfrcc_projectname",\r\n        "TheoryofChange": "eyfrcc_theoryofchange",\r\n        "ExpectedImpact": "eyfrcc_expectedimpact",\r\n        "Feasibility": "eyfrcc_feasibility",\r\n        "ReturnonInvestment": "eyfrcc_returnoninvestment",\r\n        "Equity": "eyfrcc_equity",\r\n        "PreviousFundingRecipient": "eyfrcc_previousfundingrecipient",\r\n        "PreviousProgramParticipant": "eyfrcc_previousprogramparticipant",\r\n        "DebarmentStatus": "eyfrcc_debarmentstatus",\r\n        "OfficialAwardIDNumber": "eyfrcc_officialawardidnumber",\r\n        "FollowUpDate": "eyfrcc_followupdate",\r\n        "InstructionalText": "eyfrcc_instructionaltext",\r\n        "FederalShareofIndirectCosts": "eyfrcc_federalshareofindirectcosts",\r\n        "CompetitionIdentificationNumber": "eyfrcc_competitionidentificationnumber",\r\n        "AllowAppeal": "eyfrcc_allowappeal",\r\n        "AllowStandardForm424": "eyfrcc_allowstandardform424",\r\n        "AllowStandardForm424A": "eyfrcc_allowstandardform424a",\r\n        "DocumentReviewNotes": "eyfrcc_documentreviewnotes",\r\n        "ProjectReviewNotes": "eyfrcc_projectreviewnotes",\r\n        "FinancialReviewNotes": "eyfrcc_financialreviewnotes",\r\n        "BudgetReviewNotes": "eyfrcc_budgetreviewnotes",\r\n        "PrimeApplication": "eyfrcc_primeapplication",\r\n        "TotalProposedDirectBudget": "eyfrcc_totalproposeddirectbudget",\r\n        "DocumentNumber": "eyfrcc_documentnumber",\r\n        "ReadyforPayment": "eyfrcc_readyforpayment",\r\n        "AuditPackageGenerated": "eyfrcc_auditpackagegenerated",\r\n        "AuditPackageDocumentUrl": "eyfrcc_auditpackagedocumenturl",\r\n        "PreApplicationReference": "eyfrcc_preapplicationid",\r\n        "PostApplicationReference": "eyfrcc_postapplicationid",\r\n        "AuthorizedRepresentative": "eyfrcc_authorizedrepresentative",\r\n        "ApplicationPackage": "eyfrcc_applicationpackage",\r\n        "HasStarted": "eyfrcc_hasstarted"\r\n      }\r\n    },\r\n    "Introduction": null,\r\n    "Settings": {\r\n      "IncludeInApplicationPackage": true,\r\n      "ApplicationPackageTypesToIncludeOn": [\r\n        643260000\r\n      ],\r\n      "RequireFormForApplicant": true,\r\n      "EstimatedCompletionTime": "2 hours"\r\n    },\r\n    "Steps": [\r\n      {\r\n        "Id": "ce35df82-3fdd-f011-8544-6045bdd311df",\r\n        "Name": "Application Overview",\r\n        "EntityLogicalName": "eyfrcc_childapplicationtest",\r\n        "ReferencingAttributeLogicalName": null,\r\n        "Description": "\u003Cdiv class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"\u003E\u003Cp style=\\"margin: 0;\\"\u003EThis is the description of the Application Overview step.\u003C/p\u003E\u003C/div\u003E",\r\n        "Order": 1,\r\n        "Actions": [\r\n          {\r\n            "Id": "0229d1c0-3fdd-f011-8544-6045bdd311df",\r\n            "Name": "Application Overview - Field Input - Purpose (Child Application)",\r\n            "Order": 1,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_purpose",\r\n              "SchemaName": "eyfrcc_purpose",\r\n              "Label": "Purpose",\r\n              "DataType": 643260001,\r\n              "IsRequired": true,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "A description of the purpose of the project that has been awarded under the grant program. This comes from the Federal Integrated Business Framework (FIBF) model.",\r\n              "MaxLength": 100000,\r\n              "Format": null\r\n            }\r\n          }\r\n        ],\r\n        "Conditions": []\r\n      },\r\n      {\r\n        "Id": "63755ce0-3fdd-f011-8544-6045bdd311df",\r\n        "Name": "SF424",\r\n        "EntityLogicalName": "eyfrcc_standardform424",\r\n        "ReferencingAttributeLogicalName": "eyfrcc_childapplication",\r\n        "Description": "\u003Cdiv class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"\u003E\u003Cp style=\\"margin: 0;\\"\u003EThis form step resides on a different table than the form\'s primary table.\u003C/p\u003E\u003C/div\u003E",\r\n        "Order": 2,\r\n        "Actions": [\r\n          {\r\n            "Id": "89faad05-40dd-f011-8544-6045bdd311df",\r\n            "Name": "SF424 - Field Input - Attestation",\r\n            "Order": 1,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_attestation",\r\n              "SchemaName": "eyfrcc_attestation",\r\n              "Label": "Attestation",\r\n              "DataType": 643260007,\r\n              "IsRequired": true,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "The attestation required to be confirmed in order to submit the form.",\r\n              "Choices": [\r\n                {\r\n                  "Value": 1,\r\n                  "Label": "Yes"\r\n                },\r\n                {\r\n                  "Value": 0,\r\n                  "Label": "No"\r\n                }\r\n              ],\r\n              "DefaultValue": false\r\n            }\r\n          }\r\n        ],\r\n        "Conditions": []\r\n      },\r\n      {\r\n        "Id": "3eea7f25-40dd-f011-8544-6045bdd311df",\r\n        "Name": "Accessibility",\r\n        "EntityLogicalName": "eyfrcc_childapplicationtest",\r\n        "ReferencingAttributeLogicalName": null,\r\n        "Description": "\u003Cdiv class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"\u003E\u003Cp style=\\"margin: 0;\\"\u003EThis step will store every variation of all controls.\u003C/p\u003E\u003C/div\u003E",\r\n        "Order": 3,\r\n        "Actions": [\r\n          {\r\n            "Id": "0eb5e738-40dd-f011-8544-6045bdd311df",\r\n            "Name": "Accessibility - Field Input - State or Territory (Child Application)",\r\n            "Order": 1,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_stateorterritory",\r\n              "SchemaName": "eyfrcc_stateorterritory",\r\n              "Label": "State or Territory",\r\n              "DataType": 643260009,\r\n              "IsRequired": false,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "State or Territory",\r\n              "Targets": [\r\n                {\r\n                  "EntityLogicalName": "eyfrcc_stateterritory",\r\n                  "Columns": [\r\n                    "eyfrcc_stateterritoryname",\r\n                    "createdon"\r\n                  ],\r\n                  "NavigationProperty": null,\r\n                  "ReferencingAttribute": "eyfrcc_stateorterritory"\r\n                }\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            "Id": "52e23263-40dd-f011-8544-6045bdd311df",\r\n            "Name": "Accessibility - Table Entry - Subapplicant",\r\n            "Order": 2,\r\n            "ChildOrder": 0,\r\n            "Type": 203300002,\r\n            "Properties": {\r\n              "DisplayName": "Subapplicants",\r\n              "ChildEntityLogicalName": "eyfrcc_subrecipient",\r\n              "RelationshipName": "eyfrcc_childapplicationtest_eyfrcc_subrecipient",\r\n              "ValidationMessage": "Please enter at least subapplicant for your application.",\r\n              "CreateEnabled": true,\r\n              "EditEnabled": true,\r\n              "DeleteEnabled": true,\r\n              "ValidationType": 643260000,\r\n              "ReferencingAttribute": "eyfrcc_childapplication",\r\n              "ChildFormSteps": [\r\n                {\r\n                  "Id": "8deb7f0b-2ffd-ee11-a1ff-00224825b17a",\r\n                  "Name": "Step 1",\r\n                  "EntityLogicalName": "eyfrcc_subrecipient",\r\n                  "ReferencingAttributeLogicalName": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "9b54cc19-2ffd-ee11-a1ff-00224825b17a",\r\n                      "Name": "Step 1 - Field Input - Email Address (Subrecipient)",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_emailaddress",\r\n                        "SchemaName": "eyfrcc_emailaddress",\r\n                        "Label": "Email Address",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The email address of the third-party participant.",\r\n                        "MaxLength": 1000,\r\n                        "Format": "Text"\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "8618eaa1-0de4-ef11-8ee9-000d3a8f7522",\r\n                      "Name": "Step 1 - Field Input - First Name (Subrecipient)",\r\n                      "Order": 2,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_firstname",\r\n                        "SchemaName": "eyfrcc_firstname",\r\n                        "Label": "First Name",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The first name of the third-party participant.",\r\n                        "MaxLength": 1000,\r\n                        "Format": "Text"\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ],\r\n              "ChildViewSteps": [\r\n                {\r\n                  "Id": "60e52750-2ffd-ee11-a1ff-00224825b17a",\r\n                  "Name": "Step 1",\r\n                  "EntityLogicalName": "eyfrcc_subrecipient",\r\n                  "ReferencingAttributeLogicalName": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "b7e23056-2ffd-ee11-a1ff-00224825b17a",\r\n                      "Name": "Step 1 - Field Input - Email Address (Subrecipient)",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_emailaddress",\r\n                        "SchemaName": "eyfrcc_emailaddress",\r\n                        "Label": "Email Address",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The email address of the third-party participant.",\r\n                        "MaxLength": 1000,\r\n                        "Format": "Text"\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ]\r\n            }\r\n          }\r\n        ],\r\n        "Conditions": []\r\n      }\r\n    ]\r\n  }\r\n}',
-					_eyfrcc_regardingid_value: "ffc7ca6a-3fdd-f011-8544-6045bdd311df",
-					eyfrcc_versionid: "24f7c9d3-21de-f011-8544-7ced8d21d821",
-				},
-			],
+			value: records,
 		});
 	}),
-	http.get("*/_api/eyfrcc_forminstances*", async () => {
-		await delay(2500);
 
-		// Return permission error for testing purposes
-		// TO-DO: We should do a cool mocking mechanism instead of hardcoding responses
-		// Need to brainstorm exactly what that looks like
-		/*
-			{
-				"error": {
-					"code": "90040120",
-					"message": "You don’t have permission to read the eyfrcc_forminstance table.",
-					"innererror": {
-						"code": "90040120",
-						"message": "You don’t have permission to read the eyfrcc_forminstance table.",
-						"type": "EntityPermissionReadIsMissing"
-					}
-				}
-			}
-		*/
+	// ─── GET: Form Instances ──────────────────────────────────────────────
+	// Complex nested response structure with Version containing formcontent
+	http.get("*/_api/eyfrcc_forminstances*", async () => {
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_forminstances");
 		return HttpResponse.json({
 			"@odata.context":
 				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_forminstances(eyfrcc_forminstanceid,eyfrcc_primaryrecordid,eyfrcc_primaryrecordlogicalname,eyfrcc_secondaryrecords)",
@@ -145,391 +94,338 @@ export const handlers = [
 			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
 			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
 			"@Version.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_versionid",
-			value: [
-				{
-					"@odata.etag": 'W/"51508340"',
-					eyfrcc_primaryrecordid: "c9750587-d85d-4ab6-acc2-b03ee184bb42",
-					eyfrcc_primaryrecordlogicalname: "eyfrcc_childapplicationtest",
-					eyfrcc_forminstanceid: "a58a34f7-7fdf-f011-8544-6045bdd311df",
-					eyfrcc_secondaryrecords:
-						'[\r\n    {\r\n        "LogicalName": "eyfrcc_standardform424",\r\n        "Id": "bb7ef80c-d9e4-f011-8544-7ced8d21d821"\r\n    },\r\n    {\r\n        "LogicalName": "eyfrcc_standardform425",\r\n        "Id": "5a906480-dbe4-f011-8544-7ced8d21d821"\r\n    }\r\n]',
-					"Version.eyfrcc_regardingid@OData.Community.Display.V1.AttributeName": "eyfrcc_regardingid",
-					"Version.eyfrcc_regardingid@OData.Community.Display.V1.FormattedValue": "Dev & Testing: React Forms - Application Portal Form",
-					"Version.eyfrcc_regardingid@Microsoft.Dynamics.CRM.lookuplogicalname": "eyfrcc_form",
-					"Version.eyfrcc_regardingid": "ffc7ca6a-3fdd-f011-8544-6045bdd311df",
-					"Version.eyfrcc_versionid@OData.Community.Display.V1.AttributeName": "eyfrcc_versionid",
-					"Version.eyfrcc_versionid": "552cde61-53e4-f011-8544-6045bdd311df",
-					"Version.eyfrcc_formcontent@OData.Community.Display.V1.AttributeName": "eyfrcc_formcontent",
-					"Version.eyfrcc_formcontent":
-						'{\r\n  "Version": "1.0",\r\n  "Program": null,\r\n  "FundingOpportunity": {\r\n    "Id": "0bfaf433-42d8-4486-bf73-3cb72b6a3fe2",\r\n    "Name": "Dev & Testing: React Forms",\r\n    "FullName": "Dev & Testing: React Forms",\r\n    "Settings": {\r\n      "IdentityVerificationEnabled": false,\r\n      "LateSubmissionAllowedUntil": "0001-01-01T00:00:00"\r\n    },\r\n    "ApplicationTable": {\r\n      "Id": "605acbcf-b5fa-eb11-94ef-0022481e1fc4",\r\n      "Name": "Child Application",\r\n      "TableLogicalName": "eyfrcc_childapplicationtest",\r\n      "Description": "This table represents the template \\"child\\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",\r\n      "Usage": 643260000\r\n    }\r\n  },\r\n  "Form": {\r\n    "Id": "ffc7ca6a-3fdd-f011-8544-6045bdd311df",\r\n    "Name": "Dev & Testing: React Forms - Application Portal Form",\r\n    "PrimaryApplicationTable": {\r\n      "Id": "605acbcf-b5fa-eb11-94ef-0022481e1fc4",\r\n      "Name": "Child Application",\r\n      "TableLogicalName": "eyfrcc_childapplicationtest",\r\n      "Description": "This table represents the template \\"child\\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",\r\n      "Usage": 643260000\r\n    },\r\n    "Introduction": null,\r\n    "Settings": {\r\n      "IncludeInApplicationPackage": true,\r\n      "ApplicationPackageTypesToIncludeOn": [\r\n        643260000\r\n      ],\r\n      "RequireFormForApplicant": true,\r\n      "EstimatedCompletionTime": "2 hours"\r\n    },\r\n    "Steps": [\r\n      {\r\n        "Id": "ce35df82-3fdd-f011-8544-6045bdd311df",\r\n        "Name": "Application Overview",\r\n        "EntityLogicalName": "eyfrcc_childapplicationtest",\r\n        "EntityDisplayName": "Child Application Template",\r\n        "ReferencingAttribute": null,\r\n        "ReferencingNavigationProperty": null,\r\n        "Description": "<div class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"><p style=\\"margin: 0;\\">This is the description of the Application Overview step.</p></div>",\r\n        "Order": 1,\r\n        "Actions": [\r\n          {\r\n            "Id": "0229d1c0-3fdd-f011-8544-6045bdd311df",\r\n            "Name": "Application Overview - Field Input - Purpose (Child Application)",\r\n            "Order": 1,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_purpose",\r\n              "SchemaName": "eyfrcc_purpose",\r\n              "Label": "Purpose",\r\n              "DataType": 643260001,\r\n              "IsRequired": true,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "A description of the purpose of the project that has been awarded under the grant program. This comes from the Federal Integrated Business Framework (FIBF) model.",\r\n              "MaxLength": 100000,\r\n              "Format": null\r\n            }\r\n          }\r\n        ],\r\n        "Conditions": []\r\n      },\r\n      {\r\n        "Id": "3eea7f25-40dd-f011-8544-6045bdd311df",\r\n        "Name": "Primary Record - All Controls",\r\n        "EntityLogicalName": "eyfrcc_childapplicationtest",\r\n        "EntityDisplayName": "Child Application Template",\r\n        "ReferencingAttribute": null,\r\n        "ReferencingNavigationProperty": null,\r\n        "Description": "<div class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"><p style=\\"margin: 0;\\">This step will store every variation of all controls.</p></div>",\r\n        "Order": 2,\r\n        "Actions": [\r\n          {\r\n            "Id": "080e6365-0ce0-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Field Input - Address",\r\n            "Order": 1,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "ChildActions": [\r\n                {\r\n                  "Id": "180e6365-0ce0-f011-8544-7ced8d21d821",\r\n                  "Name": " - Field Input - Address Test 123 - Street 1",\r\n                  "Order": 1,\r\n                  "ChildOrder": 0,\r\n                  "Type": 203300000,\r\n                  "Properties": {\r\n                    "LogicalName": "eyfrcc_addresstest123_street1",\r\n                    "SchemaName": "eyfrcc_addresstest123_street1",\r\n                    "Label": "Address Test 123 - Street 1",\r\n                    "DataType": 643260000,\r\n                    "IsRequired": false,\r\n                    "IsReadOnly": false,\r\n                    "IsHidden": false,\r\n                    "ValidationType": null,\r\n                    "ValidationValue": null,\r\n                    "ValidationMessage": null,\r\n                    "Description": "Address Test 123 - Street 1",\r\n                    "MaxLength": 1000,\r\n                    "Format": "Text"\r\n                  }\r\n                },\r\n                {\r\n                  "Id": "190e6365-0ce0-f011-8544-7ced8d21d821",\r\n                  "Name": " - Field Input - Address Test 123 - Street 2",\r\n                  "Order": 2,\r\n                  "ChildOrder": 0,\r\n                  "Type": 203300000,\r\n                  "Properties": {\r\n                    "LogicalName": "eyfrcc_addresstest123_street2",\r\n                    "SchemaName": "eyfrcc_addresstest123_street2",\r\n                    "Label": "Address Test 123 - Street 2",\r\n                    "DataType": 643260000,\r\n                    "IsRequired": false,\r\n                    "IsReadOnly": false,\r\n                    "IsHidden": false,\r\n                    "ValidationType": null,\r\n                    "ValidationValue": null,\r\n                    "ValidationMessage": null,\r\n                    "Description": "Address Test 123 - Street 2",\r\n                    "MaxLength": 1000,\r\n                    "Format": "Text"\r\n                  }\r\n                },\r\n                {\r\n                  "Id": "1e0e6365-0ce0-f011-8544-7ced8d21d821",\r\n                  "Name": " - Field Input - Address Test 123 - City",\r\n                  "Order": 3,\r\n                  "ChildOrder": 0,\r\n                  "Type": 203300000,\r\n                  "Properties": {\r\n                    "LogicalName": "eyfrcc_addresstest123_city",\r\n                    "SchemaName": "eyfrcc_addresstest123_city",\r\n                    "Label": "Address Test 123 - City",\r\n                    "DataType": 643260000,\r\n                    "IsRequired": false,\r\n                    "IsReadOnly": false,\r\n                    "IsHidden": false,\r\n                    "ValidationType": null,\r\n                    "ValidationValue": null,\r\n                    "ValidationMessage": null,\r\n                    "Description": "Address Test 123 - City",\r\n                    "MaxLength": 1000,\r\n                    "Format": "Text"\r\n                  }\r\n                },\r\n                {\r\n                  "Id": "1f0e6365-0ce0-f011-8544-7ced8d21d821",\r\n                  "Name": " - Field Input - Address Test 123 - State",\r\n                  "Order": 4,\r\n                  "ChildOrder": 0,\r\n                  "Type": 203300000,\r\n                  "Properties": {\r\n                    "LogicalName": "eyfrcc_addresstest123_state",\r\n                    "SchemaName": "eyfrcc_addresstest123_state",\r\n                    "Label": "Address Test 123 - State",\r\n                    "DataType": 643260000,\r\n                    "IsRequired": false,\r\n                    "IsReadOnly": false,\r\n                    "IsHidden": false,\r\n                    "ValidationType": null,\r\n                    "ValidationValue": null,\r\n                    "ValidationMessage": null,\r\n                    "Description": "Address Test 123 - State",\r\n                    "MaxLength": 1000,\r\n                    "Format": "Text"\r\n                  }\r\n                },\r\n                {\r\n                  "Id": "200e6365-0ce0-f011-8544-7ced8d21d821",\r\n                  "Name": " - Field Input - Address Test 123 - ZIP",\r\n                  "Order": 5,\r\n                  "ChildOrder": 0,\r\n                  "Type": 203300000,\r\n                  "Properties": {\r\n                    "LogicalName": "eyfrcc_addresstest123_zip",\r\n                    "SchemaName": "eyfrcc_addresstest123_zip",\r\n                    "Label": "Address Test 123 - ZIP",\r\n                    "DataType": 643260000,\r\n                    "IsRequired": false,\r\n                    "IsReadOnly": false,\r\n                    "IsHidden": false,\r\n                    "ValidationType": null,\r\n                    "ValidationValue": null,\r\n                    "ValidationMessage": null,\r\n                    "Description": "Address Test 123 - ZIP",\r\n                    "MaxLength": 1000,\r\n                    "Format": "Text"\r\n                  }\r\n                }\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            "Id": "45faca7d-0ce0-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Field Input - Approved Indirect Cost Rate (Child Application)",\r\n            "Order": 2,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_totalapprovedindirectcostrate",\r\n              "SchemaName": "eyfrcc_totalapprovedindirectcostrate",\r\n              "Label": "Approved Indirect Cost Rate",\r\n              "DataType": 643260004,\r\n              "IsRequired": true,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "The approved percentage for the indirect cost rate based on the calculation of the \\"Total Approved Indirect Budget\\" over the \\"Total Approved Direct Budget\\".",\r\n              "MinValue": 0.0,\r\n              "MaxValue": 1000000000.0,\r\n              "Precision": 2\r\n            }\r\n          },\r\n          {\r\n            "Id": "c7e5d189-0ce0-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Field Input - Areas Impacted (Child Application)",\r\n            "Order": 3,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_areasimpacted",\r\n              "SchemaName": "eyfrcc_areasimpacted",\r\n              "Label": "Areas Impacted",\r\n              "DataType": 643260001,\r\n              "IsRequired": false,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "A list of geographic areas or entities aided within the function or activity for a Federal award using categories specified in the Federal agency instructions (e.g., Cities, Counties, States). This comes from the Federal Integrated Business Framework (FIBF) model.",\r\n              "MaxLength": 100000,\r\n              "Format": null\r\n            }\r\n          },\r\n          {\r\n            "Id": "0653c595-0ce0-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Field Input - Budget Status (Child Application)",\r\n            "Order": 4,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_budgetstatus",\r\n              "SchemaName": "eyfrcc_budgetstatus",\r\n              "Label": "Budget Status",\r\n              "DataType": 643260006,\r\n              "IsRequired": false,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "A code denoting the current state of the Federal award project budget as proposed or approved status. This comes from the Federal Integrated Business Framework (FIBF) model.",\r\n              "CanSelectMultiple": false,\r\n              "Choices": [\r\n                {\r\n                  "Value": 643260000,\r\n                  "Label": "Approved"\r\n                },\r\n                {\r\n                  "Value": 643260001,\r\n                  "Label": "Proposed"\r\n                },\r\n                {\r\n                  "Value": 643260002,\r\n                  "Label": "Revision Approved"\r\n                },\r\n                {\r\n                  "Value": 643260003,\r\n                  "Label": "Revision Proposed"\r\n                },\r\n                {\r\n                  "Value": 643260004,\r\n                  "Label": "Rejected"\r\n                }\r\n              ],\r\n              "DefaultValue": -1\r\n            }\r\n          },\r\n          {\r\n            "Id": "52e23263-40dd-f011-8544-6045bdd311df",\r\n            "Name": "Accessibility - Table Entry - Subapplicant",\r\n            "Order": 5,\r\n            "ChildOrder": 0,\r\n            "Type": 203300002,\r\n            "Properties": {\r\n              "DisplayName": "Subapplicants",\r\n              "ChildEntityLogicalName": "eyfrcc_subrecipient",\r\n              "RelationshipName": "eyfrcc_childapplicationtest_eyfrcc_subrecipient",\r\n              "ValidationMessage": "Please enter at least subapplicant for your application.",\r\n              "CreateEnabled": true,\r\n              "EditEnabled": true,\r\n              "DeleteEnabled": true,\r\n              "ValidationType": 643260000,\r\n              "ReferencingAttribute": "eyfrcc_childapplication",\r\n              "ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",\r\n              "ChildFormSteps": [\r\n                {\r\n                  "Id": "8deb7f0b-2ffd-ee11-a1ff-00224825b17a",\r\n                  "Name": "Step 1",\r\n                  "EntityLogicalName": "eyfrcc_subrecipient",\r\n                  "EntityDisplayName": "Subapplicant",\r\n                  "ReferencingAttribute": null,\r\n                  "ReferencingNavigationProperty": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "9b54cc19-2ffd-ee11-a1ff-00224825b17a",\r\n                      "Name": "Step 1 - Field Input - Email Address (Subrecipient)",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_emailaddress",\r\n                        "SchemaName": "eyfrcc_emailaddress",\r\n                        "Label": "Email Address",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The email address of the third-party participant.",\r\n                        "MaxLength": 1000,\r\n                        "Format": "Text"\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "8618eaa1-0de4-ef11-8ee9-000d3a8f7522",\r\n                      "Name": "Step 1 - Field Input - First Name (Subrecipient)",\r\n                      "Order": 2,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_firstname",\r\n                        "SchemaName": "eyfrcc_firstname",\r\n                        "Label": "First Name",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The first name of the third-party participant.",\r\n                        "MaxLength": 1000,\r\n                        "Format": "Text"\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ],\r\n              "ChildViewSteps": [\r\n                {\r\n                  "Id": "60e52750-2ffd-ee11-a1ff-00224825b17a",\r\n                  "Name": "Step 1",\r\n                  "EntityLogicalName": "eyfrcc_subrecipient",\r\n                  "EntityDisplayName": "Subapplicant",\r\n                  "ReferencingAttribute": null,\r\n                  "ReferencingNavigationProperty": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "b7e23056-2ffd-ee11-a1ff-00224825b17a",\r\n                      "Name": "Step 1 - Field Input - Email Address (Subrecipient)",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_emailaddress",\r\n                        "SchemaName": "eyfrcc_emailaddress",\r\n                        "Label": "Email Address",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The email address of the third-party participant.",\r\n                        "MaxLength": 1000,\r\n                        "Format": "Text"\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            "Id": "94ccd2a7-0ce0-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Field Input - Approved Cost Share or Match (Child Application)",\r\n            "Order": 6,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_approvedcostshareormatch",\r\n              "SchemaName": "eyfrcc_approvedcostshareormatch",\r\n              "Label": "Approved Cost Share or Match",\r\n              "DataType": 643260002,\r\n              "IsRequired": false,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "An amount of approved cost sharing or matching, where applicable. This comes from the Federal Integrated Business Framework (FIBF) model.",\r\n              "MinValue": 0.0,\r\n              "MaxValue": 1000000000.0,\r\n              "Precision": 2\r\n            }\r\n          },\r\n          {\r\n            "Id": "644639ae-0ce0-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Field Input - Risk Indicator (Child Application)",\r\n            "Order": 7,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_riskindicator2",\r\n              "SchemaName": "eyfrcc_riskindicator2",\r\n              "Label": "Risk Indicator",\r\n              "DataType": 643260004,\r\n              "IsRequired": false,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "A score that represents the risk level associated with this application and submitter. This is auto calculated based on the risk assessment configured by a Program Manager on the related funding opportunity. The higher the number, the greater the risk.",\r\n              "MinValue": -100000000000.0,\r\n              "MaxValue": 100000000000.0,\r\n              "Precision": 2\r\n            }\r\n          },\r\n          {\r\n            "Id": "cee0f4ba-0ce0-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Field Input - Fully Disbursed (Child Application)",\r\n            "Order": 8,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_fullydisbursed",\r\n              "SchemaName": "eyfrcc_fullydisbursed",\r\n              "Label": "Fully Disbursed",\r\n              "DataType": 643260007,\r\n              "IsRequired": true,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "The indication of whether the application has been fully disbursed or not.",\r\n              "Choices": [\r\n                {\r\n                  "Value": 1,\r\n                  "Label": "Yes"\r\n                },\r\n                {\r\n                  "Value": 0,\r\n                  "Label": "No"\r\n                }\r\n              ],\r\n              "DefaultValue": false\r\n            }\r\n          },\r\n          {\r\n            "Id": "6d57e7cd-0ce0-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Document Upload - SupportingDocumentation",\r\n            "Order": 9,\r\n            "ChildOrder": 0,\r\n            "Type": 203300001,\r\n            "Properties": {\r\n              "FolderName": "SupportingDocumentation",\r\n              "Description": "<div class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"><p style=\\"margin: 0;\\">Please upload any supporting documentation</p></div>",\r\n              "validationType": 203300000,\r\n              "ValidationMessage": null\r\n            }\r\n          },\r\n          {\r\n            "Id": "0eb5e738-40dd-f011-8544-6045bdd311df",\r\n            "Name": "Primary Record - All Controls - Field Input - Project (Child Application)",\r\n            "Order": 10,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_applicationprojectid",\r\n              "SchemaName": "eyfrcc_applicationprojectid",\r\n              "Label": "Project",\r\n              "DataType": 643260009,\r\n              "IsRequired": false,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "The project that the application is providing information for.",\r\n              "Targets": [\r\n                {\r\n                  "EntityLogicalName": "eyfrcc_project",\r\n                  "EntitySetName": "eyfrcc_projects",\r\n                  "PrimaryIdAttribute": "eyfrcc_projectid",\r\n                  "PrimaryNameAttribute": "eyfrcc_name",\r\n                  "Columns": [\r\n                    "eyfrcc_name",\r\n                    "createdon"\r\n                  ],\r\n                  "NavigationProperty": "eyfrcc_applicationprojectid"\r\n                }\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            "Id": "0f17c076-0de0-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Quick View Form",\r\n            "Order": 11,\r\n            "ChildOrder": 0,\r\n            "Type": 643260003,\r\n            "Properties": {\r\n              "DisplayName": "State/Territory Quick View",\r\n              "ParentLookup": "eyfrcc_applicationprojectid",\r\n              "QuickViewEntityLogicalName": "eyfrcc_project",\r\n              "QuickViewSteps": [\r\n                {\r\n                  "Id": "3b26873a-0de0-f011-8544-7ced8d21d821",\r\n                  "Name": "Quick View Fields",\r\n                  "EntityLogicalName": "eyfrcc_project",\r\n                  "EntityDisplayName": "Project",\r\n                  "ReferencingAttribute": null,\r\n                  "ReferencingNavigationProperty": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "06b19e40-0de0-f011-8544-7ced8d21d821",\r\n                      "Name": "Quick View Fields - Field Input - Description (Project)",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_description",\r\n                        "SchemaName": "eyfrcc_description",\r\n                        "Label": "Description",\r\n                        "DataType": 643260001,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The main description of this record that provides a brief, description of the project.",\r\n                        "MaxLength": 100000,\r\n                        "Format": null\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "681c8652-0de0-f011-8544-7ced8d21d821",\r\n                      "Name": "Quick View Fields - Field Input - Proposed Start Date",\r\n                      "Order": 2,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_proposedstartdate",\r\n                        "SchemaName": "eyfrcc_proposedstartdate",\r\n                        "Label": "Proposed Start Date",\r\n                        "DataType": 643260008,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The proposed start date for this project.",\r\n                        "DateTimeFormat": "DateOnly",\r\n                        "DateTimeBehavior": "UserLocal"\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "42f39858-0de0-f011-8544-7ced8d21d821",\r\n                      "Name": "Quick View Fields - Field Input - Proposed End Date",\r\n                      "Order": 3,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_proposedenddate",\r\n                        "SchemaName": "eyfrcc_proposedenddate",\r\n                        "Label": "Proposed End Date",\r\n                        "DataType": 643260008,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The proposed end date for this project.",\r\n                        "DateTimeFormat": "DateOnly",\r\n                        "DateTimeBehavior": "UserLocal"\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            "Id": "505965f7-3be4-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Table Entry - Project",\r\n            "Order": 12,\r\n            "ChildOrder": 0,\r\n            "Type": 203300002,\r\n            "Properties": {\r\n              "DisplayName": "Projects",\r\n              "ChildEntityLogicalName": "eyfrcc_project",\r\n              "RelationshipName": "eyfrcc_project_eyfrcc_childapplication_eyfrcc_childapplicationtest",\r\n              "ValidationMessage": null,\r\n              "CreateEnabled": true,\r\n              "EditEnabled": true,\r\n              "DeleteEnabled": true,\r\n              "ValidationType": 643260001,\r\n              "ReferencingAttribute": "eyfrcc_childapplication",\r\n              "ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",\r\n              "ChildFormSteps": [\r\n                {\r\n                  "Id": "5506c9e2-92b4-ee11-a569-0022482a96fe",\r\n                  "Name": "Projects",\r\n                  "EntityLogicalName": "eyfrcc_project",\r\n                  "EntityDisplayName": "Project",\r\n                  "ReferencingAttribute": null,\r\n                  "ReferencingNavigationProperty": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "49ffe4f1-92b4-ee11-a569-0022482a96fe",\r\n                      "Name": "Projects - Field Input - Name (Project)",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_name",\r\n                        "SchemaName": "eyfrcc_Name",\r\n                        "Label": "Project:",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The primary name of this record. Once saved, this name will appear at the top of the page.",\r\n                        "MaxLength": 100,\r\n                        "Format": "Text"\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "d0edcb63-93b4-ee11-a569-0022482a96fe",\r\n                      "Name": "Projects - Field Input - Description (Project)",\r\n                      "Order": 3,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_description",\r\n                        "SchemaName": "eyfrcc_description",\r\n                        "Label": "Description of Applicant\'s Project:",\r\n                        "DataType": 643260001,\r\n                        "IsRequired": true,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The main description of this record that provides a brief, description of the project.",\r\n                        "MaxLength": 100000,\r\n                        "Format": null\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "fe600bd0-09b7-ee11-a569-00224828012d",\r\n                      "Name": "Projects - Field Input - Proposed Start Date",\r\n                      "Order": 4,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_proposedstartdate",\r\n                        "SchemaName": "eyfrcc_proposedstartdate",\r\n                        "Label": "Proposed Start Date:",\r\n                        "DataType": 643260008,\r\n                        "IsRequired": true,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The proposed start date for this project.",\r\n                        "DateTimeFormat": "DateOnly",\r\n                        "DateTimeBehavior": "UserLocal"\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "fb3886dc-09b7-ee11-a569-00224828012d",\r\n                      "Name": "Projects - Field Input - Proposed End Date",\r\n                      "Order": 5,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_proposedenddate",\r\n                        "SchemaName": "eyfrcc_proposedenddate",\r\n                        "Label": "Proposed End Date:",\r\n                        "DataType": 643260008,\r\n                        "IsRequired": true,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The proposed end date for this project.",\r\n                        "DateTimeFormat": "DateOnly",\r\n                        "DateTimeBehavior": "UserLocal"\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "edfae4c9-95b4-ee11-a569-0022482a96fe",\r\n                      "Name": "Projects - Field Input - Congressional Districts of Program/Project (Project)",\r\n                      "Order": 7,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_projectcongressionaldistrict",\r\n                        "SchemaName": "eyfrcc_projectcongressionaldistrict",\r\n                        "Label": "Congressional Districts of Program/Project:",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": true,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The list of congressional districts associated to this specified project.",\r\n                        "MaxLength": 100,\r\n                        "Format": "Text"\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ],\r\n              "ChildViewSteps": [\r\n                {\r\n                  "Id": "01d4f832-91b4-ee11-a569-00224828012d",\r\n                  "Name": "View",\r\n                  "EntityLogicalName": "eyfrcc_project",\r\n                  "EntityDisplayName": "Project",\r\n                  "ReferencingAttribute": null,\r\n                  "ReferencingNavigationProperty": null,\r\n                  "Description": "<div data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"font-size:9pt;font-family:\'Segoe UI\',\'Helvetica Neue\',sans-serif;\\"><div>This is the view displayed in the Portal when the Standard Form 424 portal form is used within an application form.</div></div>",\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "4c446a86-91b4-ee11-a569-0022482a96fe",\r\n                      "Name": "View - Field Input - Name (Project)",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_name",\r\n                        "SchemaName": "eyfrcc_Name",\r\n                        "Label": "Project",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The primary name of this record. Once saved, this name will appear at the top of the page.",\r\n                        "MaxLength": 100,\r\n                        "Format": "Text"\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "9d002d25-92b4-ee11-a569-0022482a96fe",\r\n                      "Name": "View - Field Input - Start Date",\r\n                      "Order": 2,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "ChildActions": [\r\n                          {\r\n                            "Id": "ab002d25-92b4-ee11-a569-0022482a96fe",\r\n                            "Name": "View - Field Input - Start Date - Field Input - Start Date - Fiscal Year",\r\n                            "Order": 1,\r\n                            "ChildOrder": 0,\r\n                            "Type": 203300000,\r\n                            "Properties": {\r\n                              "LogicalName": "eyfrcc_startdate_fiscalyear",\r\n                              "SchemaName": "eyfrcc_startdate_fiscalyear",\r\n                              "Label": "Start Date - Fiscal Year",\r\n                              "DataType": 643260009,\r\n                              "IsRequired": false,\r\n                              "IsReadOnly": false,\r\n                              "IsHidden": false,\r\n                              "ValidationType": 643260002,\r\n                              "ValidationValue": null,\r\n                              "ValidationMessage": null,\r\n                              "Description": "Start Date - Fiscal Year",\r\n                              "Targets": [\r\n                                {\r\n                                  "EntityLogicalName": "eyfrcc_fiscalyear",\r\n                                  "EntitySetName": "eyfrcc_fiscalyears",\r\n                                  "PrimaryIdAttribute": "eyfrcc_fiscalyearid",\r\n                                  "PrimaryNameAttribute": "eyfrcc_name",\r\n                                  "Columns": [\r\n                                    "eyfrcc_name",\r\n                                    "createdon"\r\n                                  ],\r\n                                  "NavigationProperty": "eyfrcc_startdate_fiscalyear"\r\n                                }\r\n                              ]\r\n                            }\r\n                          }\r\n                        ]\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "e4385231-92b4-ee11-a569-0022482a96fe",\r\n                      "Name": "View - Field Input - End Date",\r\n                      "Order": 3,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "ChildActions": [\r\n                          {\r\n                            "Id": "e8385231-92b4-ee11-a569-0022482a96fe",\r\n                            "Name": "View - Field Input - End Date - Field Input - End Date - Fiscal Year",\r\n                            "Order": 1,\r\n                            "ChildOrder": 0,\r\n                            "Type": 203300000,\r\n                            "Properties": {\r\n                              "LogicalName": "eyfrcc_enddate_fiscalyear",\r\n                              "SchemaName": "eyfrcc_enddate_fiscalyear",\r\n                              "Label": "End Date - Fiscal Year",\r\n                              "DataType": 643260009,\r\n                              "IsRequired": false,\r\n                              "IsReadOnly": false,\r\n                              "IsHidden": false,\r\n                              "ValidationType": 643260002,\r\n                              "ValidationValue": null,\r\n                              "ValidationMessage": null,\r\n                              "Description": "End Date - Fiscal Year",\r\n                              "Targets": [\r\n                                {\r\n                                  "EntityLogicalName": "eyfrcc_fiscalyear",\r\n                                  "EntitySetName": "eyfrcc_fiscalyears",\r\n                                  "PrimaryIdAttribute": "eyfrcc_fiscalyearid",\r\n                                  "PrimaryNameAttribute": "eyfrcc_name",\r\n                                  "Columns": [\r\n                                    "eyfrcc_name",\r\n                                    "createdon"\r\n                                  ],\r\n                                  "NavigationProperty": "eyfrcc_enddate_fiscalyear"\r\n                                }\r\n                              ]\r\n                            }\r\n                          }\r\n                        ]\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            "Id": "1223e6ce-3ce4-f011-8544-7ced8d21d821",\r\n            "Name": "Primary Record - All Controls - Table Entry - Standard Form 424A",\r\n            "Order": 13,\r\n            "ChildOrder": 0,\r\n            "Type": 203300002,\r\n            "Properties": {\r\n              "DisplayName": "Standard Form 424A",\r\n              "ChildEntityLogicalName": "eyfrcc_standardform424a",\r\n              "RelationshipName": "eyfrcc_standardform424a_eyfrcc_childapplication_eyfrcc_childapplicationtest",\r\n              "ValidationMessage": "Please upload at least one record",\r\n              "CreateEnabled": true,\r\n              "EditEnabled": true,\r\n              "DeleteEnabled": true,\r\n              "ValidationType": 643260000,\r\n              "ReferencingAttribute": "eyfrcc_childapplication",\r\n              "ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",\r\n              "ChildFormSteps": [\r\n                {\r\n                  "Id": "73fbf258-3ce4-f011-8544-7ced8d21d821",\r\n                  "Name": "Information",\r\n                  "EntityLogicalName": "eyfrcc_standardform424a",\r\n                  "EntityDisplayName": "Standard Form 424A",\r\n                  "ReferencingAttribute": null,\r\n                  "ReferencingNavigationProperty": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "b3e9d171-3ce4-f011-8544-7ced8d21d821",\r\n                      "Name": "Information - Field Input - Agency Use Only",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {}\r\n                    },\r\n                    {\r\n                      "Id": "e09a2e84-3ce4-f011-8544-7ced8d21d821",\r\n                      "Name": "Information - Document Upload - InformationUpload",\r\n                      "Order": 2,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300001,\r\n                      "Properties": {\r\n                        "FolderName": "InformationUpload",\r\n                        "Description": "<div class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"><p style=\\"margin: 0;\\">Please upload information</p></div>",\r\n                        "validationType": 203300000,\r\n                        "ValidationMessage": null\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ],\r\n              "ChildViewSteps": [\r\n                {\r\n                  "Id": "4dc24db6-3ce4-f011-8544-7ced8d21d821",\r\n                  "Name": "View",\r\n                  "EntityLogicalName": "eyfrcc_standardform424a",\r\n                  "EntityDisplayName": "Standard Form 424A",\r\n                  "ReferencingAttribute": null,\r\n                  "ReferencingNavigationProperty": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "c26bbbc8-3ce4-f011-8544-7ced8d21d821",\r\n                      "Name": "View - Field Input - Name (Standard Form 424A)",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_name",\r\n                        "SchemaName": "eyfrcc_name",\r\n                        "Label": "Name",\r\n                        "DataType": 643260000,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": null,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The primary attribute",\r\n                        "MaxLength": 300,\r\n                        "Format": "Text"\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ]\r\n            }\r\n          }\r\n        ],\r\n        "Conditions": []\r\n      },\r\n      {\r\n        "Id": "63755ce0-3fdd-f011-8544-6045bdd311df",\r\n        "Name": "SF424 (Secondary Table)",\r\n        "EntityLogicalName": "eyfrcc_standardform424",\r\n        "EntityDisplayName": "Standard Form 424",\r\n        "ReferencingAttribute": "eyfrcc_childapplication",\r\n        "ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",\r\n        "Description": "<div class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"><p style=\\"margin: 0;\\">This form step resides on a different table than the form\'s primary table.</p></div>",\r\n        "Order": 3,\r\n        "Actions": [\r\n          {\r\n            "Id": "89faad05-40dd-f011-8544-6045bdd311df",\r\n            "Name": "SF424 - Field Input - Attestation",\r\n            "Order": 1,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_attestation",\r\n              "SchemaName": "eyfrcc_attestation",\r\n              "Label": "Attestation",\r\n              "DataType": 643260007,\r\n              "IsRequired": true,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "The attestation required to be confirmed in order to submit the form.",\r\n              "Choices": [\r\n                {\r\n                  "Value": 1,\r\n                  "Label": "Yes"\r\n                },\r\n                {\r\n                  "Value": 0,\r\n                  "Label": "No"\r\n                }\r\n              ],\r\n              "DefaultValue": false\r\n            }\r\n          }\r\n        ],\r\n        "Conditions": []\r\n      },\r\n      {\r\n        "Id": "ff7634e7-17e0-f011-8544-0022482dfe82",\r\n        "Name": "SF425 (Secondary Table)",\r\n        "EntityLogicalName": "eyfrcc_standardform425",\r\n        "EntityDisplayName": "Standard Form 425",\r\n        "ReferencingAttribute": "eyfrcc_childapplication",\r\n        "ReferencingNavigationProperty": "eyfrcc_childapplication_eyfrcc_childapplicationtest",\r\n        "Description": null,\r\n        "Order": 4,\r\n        "Actions": [\r\n          {\r\n            "Id": "ad124460-18e0-f011-8544-0022482dfe82",\r\n            "Name": "SF425 (Secondary Table) - Table Entry - Expenditure",\r\n            "Order": 1,\r\n            "ChildOrder": 0,\r\n            "Type": 203300002,\r\n            "Properties": {\r\n              "DisplayName": "Indirect Expenses",\r\n              "ChildEntityLogicalName": "eyfrcc_expenditure",\r\n              "RelationshipName": "eyfrcc_expenditure_eyfrcc_childsecondaryreport_eyfrcc_standardform425",\r\n              "ValidationMessage": null,\r\n              "CreateEnabled": true,\r\n              "EditEnabled": true,\r\n              "DeleteEnabled": true,\r\n              "ValidationType": 643260001,\r\n              "ReferencingAttribute": "eyfrcc_childsecondaryreport",\r\n              "ReferencingNavigationProperty": "eyfrcc_childsecondaryreport_eyfrcc_standardform425",\r\n              "ChildFormSteps": [\r\n                {\r\n                  "Id": "f07fea43-71c7-ee11-9079-0022482a91d0",\r\n                  "Name": "Indirect Expenses",\r\n                  "EntityLogicalName": "eyfrcc_expenditure",\r\n                  "EntityDisplayName": "Expenditure",\r\n                  "ReferencingAttribute": null,\r\n                  "ReferencingNavigationProperty": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "b58e1671-71c7-ee11-9079-0022482a91d0",\r\n                      "Name": "Indirect Expenses - Field Input - Indirect Cost Rate",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_indirectcostrate",\r\n                        "SchemaName": "eyfrcc_indirectcostrate",\r\n                        "Label": "Indirect Cost Rate",\r\n                        "DataType": 643260009,\r\n                        "IsRequired": true,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "<div data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"font-size:9pt;font-family:\'Segoe UI\',\'Helvetica Neue\',sans-serif;\\"><div><em>Select the indirect cost rate line that represents the type of indirect expense, the indirect cost rate in effect during the reporting period, and the beginning and ending effective dates for the rate.</em></div></div>",\r\n                        "Targets": [\r\n                          {\r\n                            "EntityLogicalName": "eyfrcc_indirectcostratelines",\r\n                            "EntitySetName": "eyfrcc_indirectcostratelineses",\r\n                            "PrimaryIdAttribute": "eyfrcc_indirectcostratelinesid",\r\n                            "PrimaryNameAttribute": "eyfrcc_name",\r\n                            "Columns": [\r\n                              "eyfrcc_name",\r\n                              "createdon"\r\n                            ],\r\n                            "NavigationProperty": "eyfrcc_indirectcostrate"\r\n                          }\r\n                        ]\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "661bee86-71c7-ee11-9079-0022482a91d0",\r\n                      "Name": "Indirect Expenses - Field Input - Indirect Cost Rate Base",\r\n                      "Order": 2,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_indirectcostratebase",\r\n                        "SchemaName": "eyfrcc_indirectcostratebase",\r\n                        "Label": "Base",\r\n                        "DataType": 643260002,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "<div data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"font-size:9pt;font-family:\'Segoe UI\',\'Helvetica Neue\',sans-serif;\\"><div><em>Enter the amount of the base against which the rate(s) was applied.</em></div></div>",\r\n                        "MinValue": 0.0,\r\n                        "MaxValue": 1000000000.0,\r\n                        "Precision": 2\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "fb908a93-71c7-ee11-9079-0022482a91d0",\r\n                      "Name": "Indirect Expenses - Field Input - Amount Charged",\r\n                      "Order": 3,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_amountcharged",\r\n                        "SchemaName": "eyfrcc_amountcharged",\r\n                        "Label": "Amount Charged",\r\n                        "DataType": 643260002,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": true,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "<div data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"font-size:9pt;font-family:\'Segoe UI\',\'Helvetica Neue\',sans-serif;\\"><div><em>&nbsp;The amount of indirect costs charged during the time period specified. This field is automatically calculated.</em></div></div>",\r\n                        "MinValue": 0.0,\r\n                        "MaxValue": 1000000000.0,\r\n                        "Precision": 2\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "02b898b4-71c7-ee11-9079-0022482a91d0",\r\n                      "Name": "Indirect Expenses - Field Input - Federal Share",\r\n                      "Order": 4,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_federalshare",\r\n                        "SchemaName": "eyfrcc_federalshare",\r\n                        "Label": "Federal Share",\r\n                        "DataType": 643260002,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "<div data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"font-size:9pt;font-family:\'Segoe UI\',\'Helvetica Neue\',sans-serif;\\"><div><em>Enter the Federal share of the amount from \\"Amount Charged\\".</em></div></div>",\r\n                        "MinValue": 0.0,\r\n                        "MaxValue": 1000000000.0,\r\n                        "Precision": 2\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ],\r\n              "ChildViewSteps": [\r\n                {\r\n                  "Id": "983e498a-72c7-ee11-9079-0022482a91d0",\r\n                  "Name": "Indirect Expenses",\r\n                  "EntityLogicalName": "eyfrcc_expenditure",\r\n                  "EntityDisplayName": "Expenditure",\r\n                  "ReferencingAttribute": null,\r\n                  "ReferencingNavigationProperty": null,\r\n                  "Description": null,\r\n                  "Order": 1,\r\n                  "Actions": [\r\n                    {\r\n                      "Id": "8d273d98-72c7-ee11-9079-0022482a91d0",\r\n                      "Name": "Indirect Expenses - Field Input - Indirect Cost Rate",\r\n                      "Order": 1,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_indirectcostrate",\r\n                        "SchemaName": "eyfrcc_indirectcostrate",\r\n                        "Label": "Indirect Cost Rate",\r\n                        "DataType": 643260009,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The related indirect cost rate line from a negotiated indirect cost rate agreement in which assess the amount charged.",\r\n                        "Targets": [\r\n                          {\r\n                            "EntityLogicalName": "eyfrcc_indirectcostratelines",\r\n                            "EntitySetName": "eyfrcc_indirectcostratelineses",\r\n                            "PrimaryIdAttribute": "eyfrcc_indirectcostratelinesid",\r\n                            "PrimaryNameAttribute": "eyfrcc_name",\r\n                            "Columns": [\r\n                              "eyfrcc_name",\r\n                              "createdon"\r\n                            ],\r\n                            "NavigationProperty": "eyfrcc_indirectcostrate"\r\n                          }\r\n                        ]\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "2867779f-72c7-ee11-9079-0022482a91d0",\r\n                      "Name": "Indirect Expenses - Field Input - Indirect Cost Rate Base",\r\n                      "Order": 2,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_indirectcostratebase",\r\n                        "SchemaName": "eyfrcc_indirectcostratebase",\r\n                        "Label": "Indirect Cost Rate Base",\r\n                        "DataType": 643260002,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The amount of the base against which the rate(s) was applied.",\r\n                        "MinValue": 0.0,\r\n                        "MaxValue": 1000000000.0,\r\n                        "Precision": 2\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "58d2bba8-72c7-ee11-9079-0022482a91d0",\r\n                      "Name": "Indirect Expenses - Field Input - Amount Charged",\r\n                      "Order": 3,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_amountcharged",\r\n                        "SchemaName": "eyfrcc_amountcharged",\r\n                        "Label": "Amount Charged",\r\n                        "DataType": 643260002,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The auto calculated amount of indirect costs charged during the time period specified. This is the related indirect cost rate multiplied by the base.",\r\n                        "MinValue": 0.0,\r\n                        "MaxValue": 1000000000.0,\r\n                        "Precision": 2\r\n                      }\r\n                    },\r\n                    {\r\n                      "Id": "27d0bdae-72c7-ee11-9079-0022482a91d0",\r\n                      "Name": "Indirect Expenses - Field Input - Federal Share",\r\n                      "Order": 4,\r\n                      "ChildOrder": 0,\r\n                      "Type": 203300000,\r\n                      "Properties": {\r\n                        "LogicalName": "eyfrcc_federalshare",\r\n                        "SchemaName": "eyfrcc_federalshare",\r\n                        "Label": "Federal Share",\r\n                        "DataType": 643260002,\r\n                        "IsRequired": false,\r\n                        "IsReadOnly": false,\r\n                        "IsHidden": false,\r\n                        "ValidationType": 643260002,\r\n                        "ValidationValue": null,\r\n                        "ValidationMessage": null,\r\n                        "Description": "The Federal share of the amount in \\"Amount Charged\\".",\r\n                        "MinValue": 0.0,\r\n                        "MaxValue": 1000000000.0,\r\n                        "Precision": 2\r\n                      }\r\n                    }\r\n                  ],\r\n                  "Conditions": []\r\n                }\r\n              ]\r\n            }\r\n          },\r\n          {\r\n            "Id": "45ba3fb4-3be4-f011-8544-7ced8d21d821",\r\n            "Name": "SF425 (Secondary Table) - Document Upload - TaxDocuments",\r\n            "Order": 2,\r\n            "ChildOrder": 0,\r\n            "Type": 203300001,\r\n            "Properties": {\r\n              "FolderName": "TaxDocuments",\r\n              "Description": "<div class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"><p style=\\"margin: 0;\\">Upload supporting tax documentation</p></div>",\r\n              "validationType": 203300002,\r\n              "ValidationMessage": "Please upload at least one file"\r\n            }\r\n          }\r\n        ],\r\n        "Conditions": []\r\n      },\r\n      {\r\n        "Id": "a7e5ff8e-18e0-f011-8544-0022482dfe82",\r\n        "Name": "Submission",\r\n        "EntityLogicalName": "eyfrcc_childapplicationtest",\r\n        "EntityDisplayName": "Child Application Template",\r\n        "ReferencingAttribute": null,\r\n        "ReferencingNavigationProperty": null,\r\n        "Description": null,\r\n        "Order": 5,\r\n        "Actions": [\r\n          {\r\n            "Id": "eeff07c1-18e0-f011-8544-0022482dfe82",\r\n            "Name": "Submission - Field Input - Test Form Field",\r\n            "Order": 1,\r\n            "ChildOrder": 0,\r\n            "Type": 203300000,\r\n            "Properties": {\r\n              "LogicalName": "eyfrcc_testformfield",\r\n              "SchemaName": "eyfrcc_testformfield",\r\n              "Label": "Test Form Field",\r\n              "DataType": 643260000,\r\n              "IsRequired": true,\r\n              "IsReadOnly": false,\r\n              "IsHidden": false,\r\n              "ValidationType": null,\r\n              "ValidationValue": null,\r\n              "ValidationMessage": null,\r\n              "Description": "Test Form Field",\r\n              "MaxLength": 1000,\r\n              "Format": "Text"\r\n            }\r\n          },\r\n          {\r\n            "Id": "7a5cc683-3be4-f011-8544-7ced8d21d821",\r\n            "Name": "Submission - Document Upload - SupportingDocuments",\r\n            "Order": 2,\r\n            "ChildOrder": 0,\r\n            "Type": 203300001,\r\n            "Properties": {\r\n              "FolderName": "SupportingDocuments",\r\n              "Description": "<div class=\\"ck-content\\" data-wrapper=\\"true\\" dir=\\"ltr\\" style=\\"--ck-image-style-spacing: 1.5em; --ck-inline-image-style-spacing: calc(var(--ck-image-style-spacing) / 2); font-family: Segoe UI; font-size: 11pt;\\"><p style=\\"margin: 0;\\">Please upload any supporting documentation</p></div>",\r\n              "validationType": 203300000,\r\n              "ValidationMessage": null\r\n            }\r\n          }\r\n        ],\r\n        "Conditions": []\r\n      }\r\n    ],\r\n    "TableMetadata": {\r\n      "eyfrcc_childapplicationtest": {\r\n        "EntityLogicalName": "eyfrcc_childapplicationtest",\r\n        "EntitySchemaName": "eyfrcc_ChildApplicationTest",\r\n        "EntitySetName": "eyfrcc_childapplicationtests",\r\n        "EntityDisplayName": "Child Application Template",\r\n        "EntityDescription": "This table represents the template \\"child\\" application table for all child application tables created through the Application Builder. Fields, forms, views, and more will be included by default for all newly created child tables through the Application Builder publishing process.",\r\n        "PrimaryIdAttribute": "eyfrcc_childapplicationtestid",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [\r\n          {\r\n            "ConfigurationIdentifier": "DocumentPath",\r\n            "FieldLogicalName": "eyfrcc_documentpath",\r\n            "NavigationPropertyName": null\r\n          },\r\n          {\r\n            "ConfigurationIdentifier": "ApplicationNumber",\r\n            "FieldLogicalName": "eyfrcc_applicationnumber",\r\n            "NavigationPropertyName": null\r\n          }\r\n        ],\r\n        "DefaultOnCreateActions": [\r\n          {\r\n            "ConfigurationIdentifierMetadata": {\r\n              "ConfigurationIdentifier": "Form",\r\n              "FieldLogicalName": "eyfrcc_form",\r\n              "NavigationPropertyName": "eyfrcc_form"\r\n            }\r\n          },\r\n          {\r\n            "ConfigurationIdentifierMetadata": {\r\n              "ConfigurationIdentifier": "ApplicationType",\r\n              "FieldLogicalName": "eyfrcc_applicationtype",\r\n              "NavigationPropertyName": "eyfrcc_ApplicationType"\r\n            }\r\n          },\r\n          {\r\n            "ConfigurationIdentifierMetadata": {\r\n              "ConfigurationIdentifier": "Requestor",\r\n              "FieldLogicalName": "eyfrcc_requestor",\r\n              "NavigationPropertyName": "eyfrcc_Requestor"\r\n            }\r\n          }\r\n        ]\r\n      },\r\n      "eyfrcc_subrecipient": {\r\n        "EntityLogicalName": "eyfrcc_subrecipient",\r\n        "EntitySchemaName": "eyfrcc_subrecipient",\r\n        "EntitySetName": "eyfrcc_subrecipients",\r\n        "EntityDisplayName": "Subapplicant",\r\n        "EntityDescription": "A subapplicant is a non-Federal entity that is invited to apply for a subaward from a pass-through entity to carry out part of a Federal program. ",\r\n        "PrimaryIdAttribute": "eyfrcc_subrecipientid",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      },\r\n      "eyfrcc_project": {\r\n        "EntityLogicalName": "eyfrcc_project",\r\n        "EntitySchemaName": "eyfrcc_Project",\r\n        "EntitySetName": "eyfrcc_projects",\r\n        "EntityDisplayName": "Project",\r\n        "EntityDescription": "A planned set of activities or services that the applicant will carry out using the funding, designed to address a specific need or goal in the community.",\r\n        "PrimaryIdAttribute": "eyfrcc_projectid",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      },\r\n      "eyfrcc_standardform424a": {\r\n        "EntityLogicalName": "eyfrcc_standardform424a",\r\n        "EntitySchemaName": "eyfrcc_standardform424a",\r\n        "EntitySetName": "eyfrcc_standardform424as",\r\n        "EntityDisplayName": "Standard Form 424A",\r\n        "EntityDescription": "The Standard Form 424A (SF-424A) is used to budget and request grant funds for non-construction programs. It is part of the broader Standard Form 424 Form Family of government-wide standard data sets.",\r\n        "PrimaryIdAttribute": "eyfrcc_standardform424aid",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      },\r\n      "eyfrcc_standardform424": {\r\n        "EntityLogicalName": "eyfrcc_standardform424",\r\n        "EntitySchemaName": "eyfrcc_standardform424",\r\n        "EntitySetName": "eyfrcc_standardform424s",\r\n        "EntityDisplayName": "Standard Form 424",\r\n        "EntityDescription": "The Standard Form 424 (SF-424) is used in all federal grant applications and collects information including type of submission, applicant information, type of applicant, and proposed project dates. It is part of the broader Standard Forms 424 Form Family of government-wide standard data sets.",\r\n        "PrimaryIdAttribute": "eyfrcc_standardform424id",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      },\r\n      "eyfrcc_standardform425": {\r\n        "EntityLogicalName": "eyfrcc_standardform425",\r\n        "EntitySchemaName": "eyfrcc_standardform425",\r\n        "EntitySetName": "eyfrcc_standardform425s",\r\n        "EntityDisplayName": "Standard Form 425",\r\n        "EntityDescription": "The Standard Form 425 (SF-425) is used by recipients to submit reports on their grant\'s financial progress. It is part of the broader Form Family of government-wide standard data sets.",\r\n        "PrimaryIdAttribute": "eyfrcc_standardform425id",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [\r\n          {\r\n            "ConfigurationIdentifier": "DocumentPath",\r\n            "FieldLogicalName": "eyfrcc_documentpath",\r\n            "NavigationPropertyName": null\r\n          },\r\n          {\r\n            "ConfigurationIdentifier": "ApplicationNumber",\r\n            "FieldLogicalName": "eyfrcc_recordnumber",\r\n            "NavigationPropertyName": null\r\n          }\r\n        ],\r\n        "DefaultOnCreateActions": [\r\n          {\r\n            "ConfigurationIdentifierMetadata": {\r\n              "ConfigurationIdentifier": "Form",\r\n              "FieldLogicalName": "eyfrcc_form",\r\n              "NavigationPropertyName": "eyfrcc_form"\r\n            }\r\n          },\r\n          {\r\n            "ConfigurationIdentifierMetadata": {\r\n              "ConfigurationIdentifier": "ApplicationType",\r\n              "FieldLogicalName": "eyfrcc_fundingopportunity",\r\n              "NavigationPropertyName": "eyfrcc_fundingopportunity"\r\n            }\r\n          },\r\n          {\r\n            "ConfigurationIdentifierMetadata": {\r\n              "ConfigurationIdentifier": "Requestor",\r\n              "FieldLogicalName": "eyfrcc_requestor",\r\n              "NavigationPropertyName": "eyfrcc_requestor"\r\n            }\r\n          }\r\n        ]\r\n      },\r\n      "eyfrcc_expenditure": {\r\n        "EntityLogicalName": "eyfrcc_expenditure",\r\n        "EntitySchemaName": "eyfrcc_Expenditure",\r\n        "EntitySetName": "eyfrcc_expenditures",\r\n        "EntityDisplayName": "Expenditure",\r\n        "EntityDescription": "An expenditure represents the amount of money paid out or is spent. These are reported by a recipient relating to their award.",\r\n        "PrimaryIdAttribute": "eyfrcc_expenditureid",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      },\r\n      "eyfrcc_form": {\r\n        "EntityLogicalName": "eyfrcc_form",\r\n        "EntitySchemaName": "eyfrcc_Form",\r\n        "EntitySetName": "eyfrcc_forms",\r\n        "EntityDisplayName": "Form",\r\n        "EntityDescription": "A form represents a user interface that users can use to create data and/or interact with data that is relevant to them. This can be used to create application and report forms, review checklists, and review process flows.",\r\n        "PrimaryIdAttribute": "eyfrcc_formid",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      },\r\n      "eyfrcc_applicationtype": {\r\n        "EntityLogicalName": "eyfrcc_applicationtype",\r\n        "EntitySchemaName": "eyfrcc_ApplicationType",\r\n        "EntitySetName": "eyfrcc_applicationtypes",\r\n        "EntityDisplayName": "Funding Opportunity",\r\n        "EntityDescription": "A funding opportunity represents the official availability of funding through a program. Each opportunity has an overview of eligibility criteria, required documentation, the application process, and award details. An application form is built in order to allow an external user to apply for funding.",\r\n        "PrimaryIdAttribute": "eyfrcc_applicationtypeid",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      },\r\n      "contact": {\r\n        "EntityLogicalName": "contact",\r\n        "EntitySchemaName": "Contact",\r\n        "EntitySetName": "contacts",\r\n        "EntityDisplayName": "Portal User",\r\n        "EntityDescription": "Person with whom a business unit has a relationship, such as customer, supplier, and colleague.",\r\n        "PrimaryIdAttribute": "contactid",\r\n        "PrimaryNameAttribute": "fullname",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      },\r\n      "eyfrcc_fiscalyear": {\r\n        "EntityLogicalName": "eyfrcc_fiscalyear",\r\n        "EntitySchemaName": "eyfrcc_FiscalYear",\r\n        "EntitySetName": "eyfrcc_fiscalyears",\r\n        "EntityDisplayName": "Fiscal Year",\r\n        "EntityDescription": "A fiscal year is used in accounting and for budget purposes. It is used to help perform financial reporting on important, key dates used throughout the system.",\r\n        "PrimaryIdAttribute": "eyfrcc_fiscalyearid",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      },\r\n      "eyfrcc_indirectcostratelines": {\r\n        "EntityLogicalName": "eyfrcc_indirectcostratelines",\r\n        "EntitySchemaName": "eyfrcc_IndirectCostRateLines",\r\n        "EntitySetName": "eyfrcc_indirectcostratelineses",\r\n        "EntityDisplayName": "Indirect Cost Rate",\r\n        "EntityDescription": "A table used to capture the indirect cost rates associated with a particular Negotiated Indirect Cost Rate Agreement (NICRA). An indirect cost rate is the ratio between the total indirect expenses and some direct cost base.",\r\n        "PrimaryIdAttribute": "eyfrcc_indirectcostratelinesid",\r\n        "PrimaryNameAttribute": "eyfrcc_name",\r\n        "ConfigurationIdentifierMetadata": [],\r\n        "DefaultOnCreateActions": []\r\n      }\r\n    }\r\n  }\r\n}',
-				},
-			],
+			value: records,
 		});
 	}),
+
+	// ─── GET: User Form Sessions ──────────────────────────────────────────
 	http.get("*/_api/eyfrcc_userformsessions*", async () => {
-		await delay(500);
-		return HttpResponse.json({
-			"@odata.context":
-				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_userformsessions(_eyfrcc_forminstanceid_value,eyfrcc_FormInstanceId,_eyfrcc_contactid_value,eyfrcc_ContactId,_eyfrcc_organizationid_value,eyfrcc_OrganizationId,eyfrcc_lastactive,eyfrcc_userformsessionid,eyfrcc_FormInstanceId(),eyfrcc_ContactId(),eyfrcc_OrganizationId())",
-			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
-			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
-			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
-			value: [
-				{
-					"@odata.etag": 'W/"51348092"',
-					"eyfrcc_lastactive@OData.Community.Display.V1.FormattedValue": "12/22/2025 5:00 PM",
-					eyfrcc_lastactive: "2025-12-22T22:00:00Z",
-					"_eyfrcc_forminstanceid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "eyfrcc_FormInstanceId",
-					"_eyfrcc_forminstanceid_value@Microsoft.Dynamics.CRM.lookuplogicalname": "eyfrcc_forminstance",
-					_eyfrcc_forminstanceid_value: "a58a34f7-7fdf-f011-8544-6045bdd311df",
-					"_eyfrcc_organizationid_value@OData.Community.Display.V1.FormattedValue": "Katie's Organization",
-					"_eyfrcc_organizationid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "eyfrcc_OrganizationId",
-					"_eyfrcc_organizationid_value@Microsoft.Dynamics.CRM.lookuplogicalname": "account",
-					_eyfrcc_organizationid_value: "aec34f1d-7627-ef11-8ee7-00224853d420",
-					eyfrcc_userformsessionid: "3da2550b-80df-f011-8544-6045bdd311df",
-					"_eyfrcc_contactid_value@OData.Community.Display.V1.FormattedValue": "Evan Currier",
-					"_eyfrcc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "eyfrcc_ContactId",
-					"_eyfrcc_contactid_value@Microsoft.Dynamics.CRM.lookuplogicalname": "contact",
-					_eyfrcc_contactid_value: "8b896118-8df6-ee11-a1fe-00224825b17a",
-				},
-			],
-		});
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_userformsessions");
+		return HttpResponse.json(odataCollection(records));
 	}),
-	http.get("*/_api/eyfrcc_projects*", async () => {
-		await delay(500);
-		return HttpResponse.json({
-			"@odata.context":
-				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_projects(eyfrcc_projectid,eyfrcc_name,eyfrcc_description,eyfrcc_proposedstartdate,eyfrcc_proposedenddate,eyfrcc_projectcongressionaldistrict)",
-			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
-			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
-			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51526383",
-			value: [
-				{
-					"@odata.etag": 'W/"51529456"',
-					"eyfrcc_proposedstartdate@OData.Community.Display.V1.FormattedValue": "12/29/2025",
-					eyfrcc_proposedstartdate: "2025-12-30T00:00:00Z",
-					eyfrcc_projectcongressionaldistrict: "Idk",
-					eyfrcc_name: "React Project",
-					"eyfrcc_proposedenddate@OData.Community.Display.V1.FormattedValue": "12/31/2025",
-					eyfrcc_proposedenddate: "2026-01-01T00:00:00Z",
-					eyfrcc_projectid: "2487281d-0de5-f011-8544-7ced8d21d821",
-					eyfrcc_description: "This is a long description\n\nWith new lines!",
-				},
-			],
-		});
+
+	// ─── GET: Projects ────────────────────────────────────────────────────
+	http.get("*/_api/eyfrcc_projects*", async ({ request }) => {
+		const errorResp = maybeErrorResponse();
+		if (errorResp) {
+			return errorResp;
+		}
+
+		await delay(getMockDelay());
+
+		const url = new URL(request.url);
+		const fetchXml = url.searchParams.get("fetchXml");
+
+		const projectId = fetchXml ? extractIdFromFetchXml(fetchXml, "eyfrcc_projectid") : null;
+		const records = projectId ? getRecords("eyfrcc_projects", projectId) : getRecords("eyfrcc_projects");
+
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── POST: Projects ────────────────────────────────────────────────────
+	http.post("*/_api/eyfrcc_projects*", async ({ request }) => {
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const body = (await request.json()) as Record<string, any>;
+		const id = insertRecord("eyfrcc_projects", body);
+
+		const response = HttpResponse.json({}, { status: 204 });
+		response.headers.set("entityid", id);
+		return response;
+	}),
+
+	// ─── GET: Expenditures ────────────────────────────────────────────────
 	http.get("*/_api/eyfrcc_expenditures*", async () => {
-		await delay(500);
-		return HttpResponse.json({
-			"@odata.context":
-				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_expenditures(_transactioncurrencyid_value,transactioncurrencyid,eyfrcc_expenditureid,_eyfrcc_indirectcostrate_value,eyfrcc_indirectcostrate,eyfrcc_indirectcostratebase,eyfrcc_federalshare,eyfrcc_amountcharged,transactioncurrencyid(),eyfrcc_indirectcostrate())",
-			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
-			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
-			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51526383",
-			"@generated_alias_eyfrcc_application_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
-			"@generated_alias_eyfrcc_application_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_application_2.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
-			"@generated_alias_eyfrcc_application_3.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_secondaryreport_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
-			"@generated_alias_eyfrcc_secondaryreport_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
-			"@generated_alias_eyfrcc_recordpermission_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_expenditureid",
-			value: [
-				{
-					"@odata.etag": 'W/"51529058"',
-					"_eyfrcc_indirectcostrate_value@OData.Community.Display.V1.FormattedValue": "IDCR-00001000",
-					"_eyfrcc_indirectcostrate_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "eyfrcc_indirectcostrate",
-					"_eyfrcc_indirectcostrate_value@Microsoft.Dynamics.CRM.lookuplogicalname": "eyfrcc_indirectcostratelines",
-					_eyfrcc_indirectcostrate_value: "94b76e5c-3771-f011-b4cb-6045bdd311df",
-					eyfrcc_expenditureid: "f3338448-0b95-404d-8f94-a364d9a5759c",
-					"_transactioncurrencyid_value@OData.Community.Display.V1.FormattedValue": "US Dollar",
-					"_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-					"_transactioncurrencyid_value@Microsoft.Dynamics.CRM.lookuplogicalname": "transactioncurrency",
-					_transactioncurrencyid_value: "f7e6eb2c-83d3-ee11-907a-0022481cd40a",
-					"eyfrcc_indirectcostratebase@OData.Community.Display.V1.FormattedValue": "$500.00",
-					eyfrcc_indirectcostratebase: 500.0,
-					"eyfrcc_amountcharged@OData.Community.Display.V1.FormattedValue": "$50.00",
-					eyfrcc_amountcharged: 50.0,
-					"eyfrcc_federalshare@OData.Community.Display.V1.FormattedValue": "$500.00",
-					eyfrcc_federalshare: 500.0,
-				},
-			],
-		});
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_expenditures");
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── GET: Indirect Cost Rate Lines ────────────────────────────────────
 	http.get("*/_api/eyfrcc_indirectcostratelineses*", async () => {
-		await delay(500);
-		return HttpResponse.json({
-			value: [
-				{
-					"@odata.etag": 'W/"41904727"',
-					"createdon@OData.Community.Display.V1.FormattedValue": "8/4/2025 9:31 AM",
-					createdon: "2025-08-04T13:31:49Z",
-					eyfrcc_name: "IDCR-00001000",
-					eyfrcc_indirectcostratelinesid: "94b76e5c-3771-f011-b4cb-6045bdd311df",
-				},
-			],
-		});
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_indirectcostratelineses");
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── GET: Child Application Tests ─────────────────────────────────────
 	http.get("*/_api/eyfrcc_childapplicationtests*", async () => {
-		await delay(1500);
-		return HttpResponse.json({
-			"@odata.context":
-				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_childapplicationtests(eyfrcc_addresstest123_street1,eyfrcc_fullydisbursed,eyfrcc_applicationnumber,eyfrcc_addresstest123_city,eyfrcc_purpose,eyfrcc_childapplicationtestid,eyfrcc_addresstest123_state,eyfrcc_addresstest123_zip,eyfrcc_documentpath,_eyfrcc_applicationprojectid_value,eyfrcc_applicationprojectid,eyfrcc_areasimpacted,eyfrcc_addresstest123_street2,eyfrcc_totalapprovedindirectcostrate,eyfrcc_budgetstatus,eyfrcc_approvedcostshareormatch,eyfrcc_riskindicator2,eyfrcc_testformfield,eyfrcc_applicationprojectid())",
-			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
-			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
-			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
-			value: [
-				{
-					"@odata.etag": 'W/"51511309"',
-					eyfrcc_childapplicationtestid: "c9750587-d85d-4ab6-acc2-b03ee184bb42",
-					eyfrcc_areasimpacted: "Areas Impacted",
-					eyfrcc_applicationnumber: "APP-000001209",
-					"eyfrcc_fullydisbursed@OData.Community.Display.V1.FormattedValue": "No",
-					eyfrcc_fullydisbursed: false,
-					eyfrcc_addresstest123_street1: "525 W Monroe St.",
-					eyfrcc_purpose: "This is purpose content",
-					"_eyfrcc_applicationprojectid_value@OData.Community.Display.V1.FormattedValue": "Evan Test Proj 123",
-					"_eyfrcc_applicationprojectid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "eyfrcc_applicationprojectid",
-					"_eyfrcc_applicationprojectid_value@Microsoft.Dynamics.CRM.lookuplogicalname": "eyfrcc_project",
-					_eyfrcc_applicationprojectid_value: "027ed7f0-545b-f011-bec1-7ced8d21d821",
-					eyfrcc_addresstest123_state: "IL",
-					eyfrcc_documentpath: "Child Application Template/APP-000001209",
-					eyfrcc_addresstest123_zip: "60606",
-					eyfrcc_addresstest123_city: "Chicago",
-					eyfrcc_addresstest123_street2: "Ste 500",
-				},
-			],
-		});
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_childapplicationtests");
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── GET: Standard Form 424s ──────────────────────────────────────────
 	http.get("*/_api/eyfrcc_standardform424s*", async () => {
-		await delay(1500);
-		return HttpResponse.json({
-			"@odata.context": "https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_standardform424s(eyfrcc_standardform424id,eyfrcc_attestation)",
-			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
-			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
-			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
-			"@generated_alias_eyfrcc_application_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_application_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
-			"@generated_alias_eyfrcc_application_2.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_application_3.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_application_4.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
-			"@generated_alias_eyfrcc_application_5.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_secondaryreport_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
-			"@generated_alias_eyfrcc_secondaryreport_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
-			"@generated_alias_eyfrcc_recordpermission_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_standardform424id",
-			value: [
-				{
-					"@odata.etag": 'W/"51511838"',
-					"eyfrcc_attestation@OData.Community.Display.V1.FormattedValue": "Yes",
-					eyfrcc_attestation: true,
-					eyfrcc_name: "Standard Form 424 - SRPT-00001063",
-					eyfrcc_standardform424id: "bb7ef80c-d9e4-f011-8544-7ced8d21d821",
-				},
-			],
-		});
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_standardform424s");
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── GET: Standard Form 424As ─────────────────────────────────────────
 	http.get("*/_api/eyfrcc_standardform424as*", async () => {
-		await delay(1500);
-		return HttpResponse.json({
-			"@odata.context":
-				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_standardform424as(eyfrcc_standardform424aid,eyfrcc_attestation)",
-			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
-			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
-			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
-			"@generated_alias_eyfrcc_application_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_application_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
-			"@generated_alias_eyfrcc_application_2.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_application_3.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_application_4.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_application",
-			"@generated_alias_eyfrcc_application_5.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_secondaryreport_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
-			"@generated_alias_eyfrcc_secondaryreport_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_parentsecondaryreport",
-			"@generated_alias_eyfrcc_recordpermission_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_standardform424id",
-			value: [
-				{
-					"@odata.etag": 'W/"51511838"',
-					"eyfrcc_attestation@OData.Community.Display.V1.FormattedValue": "Yes",
-					eyfrcc_attestation: true,
-					eyfrcc_name: "Standard Form 424A - SRPT-00001064",
-					eyfrcc_standardform424aid: "bb7ef80c-d9e4-f011-8544-7ced8d21d821",
-				},
-			],
-		});
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_standardform424as");
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── GET: Standard Form 425s ──────────────────────────────────────────
 	http.get("*/_api/eyfrcc_standardform425s*", async () => {
-		await delay(1500);
-		return HttpResponse.json({
-			"@odata.context":
-				"https://eyga-fedcore2.powerappsportals.com/_api/$metadata#eyfrcc_standardform425s(eyfrcc_standardform425id,eyfrcc_documentpath,eyfrcc_recordnumber)",
-			"@Microsoft.Dynamics.CRM.totalrecordcount": -1,
-			"@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded": false,
-			"@Microsoft.Dynamics.CRM.globalmetadataversion": "51503950",
-			"@generated_alias_eyfrcc_application_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_application_1.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_primeapplication",
-			"@generated_alias_eyfrcc_recordpermission_0.OData.Community.Display.V1.CurrentEntityField": "eyfrcc_standardform425id",
-			value: [
-				{
-					"@odata.etag": 'W/"51512377"',
-					eyfrcc_recordnumber: "SRPT-00001063",
-					eyfrcc_documentpath: "Standard Form 425/SRPT-00001063",
-					eyfrcc_standardform425id: "5a906480-dbe4-f011-8544-7ced8d21d821",
-				},
-			],
-		});
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
+
+		const records = getRecords("eyfrcc_standardform425s");
+		return HttpResponse.json(odataCollection(records));
 	}),
+
+	// ─── POST: Child Application Tests ────────────────────────────────────
 	http.post("*/_api/eyfrcc_childapplicationtests*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] Child Application Test POST request:", { request });
+		await delay(getMockDelay());
+
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] Child Application Test POST request:", { body });
+		const id = insertRecord("eyfrcc_childapplicationtests", body);
 
 		const response = HttpResponse.json({}, { status: 204 });
-		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8499");
-
+		response.headers.set("entityid", id);
 		return response;
 	}),
+
+	// ─── PATCH: Child Application Tests ───────────────────────────────────
 	http.patch("*/_api/eyfrcc_childapplicationtests*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] Child Application Test PATCH request:", { request });
+		await delay(getMockDelay());
 
-		const response = HttpResponse.json({}, { status: 204 });
-		return response;
+		const url = new URL(request.url);
+		const recordId = extractIdFromUrl(url.pathname);
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] Child Application Test PATCH request:", { recordId, body });
+		if (recordId) updateRecord("eyfrcc_childapplicationtests", recordId, body);
+
+		return HttpResponse.json({}, { status: 204 });
 	}),
+
+	// ─── POST: Standard Form 424s ─────────────────────────────────────────
 	http.post("*/_api/eyfrcc_standardform424s*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] Standard Form 424 POST request:", { request });
+		await delay(getMockDelay());
+
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] Standard Form 424 POST request:", { body });
+		const id = insertRecord("eyfrcc_standardform424s", body);
 
 		const response = HttpResponse.json({}, { status: 204 });
-		response.headers.set("entityid", "d3a5c3f4-6f4e-ec11-b6e6-0022481f8500");
-
+		response.headers.set("entityid", id);
 		return response;
 	}),
+
+	// ─── POST: Standard Form 425s ─────────────────────────────────────────
 	http.post("*/_api/eyfrcc_standardform425s*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] Standard Form 425 POST request:", { request });
+		await delay(getMockDelay());
+
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] Standard Form 425 POST request:", { body });
+		const id = insertRecord("eyfrcc_standardform425s", body);
 
 		const response = HttpResponse.json({}, { status: 204 });
-		response.headers.set("entityid", "c3a5c3f4-6f4e-ec11-b6e6-0022481f8500");
-
+		response.headers.set("entityid", id);
 		return response;
 	}),
+
+	// ─── POST: Subrecipients ──────────────────────────────────────────────
 	http.post("*/_api/eyfrcc_subrecipients*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] Subrecipients POST request:", { request });
+		await delay(getMockDelay());
+
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] Subrecipients POST request:", { body });
+		const id = insertRecord("eyfrcc_subrecipients", body);
 
 		const response = HttpResponse.json({}, { status: 204 });
-		response.headers.set("entityid", "e4a5c3f4-6f4e-ec11-b6e6-0022481f8501");
-
+		response.headers.set("entityid", id);
 		return response;
 	}),
+
+	// ─── POST: Expenditures ───────────────────────────────────────────────
 	http.post("*/_api/eyfrcc_expenditures*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] Expenditures POST request:", { request });
+		await delay(getMockDelay());
+
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] Expenditures POST request:", { body });
+		const id = insertRecord("eyfrcc_expenditures", body);
 
 		const response = HttpResponse.json({}, { status: 204 });
-		response.headers.set("entityid", "f5a5c3f4-6f4e-ec11-b6e6-0022481f8502");
-
+		response.headers.set("entityid", id);
 		return response;
 	}),
+
+	// ─── POST: Form Instances ─────────────────────────────────────────────
 	http.post("*/_api/eyfrcc_forminstances*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] Form Instances POST request:", { request });
+		await delay(getMockDelay());
+
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] Form Instances POST request:", { body });
+		const id = insertRecord("eyfrcc_forminstances", body);
 
 		const response = HttpResponse.json({}, { status: 204 });
-		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8433");
-
+		response.headers.set("entityid", id);
 		return response;
 	}),
+
+	// ─── POST: Document Search By Tags ────────────────────────────────────
 	http.post("*https://americorps-fed-core-2.azure-api.net/document/v1/searchbytags*", async ({ request }) => {
-		await delay(1500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
 
 		console.log("[MSW] Documents Search By Tags POST request:", { request });
-		const requestBody = (await request.json()) as { Id: string; Folder: string; Status?: string };
-		const response = HttpResponse.json(
-			[
-				{
-					name: "ErrorDetails (34).txt",
-					fullName: `Activity Proposal/${requestBody.Id}/${requestBody.Folder}/ErrorDetails (34).txt`,
-					uri: `https://eygaamericorpsfedcore2.blob.core.windows.net/dev/Activity Proposal/${requestBody.Id}/${requestBody.Folder}/ErrorDetails (34).txt?sv=2024-05-04&se=2026-01-02T20%3A31%3A10Z&sr=b&sp=r&sig=7ur58B3n3c1YHImPLG3rumR1btcP69JUjvGknHCZ%2B00%3D`,
-					tags: {
-						EntityReference: "c61baf4b-46d6-f011-ad8f-6045bd54c9b2:undefined",
-						Folder: requestBody.Folder,
-						Id: requestBody.Id,
-						PortalOrgId: "61ae137f-4ec9-f011-8544-6045bd540aa6",
-						PortalUserId: "54329348-dfc0-f011-bbd3-6045bd540aa6",
-						RestrictDelete: "false",
-						Status: requestBody.Status,
-						UploadSource: "Portal",
-						"Upload Date": "01/02/2026",
-					},
-					uploadDate: "01/02/2026",
-				},
-			],
-			{ status: 200 }
-		);
 
-		return response;
+		const requestBody = (await request.json()) as { Id: string; Folder: string; Status?: string };
+		const template = getStore().data.externalApis?.["document-search"] as Record<string, any> | undefined;
+
+		// Build response from store template, substituting dynamic request-body values
+		const doc = {
+			name: template?.name ?? "ErrorDetails (34).txt",
+			fullName: (template?.fullName ?? "Activity Proposal/{Id}/{Folder}/ErrorDetails (34).txt")
+				.replace("{Id}", requestBody.Id)
+				.replace("{Folder}", requestBody.Folder),
+			uri: (template?.uri ?? "").replace("{Id}", requestBody.Id).replace("{Folder}", requestBody.Folder),
+			tags: {
+				...(template?.tags ?? {}),
+				Folder: requestBody.Folder,
+				Id: requestBody.Id,
+				Status: requestBody.Status,
+			},
+			uploadDate: template?.uploadDate ?? "01/02/2026",
+		};
+
+		return HttpResponse.json([doc], { status: 200 });
 	}),
+
+	// ─── POST: Document Upload ────────────────────────────────────────────
 	http.post("*https://americorps-fed-core-2.azure-api.net/document/v1/upload*", async ({ request }) => {
-		await delay(1500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
 
 		console.log("[MSW] Documents Upload POST request:", { request });
 
-		const response = HttpResponse.json({}, { status: 200 });
-		return response;
+		return HttpResponse.json({}, { status: 200 });
 	}),
+
+	// ─── POST: Address Validate ───────────────────────────────────────────
 	http.post("*https://americorps-fed-core-2.azure-api.net/address/v1/validate*", async ({ request }) => {
-		await delay(1500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
+
+		await delay(getMockDelay());
 
 		console.log("[MSW] Address Validate POST request:", { request });
 
-		const response = HttpResponse.json(
-			{
-				ValidationLevel: "Valid",
-				Message: "",
-				Address: {
-					AddressLines: ["525 W MONROE ST", "STE 500"],
-					Locality: "CHICAGO",
-					AdministrativeArea: "IL",
-					PostalCode: "60661",
-					RegionCode: "US",
-				},
-			},
-			{ status: 200 }
-		);
+		const addressResponse = getStore().data.externalApis?.["address-validate"] ?? {
+			ValidationLevel: "Valid",
+			Message: "",
+			Address: null,
+		};
 
-		// Invalid address example
-		// { ValidationLevel: "Invalid", Message: "Address Not Found", Address: null }
-		return response;
+		return HttpResponse.json(addressResponse, { status: 200 });
 	}),
+
+	// ─── PATCH: Form Instances ────────────────────────────────────────────
 	http.patch("*/_api/eyfrcc_forminstances*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] Form Instances PATCH request:", { request });
+		await delay(getMockDelay());
 
-		const response = HttpResponse.json({}, { status: 204 });
-		return response;
+		const url = new URL(request.url);
+		const recordId = extractIdFromUrl(url.pathname);
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] Form Instances PATCH request:", { recordId, body });
+		if (recordId) updateRecord("eyfrcc_forminstances", recordId, body);
+
+		return HttpResponse.json({}, { status: 204 });
 	}),
+
+	// ─── POST: User Form Sessions ─────────────────────────────────────────
 	http.post("*/_api/eyfrcc_userformsessions*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] User Form Sessions POST request:", { request });
+		await delay(getMockDelay());
+
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] User Form Sessions POST request:", { body });
+		const id = insertRecord("eyfrcc_userformsessions", body);
 
 		const response = HttpResponse.json({}, { status: 204 });
-		response.headers.set("entityid", "b2a5c3f4-6f4e-ec11-b6e6-0022481f8444");
-
+		response.headers.set("entityid", id);
 		return response;
 	}),
+
+	// ─── PATCH: User Form Sessions ────────────────────────────────────────
 	http.patch("*/_api/eyfrcc_userformsessions*", async ({ request }) => {
-		await delay(500);
+		const errorResp = maybeErrorResponse();
+		if (errorResp) return errorResp;
 
-		console.log("[MSW] User Form Sessions PATCH request:", { request });
+		await delay(getMockDelay());
 
-		const response = HttpResponse.json({}, { status: 204 });
-		return response;
+		const url = new URL(request.url);
+		const recordId = extractIdFromUrl(url.pathname);
+		const body = (await request.json()) as Record<string, any>;
+		console.log("[MSW] User Form Sessions PATCH request:", { recordId, body });
+		if (recordId) updateRecord("eyfrcc_userformsessions", recordId, body);
+
+		return HttpResponse.json({}, { status: 204 });
 	}),
 ];
