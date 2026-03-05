@@ -14,7 +14,7 @@ import {
 	validateFieldRules,
 	type ValidationIssue,
 } from "@services";
-import { buildEntityMetadataMap, resolveEntityDisplayName, resolvePrimaryIdAttribute, setEntityMetadataCache } from "@utilities/metadata";
+import { buildEntityMetadataMap, resolvePrimaryIdAttribute, setEntityMetadataCache, downloadSaveErrorLog } from "@utilities";
 import type { FormStateTreeNode, UploadNodeData, ReactFormConfiguration, SaveError, SaveProgressEvent } from "@app-types";
 
 type FormBuilderProps = {
@@ -304,11 +304,16 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 	const saveProgressVariant = saveProgressTotals.failed > 0 ? "danger" : savePhase === "summary" ? "success" : "info";
 
-	const saveProgressLabel = saveProgressTotals.total
-		? `${saveProgressTotals.complete} of ${saveProgressTotals.total} items`
-		: savePhase === "summary"
-			? "No changes to save"
-			: "Preparing save...";
+	const saveProgressLabel =
+		savePhase === "saving"
+			? "Saving your changes..."
+			: savePhase === "summary"
+				? !saveProgressTotals.total
+					? "No changes to save"
+					: saveProgressTotals.failed > 0
+						? "Some changes could not be saved"
+						: "Changes saved successfully"
+				: "Preparing save...";
 
 	const saveProgressMap = React.useMemo(() => new Map(saveProgress.map((item) => [item.id, item])), [saveProgress]);
 
@@ -415,50 +420,6 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 
 		return [];
 	}, [capturedSaveTree, errorsByEntity, errorsByRecordId, formState, primaryEntity, saveProgress, saveProgressMap, shouldSaveNode]);
-
-	const renderItemStatus = (status?: SaveProgressEvent["status"]) => {
-		if (!status) {
-			return { icon: "⏳", text: "Queued" };
-		}
-
-		if (status === "saved") {
-			return { icon: "✅", text: "Saved" };
-		}
-
-		if (status === "failed") {
-			return { icon: "❌", text: "Failed" };
-		}
-
-		return { icon: "⏳", text: "Saving" };
-	};
-
-	const getEntityLabel = (entityName) => resolveEntityDisplayName(entityName, entityMetadata);
-
-	const renderSaveDetails = (nodes) => (
-		<ul className="list-unstyled" style={{ marginTop: "8px" }}>
-			{nodes.map((node) => {
-				const status = renderItemStatus(node.status);
-				const title = node.scope === "upload" ? `${node.label || "Document"}` : `${getEntityLabel(node.entityName)}`;
-
-				return (
-					<li key={node.id} style={{ marginBottom: "8px" }}>
-						<div>
-							<span style={{ marginRight: "6px" }}>{status.icon}</span>
-							{title} — {status.text}
-						</div>
-						{node.errors?.length > 0 && (
-							<ul className="list-unstyled" style={{ marginTop: "6px", paddingLeft: "18px" }}>
-								{node.errors.map((error, index) => (
-									<li key={`${node.id}-error-${index}`}>{error.message}</li>
-								))}
-							</ul>
-						)}
-						{node.children?.length > 0 && <div style={{ marginTop: "6px", paddingLeft: "18px" }}>{renderSaveDetails(node.children)}</div>}
-					</li>
-				);
-			})}
-		</ul>
-	);
 
 	const updateUrlAfterSave = (recordId: string) => {
 		if (!recordId) {
@@ -614,31 +575,36 @@ const FormBuilder = ({ config, recordData, recordDataByEntity, formSessionInfo, 
 				<LoadingIndicator
 					visible={showSaveOverlay}
 					variant="full-screen"
-					message={savePhase === "summary" ? "Save complete" : "Saving records..."}
+					message={savePhase === "summary" ? "Save Complete" : "Saving..."}
 					showSpinner={savePhase !== "summary"}>
-					<div style={{ textAlign: "left", maxWidth: "640px", margin: "16px auto 0" }}>
-						<div style={{ textAlign: "center" }}>
-							<ProgressBar value={saveProgressTotals.percent} variant={saveProgressVariant} label={saveProgressLabel} />
-							<p style={{ marginTop: "8px", marginBottom: 0 }}>{saveProgressLabel}</p>
-						</div>
-						<details style={{ marginTop: "16px" }}>
-							<summary>See Advanced Details...</summary>
-							<div style={{ marginTop: "10px" }}>
-								{saveDetailsTree.length > 0 ? (
-									renderSaveDetails(saveDetailsTree)
-								) : saveErrors.length > 0 ? (
-									<ul className="list-unstyled" style={{ marginTop: "8px" }}>
-										{saveErrors.map((error, index) => (
-											<li key={`save-error-${index}`}>{error.message}</li>
-										))}
-									</ul>
-								) : (
-									<p>Nothing to see here</p>
-								)}
+					<div style={{ textAlign: "center", margin: "16px auto 0" }}>
+						<ProgressBar value={saveProgressTotals.percent} variant={saveProgressVariant} label={saveProgressLabel} />
+						<p style={{ marginTop: "8px", marginBottom: 0 }}>{saveProgressLabel}</p>
+						{savePhase === "summary" && (saveProgressTotals.failed > 0 || saveErrors.length > 0) && (
+							<div style={{ marginTop: "16px" }}>
+								<button
+									type="button"
+									className="btn btn-link"
+									onClick={() =>
+										downloadSaveErrorLog({
+											timestamp: new Date().toISOString(),
+											formName: config?.FundingOpportunity?.FullName,
+											savePhase,
+											summary: {
+												total: saveProgressTotals.total,
+												saved: saveProgressTotals.saved,
+												failed: saveProgressTotals.failed,
+											},
+											details: saveDetailsTree,
+											ungroupedErrors: saveErrors.filter((e) => !e.recordId).map((e) => ({ phase: e.phase, message: e.message })),
+										})
+									}>
+									Download Error Details
+								</button>
 							</div>
-						</details>
+						)}
 						{savePhase === "summary" && (
-							<div style={{ marginTop: "16px", textAlign: "center" }}>
+							<div style={{ marginTop: "16px" }}>
 								<button type="button" className="btn btn-primary" onClick={handleCloseSaveOverlay}>
 									Close
 								</button>

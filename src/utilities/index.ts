@@ -8,3 +8,4 @@ export * from "./eygaApi";
 export * from "./session";
 export * from "./powerPlatform";
 export * from "./dateTimeDisplay";
+export * from "./saveErrorLog";

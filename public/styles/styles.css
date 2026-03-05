@@ -24704,6 +24704,8 @@ ol ol {
 .loading-ui.full-screen > div {
 	padding: 30px 30px 30px;
 	border-radius: 8px;
+	width: 480px;
+	max-width: 90vw;
 }
 .loading-ui.full-screen p {
 	font-size: 28px;
